@@ -133,4 +133,22 @@ use App\Http\Controllers\QuizQuestionController;
     Route::post('/notifications', [NotificationController::class, 'store']);
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
 
+    Route::middleware('role:1')->get('/admin/dashboard', function () {
+    return 'Admin only';
+    });
+    Route::middleware('role:2')->post('/courses', [CourseController::class, 'store']);
+    Route::middleware('role:3')->get('/my-courses', [EnrollmentController::class, 'index']);
+    Route::middleware('role:1,2')->post('/materials', [MaterialController::class, 'store']);
+
+Route::middleware(['auth:sanctum'])->group(function () {
+
+    // semua route ini butuh token
+    Route::get('/courses', [CourseController::class, 'index']);
+
+    Route::post('/courses', [CourseController::class, 'store'])
+        ->middleware('role:2'); // hanya instructor
+
+    Route::get('/notifications', [NotificationController::class, 'index']);
+});
+
 

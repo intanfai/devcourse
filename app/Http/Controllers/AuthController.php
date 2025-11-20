@@ -21,8 +21,15 @@ class AuthController extends Controller
 
         $user = User::create($data);
 
-        return response()->json($user, 201);
+        // Beri token langsung setelah register
+        $token = $user->createToken('devcourse_token')->plainTextToken;
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token
+        ], 201);
     }
+
 
     public function login(Request $request)
     {
@@ -37,8 +44,15 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        return response()->json(['user' => $user], 200);
+        // Buat token baru
+        $token = $user->createToken('devcourse_token')->plainTextToken;
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token
+        ]);
     }
+
 
     public function profile(Request $request)
     {
