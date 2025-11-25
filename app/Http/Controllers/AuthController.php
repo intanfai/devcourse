@@ -2,46 +2,34 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
-    {
-        $data = $request->validate([
-            'name' => 'required',
-            'email' => 'required|unique:users,email',
-            'password' => 'required|min:6',
-            'role_id' => 'required|exists:roles,id'
-        ]);
-
-        $data['password'] = Hash::make($data['password']);
-
-        $user = User::create($data);
-
-        return response()->json($user, 201);
-    }
-
     public function login(Request $request)
     {
-        $data = $request->validate([
-            'email' => 'required',
-            'password' => 'required'
-        ]);
+        // Cari user berdasarkan email
+        $user = User::where('email', $request->email)->first();
 
-        $user = User::where('email', $data['email'])->first();
-
-        if (!$user || !Hash::check($data['password'], $user->password)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+        // Jika user tidak ditemukan
+        if (!$user) {
+            return response()->json([
+                'message' => 'User tidak ditemukan'
+            ], 404);
         }
 
-        return response()->json(['user' => $user], 200);
-    }
+        // AUTO LOGIN TANPA PASSWORD
+        $token = $user->createToken('auth')->plainTextToken;
 
-    public function profile(Request $request)
-    {
-        return $request->user();
+        return response()->json([
+            'token' => $token,
+            'user' => [
+                'id'    => $user->id,
+                'name'  => $user->name,
+                'email' => $user->email,
+                'role'  => $user->role,   // WAJIB dikirim
+            ],
+        ]);
     }
 }

@@ -6,12 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class User extends Model
 {
-    protected $fillable = ['name', 'email', 'password', 'role_id'];
+    protected $fillable = ['name', 'email', 'password', 'role'];
 
     public function role()
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsTo(\App\Models\Role::class);
     }
+
 
     // Jika user = instruktur
     public function courses()

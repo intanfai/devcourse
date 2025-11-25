@@ -1,0 +1,126 @@
+html {
+  scroll-behavior: smooth;
+}
+
+
+.landing-page {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.hero h1 {
+    font-size: 48px;
+    font-weight: bold;
+}
+
+.hero p {
+    font-size: 18px;
+    margin-top: 10px;
+}
+
+.btn-start {
+    background: #2563eb;
+    padding: 12px 28px;
+    color: white;
+    border-radius: 6px;
+    border: none;
+    margin-top: 20px;
+    cursor: pointer;
+}
+
+/* NAVBAR */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px 100px;
+}
+
+.menu {
+    display: flex;
+    gap: 30px;
+    list-style: none;
+}
+
+/* HERO */
+.hero {
+    display: flex;
+    padding: 80px 100px;
+    align-items: center;
+}
+
+.hero-left h1 {
+    font-size: 48px;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.hero-left p {
+    font-size: 18px;
+    margin-bottom: 30px;
+}
+
+.search-box {
+    display: flex;
+    gap: 10px;
+}
+
+.search-box input {
+    padding: 12px;
+    width: 300px;
+}
+
+.search-box button {
+    background: blue;
+    color: white;
+    padding: 12px 20px;
+}
+
+/* KATALOG */
+.catalog {
+    padding: 80px 100px;
+    text-align: center;
+}
+
+.course-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.course-card {
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+}
+
+.course-card img {
+    width: 100%;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+.primary-btn {
+    background: #2563eb;
+    color: white;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.center {
+    margin-top: 40px;
+}
+
+.slick-center .testimonial-card {
+    transform: scale(1.06);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.10);
+}
+
+.testimonial-card {
+    transition: all 0.4s ease;
+}
+
