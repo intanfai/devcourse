@@ -12,7 +12,9 @@ export default function Login() {
             {/* LEFT — LOGIN FORM */}
             <div className="flex flex-col justify-center px-28 py-12 bg-white">
                 <h2 className="text-3xl font-bold mb-2">Login</h2>
-                <p className="text-gray-600 mb-8">Welcome back! Please login.</p>
+                <p className="text-gray-600 mb-8">
+                    Welcome back! Please login.
+                </p>
 
                 <form className="space-y-5 max-w-sm">
                     <div>
@@ -78,13 +80,10 @@ export default function Login() {
                 </p>
             </div>
 
-            {/* RIGHT — ILLUSTRATION PANEL */}
-            <div className="hidden lg:flex items-center justify-center bg-white">
-                <div className="border-2 border-blue-300 rounded-3xl
-                    w-[85%] h-[88%] mx-auto my-auto
-                    px-20 pt-12 pb-14 flex flex-col">
-
-                    {/* Illustration */}
+            {/* RIGHT — ILLUSTRATION AREA */}
+            <div className="hidden lg:flex items-start justify-center bg-white p-0">
+                <div className="w-[93%] h-[93%] my-4 border-2 border-[#004FC5] rounded-3xl px-10 pt-10 pb-12 flex flex-col">
+                    {/* Illustration — TOP CENTER */}
                     <div className="w-full flex justify-center mb-10">
                         <img
                             src="/images/illustration.png"
@@ -92,7 +91,7 @@ export default function Login() {
                         />
                     </div>
 
-                    {/* Logo */}
+                    {/* Logo + Name — LEFT */}
                     <div className="flex items-center gap-3 mb-4">
                         <img src="/images/logo.png" className="w-12" />
                         <h3 className="text-3xl font-bold text-[#004FC5]">
@@ -100,13 +99,16 @@ export default function Login() {
                         </h3>
                     </div>
 
-                    {/* Description */}
+                    {/* Description — LEFT */}
                     <p className="text-gray-600 text-sm leading-relaxed mb-6 pl-1">
-                        Welcome back to your learning journey. Keep improving
-                        your skills with fun and interactive lessons.
+                        Learning technology is easier than ever with DevCourse.
+                        Explore coding, design, and more through fun,
+                        interactive lessons. Gain real experience while working
+                        on projects that matter. Join a growing community of
+                        learners who inspire each other every day.
                     </p>
 
-                    {/* Socials */}
+                    {/* Social Icons — CENTER */}
                     <div className="flex gap-5 mt-2">
                         <FaFacebook size={28} color="#1877F2" />
                         <FaInstagram size={28} color="#E1306C" />

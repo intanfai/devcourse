@@ -8,7 +8,6 @@ import Footer from "../Components/Footer";
 import TestimonialSlider from "../Components/TestimonialSlider.jsx";
 import { Link } from "react-router-dom";
 
-
 export default function Landing() {
     const [showMore, setShowMore] = useState(false);
     const extraCourses = [
@@ -75,11 +74,16 @@ export default function Landing() {
 
                 {/* RIGHT — BUTTONS */}
                 <div className="flex items-center gap-5">
-                    <button className="font-semibold text-gray-800 hover:text-[#004FC5]">
+                    <Link
+                        to="/login"
+                        className="font-semibold text-gray-800 hover:text-[#004FC5]"
+                    >
                         Sign In
-                    </button>
-                    <Link to="/register"
-                            className="bg-[#004FC5] text-white font-semibold px-6 py-2 rounded-full shadow-sm hover:bg-blue-700 transition">
+                    </Link>
+                    <Link
+                        to="/register"
+                        className="bg-[#004FC5] text-white font-semibold px-6 py-2 rounded-full shadow-sm hover:bg-blue-700 transition"
+                    >
                         Get Started
                     </Link>
                 </div>
@@ -112,9 +116,12 @@ export default function Landing() {
                         </p>
 
                         {/* Search bar */}
-                        <button className="bg-[#004FC5] text-white font-semibold px-6 py-2 rounded-full shadow-sm hover:bg-blue-700 transition">
+                        <Link
+                            to="/register"
+                            className="bg-[#004FC5] text-white font-semibold px-6 py-2 rounded-full shadow-sm hover:bg-blue-700 transition"
+                        >
                             Get Started
-                        </button>
+                        </Link>
                     </div>
 
                     {/* RIGHT IMAGE */}
@@ -337,10 +344,8 @@ export default function Landing() {
             </section>
             {/* TESTIMONIAL SECTION CLEAN */}
             <section id="testimoni" className="py-24 px-8 lg:px-24 relative">
-                 <TestimonialSlider />
+                <TestimonialSlider />
             </section>
-
-           
             {/* FAQ SECTION */}
             <section id="faq" className="py-24 px-8 lg:px-24 bg-[#F4F7FF]">
                 <div className="text-center mb-14">
@@ -359,7 +364,6 @@ export default function Landing() {
             <section className="py-24 px-6 lg:px-24">
                 <div className="relative bg-[#F4F8FF] rounded-3xl p-12 lg:p-16 overflow-hidden shadow-sm max-w-3xl mx-auto">
                     {/* Decorative Dots / Shapes */}
-                    
 
                     {/* CTA CONTENT */}
                     <div className="relative z-10 text-center">
