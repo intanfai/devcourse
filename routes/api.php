@@ -149,6 +149,18 @@ Route::middleware(['auth:sanctum'])->group(function () {
         ->middleware('role:2'); // hanya instructor
 
     Route::get('/notifications', [NotificationController::class, 'index']);
+
+    //api material untuk mengelola materi
+    Route::post('/materials', [MaterialController::class, 'store'])->middleware('role:2'); // instructor only
+
+    Route::get('/courses/{id}/materials', [MaterialController::class, 'getByCourse']);
+
+    Route::put('/materials/{id}', [MaterialController::class, 'update'])->middleware('role:2');
+
+    Route::delete('/materials/{id}', [MaterialController::class, 'destroy'])->middleware('role:2');
+
+    //api enrollment untuk mengakses course dan materi
+    Route::post('/enrollments', [EnrollmentController::class, 'store']);
 });
 
 
