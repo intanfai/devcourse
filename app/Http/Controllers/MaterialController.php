@@ -37,4 +37,14 @@ class MaterialController extends Controller
         Material::findOrFail($id)->delete();
         return response()->json(['message' => 'Material deleted']);
     }
+
+    public function getByCourse($courseId)
+    {
+        $materials = Material::where('course_id', $courseId)
+            ->orderBy('order', 'asc')
+            ->get();
+
+        return response()->json($materials);
+    }
+
 }

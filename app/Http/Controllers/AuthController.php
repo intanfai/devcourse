@@ -7,6 +7,29 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
+    public function register(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required',
+            'email' => 'required|unique:users,email',
+            'password' => 'required|min:6',
+            'role_id' => 'required|exists:roles,id'
+        ]);
+
+        $data['password'] = Hash::make($data['password']);
+
+        $user = User::create($data);
+
+        // Beri token langsung setelah register
+        $token = $user->createToken('devcourse_token')->plainTextToken;
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token
+        ], 201);
+    }
+
+
     public function login(Request $request)
     {
         // Cari user berdasarkan email
@@ -19,17 +42,18 @@ class AuthController extends Controller
             ], 404);
         }
 
-        // AUTO LOGIN TANPA PASSWORD
-        $token = $user->createToken('auth')->plainTextToken;
+        // Buat token baru
+        $token = $user->createToken('devcourse_token')->plainTextToken;
 
         return response()->json([
-            'token' => $token,
-            'user' => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
-                'role'  => $user->role,   // WAJIB dikirim
-            ],
+            'user' => $user,
+            'token' => $token
         ]);
+    }
+
+
+    public function profile(Request $request)
+    {
+        return $request->user();
     }
 }
