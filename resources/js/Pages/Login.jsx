@@ -1,3 +1,6 @@
+import { useState } from "react";
+import axios from "../axios"; // atau sesuaikan path axios kamu
+import { useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import {
     FaFacebook,
@@ -7,6 +10,38 @@ import {
 } from "react-icons/fa";
 
 export default function Login() {
+    const navigate = useNavigate();
+
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+
+    const handleSubmit = async (e) => {
+        e.preventDefault(); // mencegah reload
+        setError("");
+
+        try {
+            const res = await axios.post("/login", {
+                email,
+                password,
+            });
+
+            console.log("Login response:", res.data);
+            // simpan token + user
+            if (res.data.token) {
+                localStorage.setItem("token", res.data.token);
+                localStorage.setItem("user", JSON.stringify(res.data.user));
+
+                navigate("/dashboard");
+            } else {
+                setError("Email atau password salah!");
+            }
+        } catch (err) {
+            setError("Email atau password salah!");
+            console.error(err);
+        }
+    };
+
     return (
         <section className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
             {/* LEFT — LOGIN FORM */}
@@ -16,13 +51,17 @@ export default function Login() {
                     Welcome back! Please login.
                 </p>
 
-                <form className="space-y-5 max-w-sm">
+                {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+
+                <form className="space-y-5 max-w-sm" onSubmit={handleSubmit}>
                     <div>
                         <label className="text-gray-700 font-medium text-sm">
                             Email
                         </label>
                         <input
                             type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             className="mt-1.5 w-full p-2.5 border border-gray-300 rounded-lg 
                     focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
                             placeholder="Enter your email"
@@ -35,19 +74,12 @@ export default function Login() {
                         </label>
                         <input
                             type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                             className="mt-1.5 w-full p-2.5 border border-gray-300 rounded-lg 
                     focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
                             placeholder="Password"
                         />
-                    </div>
-
-                    {/* Divider */}
-                    <div className="flex items-center gap-3">
-                        <hr className="flex-grow border-gray-300" />
-                        <span className="text-gray-500 text-xs">
-                            or login with
-                        </span>
-                        <hr className="flex-grow border-gray-300" />
                     </div>
 
                     {/* Google */}
