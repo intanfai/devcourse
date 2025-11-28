@@ -8,6 +8,29 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
+    public function register(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required',
+            'email' => 'required|unique:users,email',
+            'password' => 'required|min:6',
+            'role_id' => 'required|exists:roles,id'
+        ]);
+
+        $data['password'] = Hash::make($data['password']);
+
+        $user = User::create($data);
+
+        // Beri token langsung setelah register
+        $token = $user->createToken('devcourse_token')->plainTextToken;
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token
+        ], 201);
+    }
+
+
     public function login(Request $request)
     {
         // Validasi input
@@ -25,6 +48,7 @@ class AuthController extends Controller
                 'message' => 'User tidak ditemukan'
             ], 404);
         }
+
 
         // CEK PASSWORD (WAJIB!!!)
         if (!Hash::check($request->password, $user->password)) {
@@ -46,5 +70,19 @@ class AuthController extends Controller
                 'role'  => $user->role,
             ],
         ]);
+    
+        // Buat token baru
+        $token = $user->createToken('devcourse_token')->plainTextToken;
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token
+        ]);
+    }
+
+
+    public function profile(Request $request)
+    {
+        return $request->user();
     }
 }

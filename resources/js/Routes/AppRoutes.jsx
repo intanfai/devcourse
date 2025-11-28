@@ -5,6 +5,8 @@ import Landing from "../Pages/Landing";
 import Register from "../Pages/Register";
 import Dashboard from "../Pages/Dashboard";
 import PrivateRoutes from "./PrivateRoutes";
+import AdminDashboard from "../Pages/dashboard/admin/Dashboard";
+import UsersPage from "../Pages/dashboard/admin/Users";
 
 export default function AppRoutes() {
     return (
@@ -17,6 +19,7 @@ export default function AppRoutes() {
             {/* PROTECTED ROUTE */}
             <Route element={<PrivateRoutes />}>
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/admin/users" element={<UsersPage />} />
                 {/* kalau mau tambahkan route private lain, letakkan di sini */}
                 {/* <Route path="/profile" element={<Profile />} /> */}
             </Route>
@@ -26,6 +29,7 @@ export default function AppRoutes() {
                 path="*"
                 element={<h2 className="p-6">404 - Not Found</h2>}
             />
+            <Route path="/dashboard" element={<AdminDashboard />} />
         </Routes>
     );
 }

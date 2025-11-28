@@ -9,7 +9,7 @@ import {
 export default function Register() {
     <a
         href="/"
-        className="absolute top-6 left-6 text-sm text-blue-600 font-semibold hover:underline"
+        className="absolute top-6 left-6 text-sm text-[#004FC5] font-semibold hover:underline"
     >
         ← Back to Home
     </a>;
@@ -88,7 +88,7 @@ export default function Register() {
 
                     <button
                         type="submit"
-                        className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold 
+                        className="w-full bg-[#004FC5] text-white py-2.5 rounded-lg font-semibold 
                 hover:bg-blue-700 transition text-sm"
                     >
                         Register
@@ -99,7 +99,7 @@ export default function Register() {
                     Already have an account?{" "}
                     <a
                         href="/login"
-                        className="text-blue-600 font-semibold hover:underline"
+                        className="text-[#004FC5] font-semibold hover:underline"
                     >
                         Login here
                     </a>

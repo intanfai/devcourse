@@ -63,7 +63,7 @@ export default function Landing() {
                         <li key={item} className="relative group capitalize">
                             <a
                                 href={`#${item}`}
-                                className="hover:text-[#004FC5] transition"
+                                className="hover:bg-blue-700 transition"
                             >
                                 {item === "whydev" ? "About" : item}
                             </a>
@@ -76,7 +76,7 @@ export default function Landing() {
                 <div className="flex items-center gap-5">
                     <Link
                         to="/login"
-                        className="font-semibold text-gray-800 hover:text-[#004FC5]"
+                        className="font-semibold text-gray-800 hover:bg-blue-700"
                     >
                         Sign In
                     </Link>
@@ -277,7 +277,7 @@ export default function Landing() {
                     <div className="space-y-6">
                         {/* CARD 1 */}
                         <div className="flex items-start gap-5 bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition">
-                            <div className="w-14 h-14 bg-blue-100 text-blue-600 flex items-center justify-center rounded-xl text-2xl">
+                            <div className="w-14 h-14 bg-blue-100 text-[#004FC5] flex items-center justify-center rounded-xl text-2xl">
                                 📘
                             </div>
                             <div>
@@ -327,7 +327,7 @@ export default function Landing() {
                     <div>
                         <h2 className="text-4xl font-bold text-[#004FC5] mb-4 leading-snug">
                             Why Choose{" "}
-                            <span className="text-blue-600">DevCourse?</span>
+                            <span className="text-[#004FC5]">DevCourse?</span>
                         </h2>
 
                         <p className="text-gray-600 text-lg mb-8 max-w-lg">
