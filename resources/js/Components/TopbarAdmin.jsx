@@ -7,23 +7,44 @@ export default function AdminTopbar({ user }) {
     const location = useLocation();
     const path = location.pathname;
 
-    // 🟦 Extract title automatically: /admin/users → "Users"
+    // 🧠 Function to format title
+    const formatTitle = (text) =>
+        text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+
+    // 🧠 AUTO TITLE GENERATOR
     const pageTitle = (() => {
-        const segments = path.split("/").filter(Boolean); // ["admin", "users"]
+        const segments = path.split("/").filter(Boolean);
 
-        if (segments.length === 1) return "Dashboard"; // e.g. "/dashboard"
+        // Example: ["admin", "users"]
+        // Remove "admin" because it's not part of the title
+        const filtered = segments.filter((s) => s !== "admin");
 
-        const last = segments.pop(); // ambil kata terakhir
+        if (filtered.length === 0) return "Dashboard";
 
-        return last.charAt(0).toUpperCase() + last.slice(1);
+        // Ambil segmen pertama untuk title utama
+        const title = filtered[0];
+
+        // Customize (optional)
+        const customTitles = {
+            users: "Users",
+            classes: "Classes",
+            reports: "Reports",
+            payments: "Payments",
+            role: "Role Management",
+            notification: "Notifications",
+            settings: "Settings",
+            help: "Help Center",
+            certificates: "Certificates",
+        };
+
+        return customTitles[title] || formatTitle(title);
     })();
 
     return (
         <header
             className="
                 ml-39
-                mt-4
-                mr-6
+                mt-6
                 bg-[#161616]
                 rounded-xl
                 shadow-md
@@ -33,11 +54,8 @@ export default function AdminTopbar({ user }) {
             "
         >
 
-            {/* LEFT — ICON + TITLE */}
+            {/* LEFT — TITLE */}
             <div className="flex items-center gap-4">
-        
-
-                {/* 🔥 AUTO TITLE */}
                 <h2 className="text-white font-semibold text-lg">
                     {pageTitle}
                 </h2>

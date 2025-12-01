@@ -63,7 +63,7 @@ export default function Landing() {
                         <li key={item} className="relative group capitalize">
                             <a
                                 href={`#${item}`}
-                                className="hover:bg-blue-700 transition"
+                                className="hover:text-[#004FC5] transition"
                             >
                                 {item === "whydev" ? "About" : item}
                             </a>
@@ -76,7 +76,7 @@ export default function Landing() {
                 <div className="flex items-center gap-5">
                     <Link
                         to="/login"
-                        className="font-semibold text-gray-800 hover:bg-blue-700"
+                        className="font-semibold text-gray-800 hover:text-[#004FC5]"
                     >
                         Sign In
                     </Link>

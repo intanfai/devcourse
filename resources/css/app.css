@@ -8,7 +8,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 /* .slick-list {
   overflow: visible !important;
 } */
@@ -19,4 +18,34 @@
 
 .sidebar-item-active {
     @apply flex items-center gap-3 px-4 py-2 rounded-lg bg-[#0051FF] text-white transition;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.animate-scaleIn {
+    animation: scaleIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.15s ease-out;
 }

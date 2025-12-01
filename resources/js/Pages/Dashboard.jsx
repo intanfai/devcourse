@@ -1,9 +1,10 @@
+console.log("Admin dashboard loaded");
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 // IMPORT DASHBOARD BERDASARKAN ROLE
 import AdminDashboard from "./dashboard/admin/Dashboard";
-import InstructorDashboard from "./dashboard/instructor/Dashboard";
+import InstructorDashboard from "./dashboard/instructor/Dashboard/InstructorDashboard.jsx";
 import StudentDashboard from "./dashboard/student/Dashboard";
 
 export default function Dashboard() {
