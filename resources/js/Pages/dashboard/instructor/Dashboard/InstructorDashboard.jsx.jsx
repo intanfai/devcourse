@@ -1,16 +1,14 @@
 import InstructorLayout from "../../../../layouts/InstructorLayout";
 import { FiUsers, FiBookOpen, FiDollarSign, FiClock } from "react-icons/fi";
 import InstructorCourseChart from "../../../../Components/Charts/InstructorCourseChart";
-import InstructorEarningsChart from "../../../../Components/Charts/InstructorEarningsChart";   
+import InstructorEarningsChart from "../../../../Components/Charts/InstructorEarningsChart";
 
 export default function InstructorDashboard() {
     return (
         <InstructorLayout>
             {/* OVERVIEW */}
             <div className="mb-10">
-                <h3 className="text-lg font-semibold mb-4 border-l-4 pl-3 border-[#3C64EF]">
-                    Dashboard Overview
-                </h3>
+                <h3 className="text-2xl font-bold mb-6">Dashboard Overview</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     {/* Total Courses */}
@@ -85,7 +83,7 @@ export default function InstructorDashboard() {
             </div>
 
             {/* RECENT ACTIVITY */}
-            <div className="bg-white p-6 rounded-xl shadow-sm">
+            {/* <div className="bg-white p-6 rounded-xl shadow-sm">
                 <div className="flex justify-between items-center mb-4">
                     <p className="font-semibold border-l-4 pl-3 border-[#3C64EF]">
                         Recent Activity
@@ -146,7 +144,7 @@ export default function InstructorDashboard() {
                         ))}
                     </tbody>
                 </table>
-            </div>
+            </div> */}
         </InstructorLayout>
     );
 }

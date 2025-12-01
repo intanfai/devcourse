@@ -1,4 +1,3 @@
-import { NavLink } from "react-router-dom";
 import {
     FiChevronLeft,
     FiChevronRight,
@@ -7,16 +6,20 @@ import {
     FiBook,
     FiAward,
     FiBarChart2,
-    FiSettings,
-    FiHelpCircle,
-    FiBell,
-    FiCreditCard,
     FiLayers,
+    FiCreditCard,
+    FiBell,
+    FiHelpCircle,
+    FiSettings,
+    FiLogOut,
 } from "react-icons/fi";
-import LogoutModal from "./LogoutModal";
+import { NavLink } from "react-router-dom";
 import { useState } from "react";
+import LogoutModal from "./LogoutModal";
 
 export default function SidebarAdmin({ isOpen, toggle }) {
+    const [openLogout, setOpenLogout] = useState(false);
+
     const menu = [
         { name: "Dashboard", icon: <FiHome size={18} />, path: "/dashboard" },
         { name: "Users", icon: <FiUsers size={18} />, path: "/admin/users" },
@@ -49,26 +52,25 @@ export default function SidebarAdmin({ isOpen, toggle }) {
             path: "/admin/settings",
         },
     ];
-    const [openLogout, setOpenLogout] = useState(false);
 
     return (
         <div
             className={`
                 fixed top-6 left-6
                 h-[calc(100vh-3rem)]
-                bg-[#161616]
-                rounded-2xl shadow-lg
-                p-5 flex flex-col
+                bg-[#161616] text-white
+                rounded-2xl shadow-lg p-5
+                flex flex-col
                 transition-all duration-300
                 ${isOpen ? "w-64" : "w-20"}
             `}
         >
-            {/* TOGGLE BUTTON */}
+            {/* Toggle Button */}
             <button
                 onClick={toggle}
                 className="
-                    absolute -right-4 top-6 w-9 h-9
-                    bg-blue-600 rounded-full shadow-md
+                    absolute -right-4 top-6
+                    w-9 h-9 bg-blue-600 rounded-full shadow-md
                     flex items-center justify-center text-white
                     hover:bg-blue-700 transition
                 "
@@ -80,7 +82,7 @@ export default function SidebarAdmin({ isOpen, toggle }) {
             <div className="flex items-center gap-3 mb-10 px-2">
                 <img src="/images/logo.png" className="w-10" />
                 {isOpen && (
-                    <h1 className="text-xl font-bold tracking-wide text-white">
+                    <h1 className="text-xl font-bold tracking-wide">
                         DevCourse
                     </h1>
                 )}
@@ -88,14 +90,14 @@ export default function SidebarAdmin({ isOpen, toggle }) {
 
             {/* MENU LIST */}
             <nav className="flex flex-col gap-2 mt-5">
-                {menu.map((item, i) => (
+                {menu.map((item, index) => (
                     <NavLink
-                        key={i}
+                        key={index}
                         to={item.path}
                         className={({ isActive }) =>
                             `
                                 flex items-center gap-3
-                                px-4 py-3 rounded-xl cursor-pointer text-sm
+                                px-4 py-3 rounded-xl text-sm cursor-pointer
                                 transition-all
                                 ${
                                     isActive
@@ -105,38 +107,37 @@ export default function SidebarAdmin({ isOpen, toggle }) {
                             `
                         }
                     >
-                        {item.icon}
-                        {isOpen && <span>{item.name}</span>}
+                        <div className="flex items-center gap-3">
+                            {item.icon}
+                            {isOpen && <span>{item.name}</span>}
+                        </div>
                     </NavLink>
                 ))}
             </nav>
 
-            {/* SPACER */}
-            <div className="mt-auto"></div>
+            {/* Logout Section */}
+            <div className="mt-auto px-2">
+                <button
+                    className="
+                        flex items-center gap-3 w-full 
+                        px-4 py-3 rounded-xl text-sm
+                        text-red-400 hover:bg-red-500/20
+                        transition-all
+                    "
+                    onClick={() => setOpenLogout(true)}
+                >
+                    <FiLogOut size={18} />
+                    {isOpen && <span>Logout</span>}
+                </button>
+            </div>
 
-            {/* LOGOUT BUTTON */}
-            <button
-                onClick={() => setOpenLogout(true)}
-                className="
-        flex items-center gap-3
-        px-4 py-3
-        rounded-xl text-sm
-        text-red-400
-        hover:bg-red-500/10
-        transition-all
-    "
-            >
-                <FiChevronRight className="rotate-180" size={18} />
-                {isOpen && <span>Logout</span>}
-            </button>
-
+            {/* Logout Modal */}
             <LogoutModal
                 open={openLogout}
                 onClose={() => setOpenLogout(false)}
                 onConfirm={() => {
                     setOpenLogout(false);
-                    // lakukan logout
-                    localStorage.clear(); // optional
+                    localStorage.clear();
                     window.location.href = "/login";
                 }}
             />

@@ -20,7 +20,7 @@ export default function AdminLayout({ children }) {
             {/* SIDEBAR */}
             <SidebarAdmin isOpen={isOpen} toggle={() => setIsOpen(!isOpen)} />
 
-            {/* MAIN CONTENT */}
+            {/* MAIN CONTENT AREA */}
             <div
                 className={`
                     flex-1
@@ -29,10 +29,10 @@ export default function AdminLayout({ children }) {
                     ${isOpen ? "ml-[19rem]" : "ml-[7rem]"}
                 `}
             >
-                {/* TOPBAR — NO padding-top HERE */}
-                    <TopbarAdmin user={user} />
+                {/* TOPBAR */}
+                <TopbarAdmin user={user} />
 
-                {/* CONTENT AREA */}
+                {/* PAGE CONTENT */}
                 <div className="pt-6">{children}</div>
             </div>
         </div>
