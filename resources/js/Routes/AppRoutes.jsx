@@ -33,10 +33,12 @@ import EditClassPage from "../Pages/dashboard/instructor/MyClasses/EditClassPage
 import CreateClassPage from "../Pages/dashboard/instructor/CreateClass/CreateClassPage.jsx";
 import StudentsPage from "../Pages/dashboard/instructor/Students/StudentsPage.jsx";
 import EarningsPage from "../Pages/dashboard/instructor/Earnings/EarningsPage.jsx";
-
 import InstructorNotificationsPage from "../Pages/dashboard/instructor/Notifications/InstructorNotificationsPage.jsx";
 import InstructorProfilePage from "../Pages/dashboard/instructor/Profile/InstructorProfilePage.jsx";
 import InstructorSettingsPage from "../Pages/dashboard/instructor/Settings/InstructorSettingsPage.jsx";
+
+
+import StudentDashboard from "../Pages/dashboard/student/Dashboard.jsx";
 
 export default function AppRoutes() {
     return (
@@ -112,8 +114,16 @@ export default function AppRoutes() {
                 <Route
                     path="/instructor/settings"
                     element={<InstructorSettingsPage />}
-                />{" "}
+                />
+
+                <Route
+                    path="/student/dashboard"
+                    element={<StudentDashboard />}
+                />  
             </Route>
+
+
+            
 
             {/* optional: 404 */}
             <Route

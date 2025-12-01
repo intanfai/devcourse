@@ -17,22 +17,28 @@ export default function Login() {
     const [error, setError] = useState("");
 
     const handleSubmit = async (e) => {
-        e.preventDefault(); // mencegah reload
+        e.preventDefault();
         setError("");
 
         try {
-            const res = await axios.post("/login", {
-                email,
-                password,
-            });
+            const res = await axios.post("/login", { email, password });
 
             console.log("Login response:", res.data);
-            // simpan token + user
+
             if (res.data.token) {
                 localStorage.setItem("token", res.data.token);
                 localStorage.setItem("user", JSON.stringify(res.data.user));
 
-                navigate("/dashboard");
+                const role = res.data.user.role;
+
+                // REDIRECT SESUAI ROLE
+                if (res.data.user.role === "admin") {
+                    navigate("/dashboard");
+                } else if (res.data.user.role === "instructor") {
+                    navigate("/instructor/dashboard");
+                } else if (res.data.user.role === "student") {
+                    navigate("/student/dashboard");
+                } else navigate("/login"); // fallback safety
             } else {
                 setError("Email atau password salah!");
             }
