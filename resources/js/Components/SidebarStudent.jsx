@@ -18,6 +18,7 @@ export default function SidebarStudent({ isOpen, toggle }) {
 
     const menu = [
         { name: "Dashboard", icon: <FiHome size={18} />, path: "/student/dashboard" },
+        { name: "Explore Courses", icon: <FiBook size={18} />, path: "/student/explore" },
         { name: "My Courses", icon: <FiBook size={18} />, path: "/student/courses" },
         { name: "Certificates", icon: <FiAward size={18} />, path: "/student/certificates" },
         { name: "Notifications", icon: <FiBell size={18} />, path: "/student/notifications" },

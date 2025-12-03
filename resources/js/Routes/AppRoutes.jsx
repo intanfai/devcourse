@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Link } from "react-router-dom";
 // import Home from "../pages/Home";
 import Login from "../Pages/Login";
 import Landing from "../Pages/Landing";
@@ -37,8 +37,22 @@ import InstructorNotificationsPage from "../Pages/dashboard/instructor/Notificat
 import InstructorProfilePage from "../Pages/dashboard/instructor/Profile/InstructorProfilePage.jsx";
 import InstructorSettingsPage from "../Pages/dashboard/instructor/Settings/InstructorSettingsPage.jsx";
 
-
 import StudentDashboard from "../Pages/dashboard/student/Dashboard.jsx";
+import StudentCourseDetail from "../Pages/dashboard/student/StudentCourseDetail.jsx";
+import MaterialPage from "../Pages/dashboard/student/MaterialPage.jsx";
+import QuizPage from "../Pages/dashboard/student/course/QuizPage.jsx";
+import FinalQuizPage from "../Pages/dashboard/student/course/FinalQuizPage.jsx";
+import CoursePreviewPage from "../Pages/dashboard/student/CoursePreviewPage.jsx";
+import MyCoursesPage from "../Pages/dashboard/student/course/MyCourse.jsx";
+import ProgressPage from "../Pages/dashboard/student/ProgressPage.jsx";
+import StudentCertificatesPage from "../Pages/dashboard/student/Certificates/StudentCertificatesPage";
+import ExploreCoursesPage from "../Pages/dashboard/student/ExploreCoursesPage.jsx";
+import StudentNotificationsPage from "../Pages/dashboard/student/StudentNotificationsPage.jsx";
+import StudentProfilePage from "../Pages/dashboard/student/Profile/StudentProfilePage.jsx";
+import EditProfilePage from "../Pages/dashboard/student/Profile/EditProfilePage.jsx";
+import StudentSettingsPage from "../Pages/dashboard/student/Settings/StudentSettingsPage.jsx";
+
+
 
 export default function AppRoutes() {
     return (
@@ -119,11 +133,64 @@ export default function AppRoutes() {
                 <Route
                     path="/student/dashboard"
                     element={<StudentDashboard />}
-                />  
+                />
+
+                <Route
+                    path="/student/course/:courseId"
+                    element={<StudentCourseDetail />}
+                />
+
+                <Route
+                    path="/student/course/:courseId/material/:materialId"
+                    element={<MaterialPage />}
+                />
+
+                <Route
+                    path="/student/course/:courseId/quiz/:quizId"
+                    element={<QuizPage />}
+                />
+
+                <Route
+                    path="/student/course/:courseId/final-quiz"
+                    element={<FinalQuizPage />}
+                />
+                <Route
+                    path="/student/course/:courseId/preview"
+                    element={<CoursePreviewPage />}
+                />
+                <Route path="/student/progress" element={<ProgressPage />} />
+                <Route
+                    path="/student/certificates"
+                    element={<StudentCertificatesPage />}
+                />
+
+                <Route
+                    path="/student/explore"
+                    element={<ExploreCoursesPage />}
+                />
+                <Route
+                    path="/student/courses"
+                    element={<MyCoursesPage />}
+                />
+                <Route
+                    path="/student/notifications"
+                    element={<StudentNotificationsPage />}
+                />
+                <Route
+                    path="/student/profile"
+                    element={<StudentProfilePage />}
+                />
+
+                <Route
+                    path="/student/profile/edit"
+                    element={<EditProfilePage />}
+                />
+
+                <Route
+                    path="/student/settings"
+                    element={<StudentSettingsPage />}
+                />
             </Route>
-
-
-            
 
             {/* optional: 404 */}
             <Route
