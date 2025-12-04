@@ -29,16 +29,20 @@ export default function Login() {
                 localStorage.setItem("token", res.data.token);
                 localStorage.setItem("user", JSON.stringify(res.data.user));
 
-                const role = res.data.user.role;
+                // role bisa berupa string ('student') atau null — fallback ke role_id
+                const roleName = res.data.user.role || (res.data.user.role_id === 1 ? 'admin' : res.data.user.role_id === 2 ? 'instructor' : res.data.user.role_id === 3 ? 'student' : null);
 
                 // REDIRECT SESUAI ROLE
-                if (res.data.user.role === "admin") {
-                    navigate("/dashboard");
-                } else if (res.data.user.role === "instructor") {
+                if (roleName === "admin") {
+                    navigate("/admin/dashboard");
+                } else if (roleName === "instructor") {
                     navigate("/instructor/dashboard");
-                } else if (res.data.user.role === "student") {
+                } else if (roleName === "student") {
                     navigate("/student/dashboard");
-                } else navigate("/login"); // fallback safety
+                } else {
+                    // jika tidak diketahui, tetap di halaman saat ini dan tampilkan pesan
+                    setError('Role pengguna tidak dikenali');
+                }
             } else {
                 setError("Email atau password salah!");
             }

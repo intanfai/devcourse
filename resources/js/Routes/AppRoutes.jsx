@@ -65,6 +65,7 @@ export default function AppRoutes() {
             {/* PROTECTED ROUTE */}
             <Route element={<PrivateRoutes />}>
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/users" element={<UsersPage />} />
                 <Route path="/admin/classes" element={<ClassesPage />} />
                 <Route path="/admin/classes/:id" element={<ClassDetail />} />

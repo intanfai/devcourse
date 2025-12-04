@@ -21,7 +21,7 @@ export default function SidebarAdmin({ isOpen, toggle }) {
     const [openLogout, setOpenLogout] = useState(false);
 
     const menu = [
-        { name: "Dashboard", icon: <FiHome size={18} />, path: "/dashboard" },
+    { name: "Dashboard", icon: <FiHome size={18} />, path: "/admin/dashboard" },
         { name: "Users", icon: <FiUsers size={18} />, path: "/admin/users" },
         { name: "Classes", icon: <FiBook size={18} />, path: "/admin/classes" },
         {

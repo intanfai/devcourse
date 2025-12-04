@@ -14,18 +14,29 @@ class AuthController extends Controller
             'name' => 'required',
             'email' => 'required|unique:users,email',
             'password' => 'required|min:6',
-            'role_id' => 'required|exists:roles,id'
         ]);
+
+        // Force any registration to be a student (role_id = 3)
+        $data['role_id'] = 3;
 
         $data['password'] = Hash::make($data['password']);
 
         $user = User::create($data);
 
-        // Beri token langsung setelah register
+        // Beri token langsung setelah register (auto-login)
         $token = $user->createToken('devcourse_token')->plainTextToken;
 
+        // Kembalikan struktur user yang konsisten dengan login
+        $userData = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role_id' => $user->role_id,
+            'role' => optional($user->role)->name,
+        ];
+
         return response()->json([
-            'user' => $user,
+            'user' => $userData,
             'token' => $token
         ], 201);
     }
@@ -60,23 +71,18 @@ class AuthController extends Controller
         // Jika password benar → buat token
         $token = $user->createToken('auth')->plainTextToken;
 
+        $userData = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role_id' => $user->role_id,
+            'role' => optional($user->role)->name,
+        ];
+
         return response()->json([
             'status' => 'success',
             'token' => $token,
-            'user' => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
-                'role'  => $user->role,
-            ],
-        ]);
-    
-        // Buat token baru
-        $token = $user->createToken('devcourse_token')->plainTextToken;
-
-        return response()->json([
-            'user' => $user,
-            'token' => $token
+            'user' => $userData,
         ]);
     }
 
