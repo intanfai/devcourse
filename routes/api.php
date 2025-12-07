@@ -20,6 +20,10 @@ Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin/data', function (
     return response()->json(['message' => 'Admin only']);
 });
 
+// admin stats
+use App\Http\Controllers\AdminController;
+Route::middleware(['auth:sanctum', 'role:1'])->get('/admin/stats', [AdminController::class, 'stats']);
+
 
 Route::post('/login', [AuthController::class, 'login']);
 

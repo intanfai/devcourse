@@ -32,6 +32,7 @@ class CourseController extends Controller
             'description' => $request->description,
             'price' => $request->price,
             'instructor_id' => auth()->id(), // AMBIL ID USER LOGIN
+            'status' => 'pending',
         ]);
 
         return response()->json($course);

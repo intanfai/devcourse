@@ -2,6 +2,8 @@ console.log("Admin dashboard loaded");
 import AdminLayout from "../../../layouts/AdminLayout";
 import UserGrowthChart from "../../../Components/Charts/UserGrowthChart";
 import RevenueChart from "../../../Components/Charts/RevenueChart";
+import { useEffect, useState } from "react";
+import axios from "../../../axios";
 import {
     FiUserCheck,
     FiUsers,
@@ -13,6 +15,26 @@ import {
 
 export default function AdminDashboard() {
     console.log("Admin dashboard loaded");
+    const [stats, setStats] = useState({
+        students: 0,
+        instructors: 0,
+        courses: 0,
+        enrollments: 0,
+        pending_classes: 0,
+    });
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        axios.get('/admin/stats', { headers: { Authorization: `Bearer ${token}` } })
+            .then(res => {
+                if (res.data) setStats(res.data);
+            })
+            .catch(err => {
+                console.error('Failed to load admin stats', err);
+            });
+    }, []);
 
     return (
         <AdminLayout>
@@ -30,7 +52,7 @@ export default function AdminDashboard() {
                             <p className="text-sm text-gray-500">
                                 Total Students
                             </p>
-                            <h3 className="text-xl font-bold">852</h3>
+                            <h3 className="text-xl font-bold">{stats.students}</h3>
                         </div>
                     </div>
 
@@ -42,7 +64,7 @@ export default function AdminDashboard() {
                             <p className="text-sm text-gray-500">
                                 Total Instructors
                             </p>
-                            <h3 className="text-xl font-bold">85</h3>
+                            <h3 className="text-xl font-bold">{stats.instructors}</h3>
                         </div>
                     </div>
 
@@ -52,7 +74,7 @@ export default function AdminDashboard() {
                         </div>
                         <div>
                             <p className="text-sm text-gray-500">Classes</p>
-                            <h3 className="text-xl font-bold">140</h3>
+                            <h3 className="text-xl font-bold">{stats.courses}</h3>
                         </div>
                     </div>
 
@@ -62,7 +84,7 @@ export default function AdminDashboard() {
                         </div>
                         <div>
                             <p className="text-sm text-gray-500">Enrollments</p>
-                            <h3 className="text-xl font-bold">2000</h3>
+                            <h3 className="text-xl font-bold">{stats.enrollments}</h3>
                         </div>
                     </div>
 
@@ -84,7 +106,7 @@ export default function AdminDashboard() {
                             <p className="text-sm text-gray-500">
                                 Pending Classes
                             </p>
-                            <h3 className="text-xl font-bold">12</h3>
+                            <h3 className="text-xl font-bold">{stats.pending_classes}</h3>
                         </div>
                     </div>
                 </div>
@@ -95,7 +117,7 @@ export default function AdminDashboard() {
                     <p className="font-semibold border-l-4 pl-3 border-[#3C64EF]">
                         User Growth Over Time
                     </p>
-                    <UserGrowthChart />
+                    <UserGrowthChart instructors={stats.instructors} students={stats.students} />
                 </div>
 
                 <div className="bg-white p-6 rounded-xl shadow-sm">
