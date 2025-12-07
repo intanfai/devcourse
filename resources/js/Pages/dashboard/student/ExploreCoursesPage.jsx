@@ -79,7 +79,7 @@ export default function ExploreCoursesPage() {
         <StudentLayout>
             <div className="pb-6">
                 {/* HEADER */}
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
+                <h1 className="text-2xl font-bold text-gray-900 mb-6">
                     Explore Courses
                 </h1>
 

@@ -21,7 +21,11 @@ export default function SidebarAdmin({ isOpen, toggle }) {
     const [openLogout, setOpenLogout] = useState(false);
 
     const menu = [
-    { name: "Dashboard", icon: <FiHome size={18} />, path: "/admin/dashboard" },
+        {
+            name: "Dashboard",
+            icon: <FiHome size={18} />,
+            path: "/admin/dashboard",
+        },
         { name: "Users", icon: <FiUsers size={18} />, path: "/admin/users" },
         { name: "Classes", icon: <FiBook size={18} />, path: "/admin/classes" },
         {
@@ -79,7 +83,10 @@ export default function SidebarAdmin({ isOpen, toggle }) {
             </button>
 
             {/* LOGO */}
-            <div className="flex items-center gap-3 mb-10 px-2">
+            <div
+                className={`flex items-center mb-10 
+                ${isOpen ? "gap-3 px-2" : "justify-center"}`}
+            >
                 <img src="/images/logo.png" className="w-10" />
                 {isOpen && (
                     <h1 className="text-xl font-bold tracking-wide">
@@ -115,28 +122,28 @@ export default function SidebarAdmin({ isOpen, toggle }) {
                 ))}
             </nav>
 
-            {/* Logout Section */}
+            {/* LOGOUT BUTTON */}
             <div className="mt-auto px-2">
                 <button
+                    onClick={() => setOpenLogout(true)}
                     className="
                         flex items-center gap-3 w-full 
                         px-4 py-3 rounded-xl text-sm
                         text-red-400 hover:bg-red-500/20
                         transition-all
                     "
-                    onClick={() => setOpenLogout(true)}
                 >
                     <FiLogOut size={18} />
                     {isOpen && <span>Logout</span>}
                 </button>
             </div>
 
-            {/* Logout Modal */}
+            {/* LOGOUT MODAL*/}
+
             <LogoutModal
                 open={openLogout}
                 onClose={() => setOpenLogout(false)}
                 onConfirm={() => {
-                    setOpenLogout(false);
                     localStorage.clear();
                     window.location.href = "/login";
                 }}

@@ -7,44 +7,13 @@ import ConfirmModal from "../../../Components/ConfirmModal";
 
 export default function UsersPage() {
     const [users, setUsers] = useState([
-        {
-            id: 1,
-            name: "Rina",
-            email: "rina@gmail.com",
-            role: "Student",
-            status: "Active",
-        },
-        {
-            id: 2,
-            name: "Dita",
-            email: "dita@gmail.com",
-            role: "Instructor",
-            status: "Active",
-        },
-        {
-            id: 3,
-            name: "Andi",
-            email: "andi@gmail.com",
-            role: "Admin",
-            status: "Inactive",
-        },
-        {
-            id: 4,
-            name: "Bayu",
-            email: "bayu@gmail.com",
-            role: "Student",
-            status: "Active",
-        },
-        {
-            id: 5,
-            name: "Lia",
-            email: "lia@gmail.com",
-            role: "Student",
-            status: "Inactive",
-        },
+        { id: 1, name: "Rina", email: "rina@gmail.com", role: "Student" },
+        { id: 2, name: "Dita", email: "dita@gmail.com", role: "Instructor" },
+        { id: 3, name: "Andi", email: "andi@gmail.com", role: "Admin" },
+        { id: 4, name: "Bayu", email: "bayu@gmail.com", role: "Student" },
+        { id: 5, name: "Lia", email: "lia@gmail.com", role: "Student" },
     ]);
 
-    // MODALS
     const [openAdd, setOpenAdd] = useState(false);
     const [openEdit, setOpenEdit] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState({
@@ -56,16 +25,16 @@ export default function UsersPage() {
 
     const [search, setSearch] = useState("");
     const [filterRole, setFilterRole] = useState("All");
-    const [filterStatus, setFilterStatus] = useState("All");
 
+    // FILTER (Tanpa status)
     const filteredUsers = users.filter((u) => {
         const matchSearch =
             u.name.toLowerCase().includes(search.toLowerCase()) ||
             u.email.toLowerCase().includes(search.toLowerCase());
+
         const matchRole = filterRole === "All" ? true : u.role === filterRole;
-        const matchStatus =
-            filterStatus === "All" ? true : u.status === filterStatus;
-        return matchSearch && matchRole && matchStatus;
+
+        return matchSearch && matchRole;
     });
 
     const usersPerPage = 5;
@@ -120,31 +89,17 @@ export default function UsersPage() {
                         </summary>
 
                         <div className="absolute right-0 mt-2 w-40 bg-white p-3 rounded-lg shadow-lg border z-50">
-                            {/* ROLE */}
+                            {/* ROLE ONLY */}
                             <p className="text-xs text-gray-500 mb-1">Role</p>
                             <select
                                 value={filterRole}
                                 onChange={(e) => setFilterRole(e.target.value)}
-                                className="w-full border px-2 py-1 rounded mb-3"
+                                className="w-full border px-2 py-1 rounded"
                             >
                                 <option value="All">All</option>
                                 <option value="Admin">Admin</option>
                                 <option value="Instructor">Instructor</option>
                                 <option value="Student">Student</option>
-                            </select>
-
-                            {/* STATUS */}
-                            <p className="text-xs text-gray-500 mb-1">Status</p>
-                            <select
-                                value={filterStatus}
-                                onChange={(e) =>
-                                    setFilterStatus(e.target.value)
-                                }
-                                className="w-full border px-2 py-1 rounded"
-                            >
-                                <option value="All">All</option>
-                                <option value="Active">Active</option>
-                                <option value="Inactive">Inactive</option>
                             </select>
                         </div>
                     </details>
@@ -171,7 +126,6 @@ export default function UsersPage() {
                             <th className="py-3 px-3 text-left">Name</th>
                             <th className="py-3 px-3 text-left">Email</th>
                             <th className="py-3 px-3 text-left">Role</th>
-                            <th className="py-3 px-3 text-left">Status</th>
                             <th className="py-3 px-3 text-center">Actions</th>
                         </tr>
                     </thead>
@@ -182,37 +136,17 @@ export default function UsersPage() {
                                 key={user.id}
                                 className="border-b hover:bg-gray-50"
                             >
-                                <td className="py-3 px-3 text-left">
+                                <td className="py-3 px-3">
                                     {indexFirst + idx + 1}
                                 </td>
 
-                                <td className="py-3 px-3 text-left font-mono text-blue-600 font-semibold">
+                                <td className="py-3 px-3 font-mono text-blue-600 font-semibold">
                                     #{user.id}
                                 </td>
 
-                                <td className="py-3 px-3 text-left">
-                                    {user.name}
-                                </td>
-
-                                <td className="py-3 px-3 text-left">
-                                    {user.email}
-                                </td>
-
-                                <td className="py-3 px-3 text-left">
-                                    {user.role}
-                                </td>
-
-                                <td className="py-3 px-3 text-left">
-                                    <span
-                                        className={`px-3 py-1 text-xs rounded-lg ${
-                                            user.status === "Active"
-                                                ? "bg-green-100 text-green-700"
-                                                : "bg-red-100 text-red-600"
-                                        }`}
-                                    >
-                                        {user.status}
-                                    </span>
-                                </td>
+                                <td className="py-3 px-3">{user.name}</td>
+                                <td className="py-3 px-3">{user.email}</td>
+                                <td className="py-3 px-3">{user.role}</td>
 
                                 <td className="py-3 px-3 flex justify-center gap-3">
                                     <button
@@ -260,14 +194,13 @@ export default function UsersPage() {
                 </div>
             </div>
 
-            {/* ADD USER */}
+            {/* MODALS */}
             <AddUserModal
                 open={openAdd}
                 close={() => setOpenAdd(false)}
                 onSubmit={handleAddUser}
             />
 
-            {/* EDIT USER */}
             <EditUserModal
                 open={openEdit}
                 close={() => setOpenEdit(false)}
@@ -275,7 +208,6 @@ export default function UsersPage() {
                 onSubmit={handleUpdateUser}
             />
 
-            {/* CONFIRM DELETE */}
             <ConfirmModal
                 open={confirmDelete.open}
                 title="Delete User?"

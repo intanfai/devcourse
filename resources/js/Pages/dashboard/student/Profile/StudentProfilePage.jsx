@@ -23,12 +23,12 @@ export default function ProfilePage() {
     return (
         <StudentLayout>
             <div className="pb-6">
+
                 {/* TITLE */}
-                <h1 className="text-2xl font-bold text-gray-900 mb-8">
-                    My Profile
-                </h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-8">My Profile</h1>
 
                 <div className="bg-white border shadow-sm rounded-xl p-6">
+
                     {/* TOP SECTION */}
                     <div className="flex items-start gap-6 mb-10">
                         <img
@@ -42,14 +42,10 @@ export default function ProfilePage() {
                         />
 
                         <div className="flex-1">
-                            <h2 className="text-2xl font-bold text-gray-900">
-                                {user.name}
-                            </h2>
+                            <h2 className="text-2xl font-bold text-gray-900">{user.name}</h2>
 
                             {/* ROLE LANGSUNG DARI DATABASE */}
-                            <p className="text-gray-600 capitalize">
-                                {user.role}
-                            </p>
+                            <p className="text-gray-600 capitalize">{user.role}</p>
 
                             {user.bio && (
                                 <p className="text-gray-500 mt-2">{user.bio}</p>
@@ -70,6 +66,7 @@ export default function ProfilePage() {
                     </h3>
 
                     <div className="grid md:grid-cols-2 gap-6 mb-8">
+
                         {/* EMAIL */}
                         <div className="flex items-center gap-3">
                             <FiMail className="text-blue-600" size={20} />
@@ -101,6 +98,7 @@ export default function ProfilePage() {
                                 Joined: {user.joinDate || "N/A"}
                             </p>
                         </div>
+
                     </div>
 
                     {/* EDUCATION INFO */}
@@ -111,9 +109,7 @@ export default function ProfilePage() {
                     <div className="bg-gray-50 p-4 rounded-lg border mb-8">
                         <div className="flex items-center gap-3 mb-2">
                             <FiBookOpen className="text-indigo-600" size={22} />
-                            <p className="font-semibold text-gray-800">
-                                Course Progress
-                            </p>
+                            <p className="font-semibold text-gray-800">Course Progress</p>
                         </div>
 
                         <p className="text-gray-700 mb-2">
@@ -127,15 +123,14 @@ export default function ProfilePage() {
                                 style={{
                                     width: `${
                                         user.totalCourses
-                                            ? (user.completedCourses /
-                                                  user.totalCourses) *
-                                              100
+                                            ? (user.completedCourses / user.totalCourses) * 100
                                             : 0
                                     }%`,
                                 }}
                             ></div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </StudentLayout>

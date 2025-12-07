@@ -1,24 +1,23 @@
 import { HiOutlineSearch, HiOutlineBell } from "react-icons/hi";
 import { useLocation } from "react-router-dom";
 import { useState } from "react";
-import LogoutModal from "./LogoutModal";
 
-export default function TopbarStudent({ user }) {
+export default function TopbarStudent({ user, toggleSidebar, setOpenLogout }) {
     const location = useLocation();
     const path = location.pathname;
 
     const [showNoti, setShowNoti] = useState(false);
     const [showProfile, setShowProfile] = useState(false);
-    const [openLogout, setOpenLogout] = useState(false);
 
+    // PAGE TITLE
     const pageTitle = (() => {
         const parts = path.split("/").filter(Boolean);
         const filtered = parts.filter((p) => p !== "student");
-
         if (filtered.length === 0) return "Dashboard";
 
         const titles = {
             dashboard: "Dashboard",
+            explore: "Explore Courses",
             courses: "My Courses",
             certificates: "Certificates",
             notifications: "Notifications",
@@ -32,62 +31,68 @@ export default function TopbarStudent({ user }) {
     return (
         <header
             className="
-                ml-39 mt-6 bg-[#161616]
+                bg-[#161616]
                 rounded-xl shadow-md
-                px-3 sm:px-6 md:px-8
-                h-auto min-h-[70px]
-                flex items-center justify-between relative
+                px-4 md:px-8
+                h-20
+                flex items-center justify-between
+                relative
             "
         >
-            {/* PAGE TITLE */}
-            <h2 className="text-white font-semibold text-base sm:text-lg md:text-xl">
-                {pageTitle}
-            </h2>
+            {/* LEFT — MENU BUTTON + TITLE */}
+            <div className="flex items-center gap-4">
+                <button
+                    className="lg:hidden text-white text-2xl"
+                    onClick={toggleSidebar}
+                >
+                    ☰
+                </button>
 
-            {/* SEARCH BAR */}
-            <div
-                className="
-                    flex items-center bg-[#2B2B2B]
-                    px-3 sm:px-4 py-2 sm:py-3 rounded-xl
-                    w-[150px] sm:w-[250px] md:w-[350px]
-                "
-            >
-                {/* Dummy to block autofill Chrome */}
-                <input
-                    type="password"
-                    autoComplete="new-password"
-                    className="hidden"
-                />
+                <h2 className="text-white font-semibold text-lg md:text-xl">
+                    {pageTitle}
+                </h2>
+            </div>
 
-                <HiOutlineSearch className="text-gray-300 text-lg sm:text-xl" />
+            {/* CENTER — SEARCH BAR */}
+            <div className="hidden md:flex items-center bg-[#2B2B2B] px-4 py-3 rounded-xl w-[260px] lg:w-[350px]">
+                <HiOutlineSearch className="text-gray-300 text-xl" />
 
                 <input
-                    type="text"
+                    type="search"
                     placeholder="Search..."
-                    autoComplete="new-password"
-                    name="fake-search"
-                    className="ml-2 bg-transparent outline-none 
-                    text-xs sm:text-sm text-gray-200 w-full"
+                    autoComplete="off"
+                    className="ml-3 bg-transparent outline-none text-sm text-gray-200 w-full"
+                    // Chrome autofill killer
+                    onFocus={(e) => {
+                        e.target.setAttribute("autocomplete", "off");
+                        e.target.value = "";
+                    }}
                 />
             </div>
 
-            {/* RIGHT SIDE */}
-            <div className="flex items-center gap-4 sm:gap-6 md:gap-8 relative">
-                {/* NOTIFICATION BELL */}
+            {/* RIGHT — ACTIONS */}
+            <div className="flex items-center gap-5 md:gap-8 relative">
+                {/* SEARCH ICON MOBILE */}
+                <button className="md:hidden">
+                    <HiOutlineSearch className="text-3xl text-gray-200" />
+                </button>
+
+                {/* NOTIFICATIONS */}
                 <div
-                    className="relative cursor-pointer"
+                    className="relative cursor-pointer group"
                     onClick={() => {
                         setShowNoti(!showNoti);
                         setShowProfile(false);
                     }}
                 >
-                    <HiOutlineBell className="text-2xl sm:text-3xl text-gray-200 hover:text-white transition" />
-                    <span className="absolute -top-1 -right-1 bg-[#3C64EF] text-white text-[10px] rounded-full px-1.5">
-                        2
+                    <HiOutlineBell className="text-3xl text-gray-200 group-hover:text-white transition" />
+
+                    <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] rounded-full px-1.5 py-0.5">
+                        3
                     </span>
 
                     {showNoti && (
-                        <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-lg border p-4 z-40">
+                        <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-lg border p-4 z-50">
                             <h3 className="font-semibold text-gray-800 mb-2 text-sm">
                                 Notifications
                             </h3>
@@ -115,9 +120,9 @@ export default function TopbarStudent({ user }) {
                     )}
                 </div>
 
-                {/* PROFILE */}
+                {/* PROFILE BUTTON */}
                 <div
-                    className="flex items-center gap-2 sm:gap-3 cursor-pointer"
+                    className="flex items-center gap-3 cursor-pointer"
                     onClick={() => {
                         setShowProfile(!showProfile);
                         setShowNoti(false);
@@ -125,10 +130,10 @@ export default function TopbarStudent({ user }) {
                 >
                     <img
                         src="/images/avatar.jpg"
-                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border"
+                        className="w-10 h-10 rounded-full border"
                     />
 
-                    <div className="hidden md:block">
+                    <div className="hidden md:block leading-tight">
                         <p className="text-white font-semibold text-sm">
                             {user.name}
                         </p>
@@ -145,7 +150,6 @@ export default function TopbarStudent({ user }) {
                         <p className="text-xs text-gray-500 px-2 mb-2">
                             {user.email}
                         </p>
-
                         <hr className="my-2" />
 
                         <a
@@ -171,16 +175,6 @@ export default function TopbarStudent({ user }) {
                     </div>
                 )}
             </div>
-
-            {/* LOGOUT MODAL */}
-            <LogoutModal
-                open={openLogout}
-                onClose={() => setOpenLogout(false)}
-                onConfirm={() => {
-                    localStorage.clear();
-                    window.location.href = "/login";
-                }}
-            />
         </header>
     );
 }
