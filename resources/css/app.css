@@ -51,52 +51,72 @@
 }
 
 @keyframes float {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0); }
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0);
+    }
 }
 
 .animate-float {
-  animation: float 4s ease-in-out infinite;
+    animation: float 4s ease-in-out infinite;
 }
 @keyframes floatSlow {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
-  100% { transform: translateY(0); }
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+    100% {
+        transform: translateY(0);
+    }
 }
 .animate-float-slow {
-  animation: floatSlow 5s ease-in-out infinite;
+    animation: floatSlow 5s ease-in-out infinite;
 }
 
 @keyframes fadeUp {
-  0% { 
-    opacity: 0; 
-    transform: translateY(20px); 
-  }
-  100% { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .animate-fade-up {
-  animation: fadeUp 0.8s ease-out forwards;
+    animation: fadeUp 0.8s ease-out forwards;
 }
 
 .delay-200 {
-  animation-delay: .2s;
+    animation-delay: 0.2s;
 }
 
 @keyframes pulseGlow {
-  0% { opacity: .4; transform: scale(1); }
-  50% { opacity: .55; transform: scale(1.03); }
-  100% { opacity: .4; transform: scale(1); }
+    0% {
+        opacity: 0.4;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.55;
+        transform: scale(1.03);
+    }
+    100% {
+        opacity: 0.4;
+        transform: scale(1);
+    }
 }
 
 .animate-pulse-glow {
-  animation: pulseGlow 6s ease-in-out infinite;
+    animation: pulseGlow 6s ease-in-out infinite;
 }
-
 
 @keyframes cardFadeUp {
     0% {
@@ -114,10 +134,18 @@
     opacity: 0;
 }
 
-.delay-100 { animation-delay: 0.1s; }
-.delay-200 { animation-delay: 0.2s; }
-.delay-300 { animation-delay: 0.3s; }
-.delay-400 { animation-delay: 0.4s; }
+.delay-100 {
+    animation-delay: 0.1s;
+}
+.delay-200 {
+    animation-delay: 0.2s;
+}
+.delay-300 {
+    animation-delay: 0.3s;
+}
+.delay-400 {
+    animation-delay: 0.4s;
+}
 
 /* --- FIX RESPONSIVE SIDEBAR OVERLAYING CONTENT --- */
 
@@ -142,4 +170,13 @@
     .student-main {
         margin-left: 0 !important;
     }
+}
+
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none !important;
+}
+
+input[type="password"]::-webkit-textfield-decoration-container {
+    display: none !important;
 }

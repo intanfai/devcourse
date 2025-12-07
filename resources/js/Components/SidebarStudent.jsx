@@ -10,12 +10,8 @@ import {
     FiUser,
     FiLogOut,
 } from "react-icons/fi";
-import { useState } from "react";
-import LogoutModal from "./LogoutModal";
 
-export default function SidebarStudent({ isOpen, toggle }) {
-    const [openLogout, setOpenLogout] = useState(false);
-
+export default function SidebarStudent({ isOpen, toggle, setOpenLogout }) {
     const menu = [
         {
             name: "Dashboard",
@@ -57,19 +53,15 @@ export default function SidebarStudent({ isOpen, toggle }) {
     return (
         <div
             className={`
-                student-sidebar
                 fixed top-6 left-6
                 h-[calc(100vh-3rem)]
                 bg-[#161616] text-white
-                rounded-2xl shadow-lg p-5
-                flex flex-col
+                rounded-2xl shadow-lg p-5 flex flex-col
                 transition-all duration-300
-                z-50
+                z-[60]
 
-                /* Desktop behaviour */
                 ${isOpen ? "w-64" : "w-20 items-center"}
 
-                /* Mobile drawer */
                 lg:translate-x-0
                 ${
                     isOpen
@@ -81,21 +73,15 @@ export default function SidebarStudent({ isOpen, toggle }) {
             {/* TOGGLE BUTTON */}
             <button
                 onClick={toggle}
-                className="
-                    absolute -right-4 top-6 w-9 h-9
-                    bg-blue-600 rounded-full shadow-md
-                    flex items-center justify-center
-                    text-white hover:bg-blue-700
-                    z-50
-                "
+                className="absolute -right-4 top-6 w-9 h-9 bg-blue-600 rounded-full
+                shadow-md flex items-center justify-center text-white hover:bg-blue-700"
             >
                 {isOpen ? <FiChevronLeft /> : <FiChevronRight />}
             </button>
 
             {/* LOGO */}
             <div
-                className={`
-                    flex items-center gap-3 mb-10 w-full
+                className={`flex items-center gap-3 mb-10 w-full 
                     ${isOpen ? "justify-start px-2" : "justify-center px-0"}
                 `}
             >
@@ -148,15 +134,6 @@ export default function SidebarStudent({ isOpen, toggle }) {
                     {isOpen && <span>Logout</span>}
                 </button>
             </div>
-
-            <LogoutModal
-                open={openLogout}
-                onClose={() => setOpenLogout(false)}
-                onConfirm={() => {
-                    localStorage.clear();
-                    window.location.href = "/login";
-                }}
-            />
         </div>
     );
 }

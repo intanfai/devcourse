@@ -6,18 +6,30 @@ import { FiArrowLeft, FiUpload } from "react-icons/fi";
 export default function EditProfilePage() {
     const navigate = useNavigate();
 
-    const userData = {
-        name: "John Doe",
-        email: "john@example.com",
-        phone: "+62 812-3456-7890",
-        address: "Jakarta, Indonesia",
-        gender: "Male",
-        bio: "Passionate about web development.",
-        avatar: "/img/logo-razen.png",
-    };
+    // Ambil data user dari localStorage
+    const storedUser = localStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
 
-    const [form, setForm] = useState(userData);
-    const [preview, setPreview] = useState(userData.avatar);
+    if (!user) {
+        return <div className="p-6">Loading...</div>;
+    }
+
+    // FORM DEFAULT DIAMBIL DARI USER LOGIN
+    const [form, setForm] = useState({
+        name: user.name || "",
+        email: user.email || "",
+        address: user.address || "",
+        gender: user.gender || "",
+        bio: user.bio || "",
+        avatar: user.avatar || "",
+    });
+
+    const [preview, setPreview] = useState(
+        user.avatar ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                user.name
+            )}&background=0D8ABC&color=fff&size=200`
+    );
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -33,7 +45,19 @@ export default function EditProfilePage() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log("Submitting:", form);
+
+        console.log("Submitting updated profile:", form);
+
+        // Update localStorage sementara
+        const updatedUser = {
+            ...user,
+            ...form,
+            avatar: preview,
+        };
+
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+
+        navigate("/student/profile");
     };
 
     return (
@@ -49,16 +73,15 @@ export default function EditProfilePage() {
                     </button>
 
                     <h1 className="text-2xl font-bold text-gray-900">
-                        Profile
+                        Edit Profile
                     </h1>
                 </div>
 
-                {/* FULL WIDTH CARD */}
+                {/* FORM */}
                 <form
                     onSubmit={handleSubmit}
                     className="bg-white border shadow-sm rounded-2xl p-8 w-full"
                 >
-
                     {/* AVATAR */}
                     <div className="flex flex-col items-center mb-10">
                         <img
@@ -67,15 +90,21 @@ export default function EditProfilePage() {
                         />
                         <label className="mt-4 cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg border flex items-center gap-2 text-sm">
                             <FiUpload size={16} /> Change Avatar
-                            <input type="file" className="hidden" onChange={handleAvatar} />
+                            <input
+                                type="file"
+                                className="hidden"
+                                onChange={handleAvatar}
+                            />
                         </label>
                     </div>
 
                     {/* FORM GRID */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
+                        {/* NAME */}
                         <div>
-                            <label className="text-sm font-medium text-gray-700">Full Name</label>
+                            <label className="text-sm font-medium text-gray-700">
+                                Full Name
+                            </label>
                             <input
                                 type="text"
                                 name="name"
@@ -85,8 +114,11 @@ export default function EditProfilePage() {
                             />
                         </div>
 
+                        {/* EMAIL */}
                         <div>
-                            <label className="text-sm font-medium text-gray-700">Email</label>
+                            <label className="text-sm font-medium text-gray-700">
+                                Email
+                            </label>
                             <input
                                 type="email"
                                 name="email"
@@ -96,33 +128,31 @@ export default function EditProfilePage() {
                             />
                         </div>
 
-                        <div>
-                            <label className="text-sm font-medium text-gray-700">Phone</label>
-                            <input
-                                type="text"
-                                name="phone"
-                                value={form.phone}
-                                onChange={handleChange}
-                                className="w-full mt-1 p-2.5 border rounded-lg bg-gray-50"
-                            />
-                        </div>
+                        {/* PHONE REMOVED */}
 
+                        {/* GENDER */}
                         <div>
-                            <label className="text-sm font-medium text-gray-700">Gender</label>
+                            <label className="text-sm font-medium text-gray-700">
+                                Gender
+                            </label>
                             <select
                                 name="gender"
                                 value={form.gender}
                                 onChange={handleChange}
                                 className="w-full mt-1 p-2.5 border rounded-lg bg-gray-50"
                             >
+                                <option value="">Select gender</option>
                                 <option value="Male">Male</option>
                                 <option value="Female">Female</option>
                                 <option value="Other">Other</option>
                             </select>
                         </div>
 
+                        {/* ADDRESS */}
                         <div className="md:col-span-2">
-                            <label className="text-sm font-medium text-gray-700">Address</label>
+                            <label className="text-sm font-medium text-gray-700">
+                                Address
+                            </label>
                             <input
                                 type="text"
                                 name="address"
@@ -132,8 +162,11 @@ export default function EditProfilePage() {
                             />
                         </div>
 
+                        {/* BIO */}
                         <div className="md:col-span-2">
-                            <label className="text-sm font-medium text-gray-700">Bio</label>
+                            <label className="text-sm font-medium text-gray-700">
+                                Bio
+                            </label>
                             <textarea
                                 name="bio"
                                 rows="4"
@@ -144,7 +177,7 @@ export default function EditProfilePage() {
                         </div>
                     </div>
 
-                    {/* SUBMIT */}
+                    {/* SAVE BUTTON */}
                     <div className="mt-8 flex justify-end">
                         <button
                             type="submit"
@@ -153,7 +186,6 @@ export default function EditProfilePage() {
                             Save Changes
                         </button>
                     </div>
-
                 </form>
             </div>
         </StudentLayout>

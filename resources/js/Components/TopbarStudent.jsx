@@ -37,7 +37,7 @@ export default function TopbarStudent({ user }) {
                 px-3 sm:px-6 md:px-8
                 h-auto min-h-[70px]
                 flex items-center justify-between relative
-        "
+            "
         >
             {/* PAGE TITLE */}
             <h2 className="text-white font-semibold text-base sm:text-lg md:text-xl">
@@ -47,15 +47,25 @@ export default function TopbarStudent({ user }) {
             {/* SEARCH BAR */}
             <div
                 className="
-                flex items-center bg-[#2B2B2B]
-                px-3 sm:px-4 py-2 sm:py-3 rounded-xl
-                w-[150px] sm:w-[250px] md:w-[350px]
-            "
+                    flex items-center bg-[#2B2B2B]
+                    px-3 sm:px-4 py-2 sm:py-3 rounded-xl
+                    w-[150px] sm:w-[250px] md:w-[350px]
+                "
             >
+                {/* Dummy to block autofill Chrome */}
+                <input
+                    type="password"
+                    autoComplete="new-password"
+                    className="hidden"
+                />
+
                 <HiOutlineSearch className="text-gray-300 text-lg sm:text-xl" />
+
                 <input
                     type="text"
                     placeholder="Search..."
+                    autoComplete="new-password"
+                    name="fake-search"
                     className="ml-2 bg-transparent outline-none 
                     text-xs sm:text-sm text-gray-200 w-full"
                 />
@@ -63,7 +73,6 @@ export default function TopbarStudent({ user }) {
 
             {/* RIGHT SIDE */}
             <div className="flex items-center gap-4 sm:gap-6 md:gap-8 relative">
-
                 {/* NOTIFICATION BELL */}
                 <div
                     className="relative cursor-pointer"
@@ -77,7 +86,6 @@ export default function TopbarStudent({ user }) {
                         2
                     </span>
 
-                    {/* NOTIFICATION DROPDOWN */}
                     {showNoti && (
                         <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-lg border p-4 z-40">
                             <h3 className="font-semibold text-gray-800 mb-2 text-sm">
@@ -86,13 +94,21 @@ export default function TopbarStudent({ user }) {
 
                             <div className="space-y-3 text-sm">
                                 <div className="p-3 bg-gray-100 rounded-lg">
-                                    <p className="font-medium">New Course Available!</p>
-                                    <p className="text-xs text-gray-500">Tailwind CSS Mastery</p>
+                                    <p className="font-medium">
+                                        New Course Available!
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                        Tailwind CSS Mastery
+                                    </p>
                                 </div>
 
                                 <div className="p-3 bg-gray-100 rounded-lg">
-                                    <p className="font-medium">Certificate Earned</p>
-                                    <p className="text-xs text-gray-500">React Fundamentals</p>
+                                    <p className="font-medium">
+                                        Certificate Earned
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                        React Fundamentals
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -108,7 +124,7 @@ export default function TopbarStudent({ user }) {
                     }}
                 >
                     <img
-                        src="/images/avatar.jpp"
+                        src="/images/avatar.jpg"
                         className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border"
                     />
 
@@ -120,11 +136,15 @@ export default function TopbarStudent({ user }) {
                     </div>
                 </div>
 
-                {/* PROFILE DROPDOWN MENU */}
+                {/* PROFILE DROPDOWN */}
                 {showProfile && (
                     <div className="absolute right-0 top-16 w-48 bg-white border shadow-lg rounded-xl p-3 z-50">
-                        <p className="text-gray-800 font-semibold text-sm px-2">{user.name}</p>
-                        <p className="text-xs text-gray-500 px-2 mb-2">{user.email}</p>
+                        <p className="text-gray-800 font-semibold text-sm px-2">
+                            {user.name}
+                        </p>
+                        <p className="text-xs text-gray-500 px-2 mb-2">
+                            {user.email}
+                        </p>
 
                         <hr className="my-2" />
 

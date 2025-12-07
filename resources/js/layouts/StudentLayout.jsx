@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import SidebarStudent from "../Components/SidebarStudent";
 import TopbarStudent from "../Components/TopbarStudent";
+import LogoutModal from "../Components/LogoutModal"; // <-- pastikan import
 import React from "react";
 
 export default function StudentLayout({ children }) {
@@ -10,6 +11,7 @@ export default function StudentLayout({ children }) {
     });
 
     const [user, setUser] = useState(null);
+    const [openLogout, setOpenLogout] = useState(false); // <-- GLOBAL LOGOUT MODAL CONTROL
 
     useEffect(() => {
         const stored = localStorage.getItem("user");
@@ -28,12 +30,10 @@ export default function StudentLayout({ children }) {
         const newState = !isOpen;
         setIsOpen(newState);
 
-        // only save state on desktop
         if (window.innerWidth >= 1024) {
             localStorage.setItem("sidebarOpen", newState);
         }
 
-        // mobile: lock body scroll when sidebar open
         if (window.innerWidth < 1024) {
             if (newState) document.body.classList.add("sidebar-open");
             else document.body.classList.remove("sidebar-open");
@@ -45,18 +45,18 @@ export default function StudentLayout({ children }) {
     return (
         <div className="flex bg-[#F3F4F6] min-h-screen overflow-x-hidden">
             {/* SIDEBAR */}
-            <SidebarStudent isOpen={isOpen} toggle={toggleSidebar} />
+            <SidebarStudent
+                isOpen={isOpen}
+                toggle={toggleSidebar}
+                setOpenLogout={setOpenLogout} // <-- kirim ke sidebar
+            />
 
-            {/* CONTENT WRAPPER */}
+            {/* DESKTOP CONTENT */}
             <div
                 className={`
                     flex-1 transition-all duration-300
-
-                    /* Desktop spacing */
                     hidden lg:block
                     ${isOpen ? "ml-[19rem]" : "ml-[7rem]"}
-
-                    /* Mobile = full width */
                     lg:pr-6
                 `}
             >
@@ -71,7 +71,7 @@ export default function StudentLayout({ children }) {
                 </div>
             </div>
 
-            {/* MOBILE CONTENT LAYER (no left spacing) */}
+            {/* MOBILE CONTENT */}
             <div className="flex-1 lg:hidden">
                 <TopbarStudent user={user} />
 
@@ -83,6 +83,19 @@ export default function StudentLayout({ children }) {
                     )}
                 </div>
             </div>
+
+            {/* ⛔ INI POSISI YANG BENAR */}
+            {/* ============================== */}
+            {/*      LOGOUT MODAL DI TENGAH    */}
+            {/* ============================== */}
+            <LogoutModal
+                open={openLogout}
+                onClose={() => setOpenLogout(false)}
+                onConfirm={() => {
+                    localStorage.clear();
+                    window.location.href = "/login";
+                }}
+            />
         </div>
     );
 }
