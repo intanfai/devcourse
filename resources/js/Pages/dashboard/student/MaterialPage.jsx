@@ -11,7 +11,7 @@ export default function MaterialPage() {
     const { courseId, materialId } = useParams();
     const navigate = useNavigate();
 
-    // Dummy data — nanti diganti dari API
+    // Dummy data
     const course = {
         id: courseId,
         title: "React Fundamentals",
@@ -43,8 +43,8 @@ kecil yang dapat digunakan kembali sehingga membuat development lebih cepat.`,
                         done: true,
                         url: "https://www.youtube.com/embed/Tn6-PIqc4UM",
                         content: `
-Pada materi ini kamu akan mempelajari cara men-setup project React
-menggunakan Vite atau Create React App, serta memahami struktur folder.`,
+Cara setup React menggunakan Vite atau Create React App
+dan memahami struktur folder.`,
                     },
                 ],
                 quiz: { id: 101, title: "Chapter 1 Quiz", done: true },
@@ -59,8 +59,7 @@ menggunakan Vite atau Create React App, serta memahami struktur folder.`,
                         type: "text",
                         done: false,
                         content: `
-Komponen merupakan fondasi utama dalam React. Komponen bisa berupa fungsi
-atau class yang mengembalikan UI. Dengan komponen, UI menjadi modular.`,
+Komponen adalah fondasi utama React. Bisa berbentuk function atau class.`,
                     },
                     {
                         id: 4,
@@ -69,8 +68,7 @@ atau class yang mengembalikan UI. Dengan komponen, UI menjadi modular.`,
                         done: false,
                         url: "https://www.youtube.com/embed/w7ejDZ8SWv8",
                         content: `
-Props adalah data yang dikirim dari parent ke child component.
-Props bersifat immutable sehingga UI tetap predictable.`,
+Props adalah data yang dikirim dari parent ke child component.`,
                     },
                 ],
                 quiz: { id: 102, title: "Chapter 2 Quiz", done: false },
@@ -78,7 +76,6 @@ Props bersifat immutable sehingga UI tetap predictable.`,
         ],
     };
 
-    // Temukan chapter & materi
     const chapter = course.chapters.find((ch) =>
         ch.materials.some((m) => m.id == materialId)
     );
@@ -87,11 +84,10 @@ Props bersifat immutable sehingga UI tetap predictable.`,
 
     return (
         <StudentLayout>
-            <div className="pb-6 px-1">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="pb-6 px-3 lg:px-1 w-full overflow-x-hidden">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
                     {/* ================= LEFT CONTENT ================= */}
-                    <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow">
-                        {/* BACK BUTTON + TITLE (INSIDE CARD) */}
+                    <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow w-full">
                         <div className="flex items-center gap-4 mb-6">
                             <button
                                 onClick={() => navigate(-1)}
@@ -105,32 +101,35 @@ Props bersifat immutable sehingga UI tetap predictable.`,
                             </h1>
                         </div>
 
-                        {/* MATERIAL CONTENT */}
                         <div className="mb-4">
+                            {/* VIDEO */}
                             {material.type === "video" && (
-                                <iframe
-                                    className="w-full h-64 rounded-lg border mb-4"
-                                    src={material.url}
-                                    title={material.title}
-                                    allowFullScreen
-                                ></iframe>
+                                <div className="w-full aspect-video rounded-lg overflow-hidden mb-4">
+                                    <iframe
+                                        className="w-full h-full"
+                                        src={material.url}
+                                        title={material.title}
+                                        allowFullScreen
+                                    ></iframe>
+                                </div>
                             )}
 
+                            {/* TEXT */}
                             {material.type === "text" && (
                                 <p className="text-gray-700 text-sm leading-relaxed mb-4 whitespace-pre-line">
                                     {material.content}
                                 </p>
                             )}
 
-                            {/* EXTRA PARAGRAPH BELOW VIDEO/TEXT */}
+                            {/* Extra content */}
                             <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
                                 {material.content}
                             </div>
                         </div>
                     </div>
 
-                    {/* ================= RIGHT SIDEBAR ================= */}
-                    <div className="bg-white p-5 rounded-xl shadow h-fit">
+                    {/* ================= RIGHT SIDEBAR CONTENT ================= */}
+                    <div className="bg-white p-5 rounded-xl shadow h-fit w-full">
                         <h2 className="text-lg font-semibold mb-3 border-l-4 pl-3 border-[#3C64EF]">
                             Course Content
                         </h2>
@@ -145,7 +144,6 @@ Props bersifat immutable sehingga UI tetap predictable.`,
                                         {ch.title}
                                     </h3>
 
-                                    {/* MATERIALS */}
                                     <ul className="space-y-1">
                                         {ch.materials.map((m) => (
                                             <li
@@ -156,7 +154,8 @@ Props bersifat immutable sehingga UI tetap predictable.`,
                                                     )
                                                 }
                                                 className={`
-                                                    p-2 rounded-lg flex justify-between items-center cursor-pointer 
+                                                    p-2 rounded-lg flex justify-between items-start cursor-pointer
+                                                    break-words
                                                     ${
                                                         m.id == materialId
                                                             ? "bg-blue-100"
@@ -165,7 +164,7 @@ Props bersifat immutable sehingga UI tetap predictable.`,
                                                     hover:bg-gray-100 border
                                                 `}
                                             >
-                                                <p className="text-sm">
+                                                <p className="text-sm w-[80%] break-words">
                                                     {m.title}
                                                 </p>
 
@@ -178,7 +177,7 @@ Props bersifat immutable sehingga UI tetap predictable.`,
                                         ))}
                                     </ul>
 
-                                    {/* CHAPTER QUIZ */}
+                                    {/* QUIZ */}
                                     <div
                                         className="mt-3 p-3 bg-white rounded-lg border cursor-pointer hover:bg-gray-100 flex justify-between items-center"
                                         onClick={() =>

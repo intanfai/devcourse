@@ -26,8 +26,9 @@ export default function CoursePreviewPage() {
         rating: 4.8,
         reviews: 2589,
         students: 12800,
-        price: 149000,
-        oldPrice: 399000,
+        price: 1,
+        oldPrice: null,
+
         description:
             "Pelajari React dari dasar hingga mahir. Termasuk komponen, props, hooks, state management, hingga real-world projects.",
         requirements: [
@@ -75,9 +76,6 @@ export default function CoursePreviewPage() {
     };
 
     return (
-
-        
-        
         <StudentLayout>
             <div className="pb-6">
                 {/* BACK BUTTON */}
@@ -156,14 +154,19 @@ export default function CoursePreviewPage() {
                             {/* PRICE CARD */}
                             <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl w-fit mb-3">
                                 <h2 className="text-3xl font-bold text-blue-700">
-                                    Rp {course.price.toLocaleString("id-ID")}
+                                    Rp{" "}
+                                    {Number(course.price).toLocaleString(
+                                        "id-ID"
+                                    )}
                                 </h2>
-                                <p className="line-through text-gray-400">
-                                    Rp {course.oldPrice.toLocaleString("id-ID")}
-                                </p>
                             </div>
 
-                            <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold shadow transition">
+                            <button
+                                onClick={() =>
+                                    navigate(`/student/checkout/${course.id}`)
+                                }
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold shadow transition"
+                            >
                                 Buy Now
                             </button>
                         </div>

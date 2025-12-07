@@ -51,7 +51,7 @@ import StudentNotificationsPage from "../Pages/dashboard/student/StudentNotifica
 import StudentProfilePage from "../Pages/dashboard/student/Profile/StudentProfilePage.jsx";
 import EditProfilePage from "../Pages/dashboard/student/Profile/EditProfilePage.jsx";
 import StudentSettingsPage from "../Pages/dashboard/student/Settings/StudentSettingsPage.jsx";
-
+import CheckoutPage from "../Pages/dashboard/student/CheckoutPage.jsx";
 
 
 export default function AppRoutes() {
@@ -191,6 +191,11 @@ export default function AppRoutes() {
                     path="/student/settings"
                     element={<StudentSettingsPage />}
                 />
+
+                <Route
+                    path="/student/checkout/:courseId"
+                    element={<CheckoutPage />}
+                />
             </Route>
 
             {/* optional: 404 */}
@@ -198,7 +203,7 @@ export default function AppRoutes() {
                 path="*"
                 element={<h2 className="p-6">404 - Not Found</h2>}
             />
-            <Route path="/dashboard" element={<AdminDashboard />} />
+            
         </Routes>
     );
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "../axios"; // atau sesuaikan path axios kamu
+import axios from "../axios";
 import { useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import {
@@ -23,8 +23,6 @@ export default function Login() {
         try {
             const res = await axios.post("/login", { email, password });
 
-            console.log("Login response:", res.data);
-
             if (res.data.token) {
                 localStorage.setItem("token", res.data.token);
                 localStorage.setItem("user", JSON.stringify(res.data.user));
@@ -43,27 +41,36 @@ export default function Login() {
                     // jika tidak diketahui, tetap di halaman saat ini dan tampilkan pesan
                     setError('Role pengguna tidak dikenali');
                 }
+
+                if (role === "admin") navigate("/dashboard");
+                else if (role === "instructor")
+                    navigate("/instructor/dashboard");
+                else if (role === "student") navigate("/student/dashboard");
+
             } else {
                 setError("Email atau password salah!");
             }
         } catch (err) {
             setError("Email atau password salah!");
-            console.error(err);
         }
     };
 
     return (
-        <section className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-            {/* LEFT — LOGIN FORM */}
-            <div className="flex flex-col justify-center px-28 py-12 bg-white">
-                <h2 className="text-3xl font-bold mb-2">Login</h2>
-                <p className="text-gray-600 mb-8">
+        <section className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-white">
+            {/* ================= LEFT: FORM ================= */}
+            <div className="flex flex-col justify-center px-6 sm:px-12 md:px-20 lg:px-28 py-16 bg-white">
+                <h2 className="text-3xl font-bold mb-2 text-gray-900">Login</h2>
+                <p className="text-gray-600 mb-6 text-sm sm:text-base">
                     Welcome back! Please login.
                 </p>
 
-                {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+                {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
 
-                <form className="space-y-5 max-w-sm" onSubmit={handleSubmit}>
+                <form
+                    className="space-y-5 max-w-sm w-full"
+                    onSubmit={handleSubmit}
+                >
+                    {/* Email */}
                     <div>
                         <label className="text-gray-700 font-medium text-sm">
                             Email
@@ -72,12 +79,13 @@ export default function Login() {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="mt-1.5 w-full p-2.5 border border-gray-300 rounded-lg 
-                    focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+                            className="mt-1.5 w-full p-3 border border-gray-300 rounded-lg 
+                            focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
                             placeholder="Enter your email"
                         />
                     </div>
 
+                    {/* Password */}
                     <div>
                         <label className="text-gray-700 font-medium text-sm">
                             Password
@@ -86,32 +94,34 @@ export default function Login() {
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="mt-1.5 w-full p-2.5 border border-gray-300 rounded-lg 
-                    focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+                            className="mt-1.5 w-full p-3 border border-gray-300 rounded-lg 
+                            focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
                             placeholder="Password"
                         />
                     </div>
 
-                    {/* Google */}
+                    {/* Google Button */}
                     <button
                         type="button"
-                        className="w-full border border-gray-300 py-2.5 rounded-lg flex items-center justify-center gap-3 hover:bg-gray-100 transition text-sm"
+                        className="w-full border border-gray-300 py-2.5 rounded-lg 
+                        flex items-center justify-center gap-3 hover:bg-gray-100 transition text-sm"
                     >
                         <FcGoogle size={22} />
-                        Google
+                        Login with Google
                     </button>
 
-                    {/* Login btn */}
+                    {/* Login Button */}
                     <button
                         type="submit"
                         className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold 
-                hover:bg-blue-700 transition text-sm"
+                        hover:bg-blue-700 transition text-sm shadow-sm"
                     >
                         Login
                     </button>
                 </form>
 
-                <p className="mt-5 text-gray-600 text-xs">
+                {/* Register */}
+                <p className="mt-6 text-gray-600 text-xs sm:text-sm">
                     Don't have an account?{" "}
                     <a
                         href="/register"
@@ -122,10 +132,10 @@ export default function Login() {
                 </p>
             </div>
 
-            {/* RIGHT — ILLUSTRATION AREA */}
+            {/* ================= RIGHT: ILLUSTRATION ================= */}
             <div className="hidden lg:flex items-start justify-center bg-white p-0">
-                <div className="w-[93%] h-[93%] my-4 border-2 border-[#004FC5] rounded-3xl px-10 pt-10 pb-12 flex flex-col">
-                    {/* Illustration — TOP CENTER */}
+                <div className="w-[92%] h-[92%] my-6 border-2 border-[#004FC5] rounded-3xl px-10 pt-10 pb-12 flex flex-col">
+                    {/* Illust */}
                     <div className="w-full flex justify-center mb-10">
                         <img
                             src="/images/illustration.png"
@@ -133,7 +143,7 @@ export default function Login() {
                         />
                     </div>
 
-                    {/* Logo + Name — LEFT */}
+                    {/* Logo */}
                     <div className="flex items-center gap-3 mb-4">
                         <img src="/images/logo.png" className="w-12" />
                         <h3 className="text-3xl font-bold text-[#004FC5]">
@@ -141,16 +151,15 @@ export default function Login() {
                         </h3>
                     </div>
 
-                    {/* Description — LEFT */}
+                    {/* Description */}
                     <p className="text-gray-600 text-sm leading-relaxed mb-6 pl-1">
                         Learning technology is easier than ever with DevCourse.
                         Explore coding, design, and more through fun,
-                        interactive lessons. Gain real experience while working
-                        on projects that matter. Join a growing community of
+                        interactive lessons. Join a growing community of
                         learners who inspire each other every day.
                     </p>
 
-                    {/* Social Icons — CENTER */}
+                    {/* Social Icons */}
                     <div className="flex gap-5 mt-2">
                         <FaFacebook size={28} color="#1877F2" />
                         <FaInstagram size={28} color="#E1306C" />

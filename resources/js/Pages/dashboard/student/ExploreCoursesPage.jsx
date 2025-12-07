@@ -53,7 +53,6 @@ export default function ExploreCoursesPage() {
         },
     ];
 
-    // ===== FILTER LOGIC =====
     const filteredCourses = courses
         .filter((c) => {
             const matchSearch = c.title
@@ -63,11 +62,9 @@ export default function ExploreCoursesPage() {
             const matchCategory =
                 activeCategory === "All" || c.category === activeCategory;
 
-            const matchLevel =
-                levelFilter === "All" || c.level === levelFilter;
+            const matchLevel = levelFilter === "All" || c.level === levelFilter;
 
-            const matchPrice =
-                priceFilter === "All" || c.price === priceFilter;
+            const matchPrice = priceFilter === "All" || c.price === priceFilter;
 
             return matchSearch && matchCategory && matchLevel && matchPrice;
         })
@@ -82,7 +79,7 @@ export default function ExploreCoursesPage() {
         <StudentLayout>
             <div className="pb-6">
                 {/* HEADER */}
-                <h1 className="text-3xl font-bold text-gray-900 mb-6">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
                     Explore Courses
                 </h1>
 
@@ -94,18 +91,19 @@ export default function ExploreCoursesPage() {
                         className="
                             w-full px-5 py-3 rounded-xl border border-gray-300 
                             focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                            text-sm md:text-base
                         "
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
                     <FiSearch
-                        className="absolute right-3 top-3 text-gray-500"
-                        size={20}
+                        className="absolute right-4 top-3.5 text-gray-500"
+                        size={18}
                     />
                 </div>
 
                 {/* CATEGORY FILTER */}
-                <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
+                <div className="flex gap-3 mb-6 overflow-x-auto pb-2 hide-scrollbar">
                     {categories.map((ct) => (
                         <button
                             key={ct}
@@ -126,10 +124,9 @@ export default function ExploreCoursesPage() {
                 </div>
 
                 {/* FILTER OPTIONS */}
-                <div className="flex flex-wrap gap-4 mb-10">
-                    {/* LEVEL FILTER */}
+                <div className="flex flex-col sm:flex-row flex-wrap gap-4 mb-10">
                     <select
-                        className="border rounded-xl px-4 py-2 text-sm"
+                        className="border rounded-xl px-4 py-2 text-sm w-full sm:w-auto"
                         value={levelFilter}
                         onChange={(e) => setLevelFilter(e.target.value)}
                     >
@@ -139,9 +136,8 @@ export default function ExploreCoursesPage() {
                         <option value="Advanced">Advanced</option>
                     </select>
 
-                    {/* PRICE FILTER */}
                     <select
-                        className="border rounded-xl px-4 py-2 text-sm"
+                        className="border rounded-xl px-4 py-2 text-sm w-full sm:w-auto"
                         value={priceFilter}
                         onChange={(e) => setPriceFilter(e.target.value)}
                     >
@@ -150,9 +146,8 @@ export default function ExploreCoursesPage() {
                         <option value="Paid">Paid</option>
                     </select>
 
-                    {/* SORTING */}
                     <select
-                        className="border rounded-xl px-4 py-2 text-sm"
+                        className="border rounded-xl px-4 py-2 text-sm w-full sm:w-auto"
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value)}
                     >
@@ -163,7 +158,7 @@ export default function ExploreCoursesPage() {
                 </div>
 
                 {/* COURSE GRID */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredCourses.map((course) => (
                         <Link
                             key={course.id}
@@ -172,12 +167,12 @@ export default function ExploreCoursesPage() {
                         >
                             <img
                                 src={course.thumbnail}
-                                className="w-full h-44 object-cover"
+                                className="w-full h-40 md:h-44 object-cover"
                                 alt={course.title}
                             />
 
                             <div className="p-5">
-                                <h3 className="font-semibold text-gray-800 text-lg mb-1">
+                                <h3 className="font-semibold text-gray-800 text-base md:text-lg mb-1">
                                     {course.title}
                                 </h3>
 

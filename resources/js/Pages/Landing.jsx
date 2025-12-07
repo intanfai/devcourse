@@ -1,15 +1,30 @@
-import "../../css/landing.css"; // Pastikan sesuai nama file
+import "../../css/landing.css";
 import CourseCard from "../Components/CourseCard";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FAQ from "../Components/Faq.jsx";
 import Footer from "../Components/Footer";
 import TestimonialSlider from "../Components/TestimonialSlider.jsx";
 import { Link } from "react-router-dom";
 
+// AOS IMPORT
+import AOS from "aos";
+import "aos/dist/aos.css";
+
 export default function Landing() {
     const [showMore, setShowMore] = useState(false);
+    const [mobileMenu, setMobileMenu] = useState(false);
+
+    useEffect(() => {
+        AOS.init({
+            duration: 900,
+            once: true,
+            offset: 100,
+            easing: "ease-out-quart",
+        });
+    }, []);
+
     const extraCourses = [
         {
             thumbnail: "/images/node.png",
@@ -45,19 +60,17 @@ export default function Landing() {
 
     return (
         <div className="bg-white">
-            <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-lg py-5 px-8 lg:px-24 flex items-center justify-between border-b z-50">
-                {/* LEFT — LOGO */}
+            {/* ================= NAVBAR ================= */}
+            <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-lg py-4 px-6 lg:px-20 flex items-center justify-between border-b z-50">
+                {/* LOGO */}
                 <div className="flex items-center gap-3 cursor-pointer">
-                    <img src="/images/logo.png" className="w-10" alt="logo" />
+                    <img src="/images/logo.png" className="w-9" alt="logo" />
                     <h1 className="text-xl font-bold text-[#004FC5]">
-                        Dev
-                        <span className="text-gray-800 font-semibold">
-                            Course
-                        </span>
+                        Dev<span className="text-gray-800">Course</span>
                     </h1>
                 </div>
 
-                {/* MIDDLE — MENU */}
+                {/* DESKTOP MENU */}
                 <ul className="hidden lg:flex items-center gap-10 text-gray-700 font-medium">
                     {["home", "courses", "whydev", "testimoni"].map((item) => (
                         <li key={item} className="relative group capitalize">
@@ -72,8 +85,8 @@ export default function Landing() {
                     ))}
                 </ul>
 
-                {/* RIGHT — BUTTONS */}
-                <div className="flex items-center gap-5">
+                {/* AUTH BUTTON (DESKTOP) */}
+                <div className="hidden lg:flex items-center gap-5">
                     <Link
                         to="/login"
                         className="font-semibold text-gray-800 hover:text-[#004FC5]"
@@ -87,68 +100,103 @@ export default function Landing() {
                         Get Started
                     </Link>
                 </div>
+
+                {/* MOBILE MENU BUTTON */}
+                <button
+                    onClick={() => setMobileMenu(!mobileMenu)}
+                    className="lg:hidden text-gray-700 text-2xl"
+                >
+                    ☰
+                </button>
             </nav>
-            {/* HERO SECTION */}
+
+            {/* MOBILE DROPDOWN */}
+            {mobileMenu && (
+                <div className="lg:hidden px-6 pt-20 pb-6 bg-white border-b flex flex-col gap-4 text-gray-700 font-medium">
+                    {["home", "courses", "whydev", "testimoni"].map((item) => (
+                        <a
+                            key={item}
+                            href={`#${item}`}
+                            onClick={() => setMobileMenu(false)}
+                            className="capitalize py-2 hover:text-[#004FC5]"
+                        >
+                            {item === "whydev" ? "About" : item}
+                        </a>
+                    ))}
+
+                    <Link
+                        to="/login"
+                        className="mt-3 font-semibold text-gray-800 hover:text-[#004FC5]"
+                    >
+                        Sign In
+                    </Link>
+
+                    <Link
+                        to="/register"
+                        className="bg-[#004FC5] text-white font-semibold px-5 py-2 rounded-full shadow-sm hover:bg-blue-700 transition w-max"
+                    >
+                        Get Started
+                    </Link>
+                </div>
+            )}
+
+            {/* ================= HERO SECTION ================= */}
             <section
                 id="home"
-                className="pt-40 pb-32 relative overflow-hidden px-8 lg:px-24"
+                className="pt-28 pb-20 lg:pt-32 lg:pb-24 relative overflow-hidden px-6 lg:px-20 bg-[#F4F7FF]"
             >
-                {/* Background biru lembut */}
-                <div className="absolute inset-0 bg-gradient-to-br from-[#eaf1ff] via-white to-[#f3f7ff] -z-20"></div>
-
-                {/* Dekorasi biru belakang gambar */}
-                <div className="absolute right-0 top-40 w-[480px] h-[480px] bg-[#dce8ff] rounded-[50px] blur-[2px] opacity-70 -z-10 hidden lg:block"></div>
-
-                {/* Wrapper */}
-                <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10">
-                    {/* LEFT TEXT */}
-                    <div className="max-w-xl">
-                        <h1 className="text-5xl lg:text-6xl font-extrabold text-[#004FC5] leading-tight mb-6">
-                            Your Future <br />
-                            Begins with the <br />
-                            Courage to Learn.
+                <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+                    {/* LEFT SIDE */}
+                    <div className="max-w-xl" data-aos="fade-up">
+                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#004FC5] leading-snug mb-5">
+                            Your Future <br /> Begins with the <br /> Courage to
+                            Learn.
                         </h1>
 
-                        <p className="text-gray-600 text-lg mb-10 leading-relaxed">
+                        <p className="text-gray-700 text-base md:text-lg mb-8 leading-relaxed">
                             Learn programming with structured materials,
                             hands-on practice, and guidance from mentors ready
                             to support your growth.
                         </p>
 
-                        {/* Search bar */}
                         <Link
                             to="/register"
-                            className="bg-[#004FC5] text-white font-semibold px-6 py-2 rounded-full shadow-sm hover:bg-blue-700 transition"
+                            className="bg-[#004FC5] text-white font-semibold px-8 py-3 rounded-full shadow-md hover:bg-blue-700 transition inline-block"
+                            data-aos="fade-up"
+                            data-aos-delay="200"
                         >
                             Get Started
                         </Link>
                     </div>
 
+                    {/* RIGHT SIDE */}
                     {/* RIGHT IMAGE */}
-                    <div className="relative flex justify-center lg:justify-end">
-                        {/* BLUE BACKGROUND SHAPE */}
+                    <div
+                        className="relative flex justify-center lg:justify-end animate-float"
+                        data-aos="fade-left"
+                    >
                         <div
                             className="
-                            absolute -right-0 top-7 
-                            w-[520px] h-[520px] 
-                            bg-gradient-to-br from-[#004FC5] to-[#2563eb]
-                            opacity-[0.15] 
-                            rounded-t-[60px]
-                            rounded-b-none 
-                            blur-sm -z-10 hidden lg:block"
+                absolute top-10 -right-4 w-[420px] h-[420px] bg-[#d9e6ff]
+                opacity-50 rounded-3xl blur-md -z-10 hidden lg:block
+                animate-pulse-glow
+            "
                         ></div>
 
-                        {/* Figur utama */}
                         <img
                             src="/images/hero.png"
-                            className="w-[380px] lg:w-[520px] drop-shadow-xl relative z-10"
+                            className="w-[460px] lg:w-[640px] drop-shadow-xl relative z-10 translate-y-10 lg:translate-y-15"
                         />
 
-                        {/* Floating Card 1 */}
-                        <div className="absolute top-6 -left-10 bg-white shadow-lg rounded-xl px-4 py-3 flex items-center gap-3 z-20">
+                        {/* Floating Cards */}
+                        <div
+                            className="absolute top-10 -left-6 bg-white shadow-lg rounded-xl px-4 py-3 flex items-center gap-3 z-20 animate-float-slow"
+                            data-aos="zoom-in"
+                            data-aos-delay="200"
+                        >
                             <img
                                 src="/images/jake.jpg"
-                                className="w-10 h-10 rounded-full"
+                                className="w-9 h-9 rounded-full"
                             />
                             <div>
                                 <p className="font-semibold text-sm">
@@ -160,8 +208,11 @@ export default function Landing() {
                             </div>
                         </div>
 
-                        {/* Floating Card 2 */}
-                        <div className="absolute top-48 -right-6 bg-white rounded-xl shadow-lg px-4 py-3 z-20">
+                        <div
+                            className="absolute top-36 -right-2 bg-white rounded-xl shadow-lg px-4 py-3 z-20 animate-float-slow"
+                            data-aos="zoom-in"
+                            data-aos-delay="300"
+                        >
                             <p className="font-bold text-sm text-[#004FC5]">
                                 John Chena
                             </p>
@@ -171,97 +222,97 @@ export default function Landing() {
                             <p className="text-yellow-400 text-xs">★★★★★</p>
                         </div>
 
-                        {/* Floating Card 3 */}
-                        <div className="absolute bottom-8 right-20 bg-white rounded-xl shadow-xl px-4 py-3 z-20">
+                        <div
+                            className="absolute bottom-4 right-24 bg-white rounded-xl shadow-lg px-4 py-3 z-20 animate-float-slow"
+                            data-aos="zoom-in"
+                            data-aos-delay="400"
+                        >
                             <p className="text-sm font-semibold mb-2">
                                 Our Instructors
                             </p>
+
                             <div className="flex -space-x-3">
-                                <img
-                                    src="/images/sunoo.jpg"
-                                    className="w-9 h-9 rounded-full border-2 border-white"
-                                />
-                                <img
-                                    src="/images/jungwon.jpg"
-                                    className="w-9 h-9 rounded-full border-2 border-white"
-                                />
-                                <img
-                                    src="/images/sunghoon.jpg"
-                                    className="w-9 h-9 rounded-full border-2 border-white"
-                                />
-                                <img
-                                    src="/images/jennie.jpg"
-                                    className="w-9 h-9 rounded-full border-2 border-white"
-                                />
+                                {["sunoo", "jungwon", "sunghoon", "jennie"].map(
+                                    (img) => (
+                                        <img
+                                            key={img}
+                                            src={`/images/${img}.jpg`}
+                                            className="w-9 h-9 rounded-full border-2 border-white"
+                                        />
+                                    )
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
-            {/* COURSE SECTION */}
-            <section id="courses" className="py-20 px-10 lg:px-24">
-                <div className="text-center mb-12">
+
+            {/* ================= POPULAR COURSES ================= */}
+            <section
+                id="courses"
+                className="py-16 lg:py-20 px-6 lg:px-20 overflow-hidden"
+            >
+                <div data-aos="fade-up" className="text-center mb-10 lg:mb-12">
                     <h2 className="text-3xl font-bold mb-3">Popular Courses</h2>
-                    <p className="text-gray-600">
+                    <p className="text-gray-600 text-sm md:text-base">
                         Explore our most popular classes chosen by thousands of
                         students.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-                    {/* 3 CARD UTAMA */}
-                    <CourseCard
-                        thumbnail="/images/uiuxfundamentals.webp"
-                        category="UI/UX Design"
-                        title="UI/UX Design Fundamentals"
-                        instructor="Sarah Kim"
-                        rating={5.0}
-                        students={2746}
-                        price={49}
-                        oldPrice={150}
-                    />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+                    {[0, 1, 2].map((i) => (
+                        <div
+                            key={i}
+                            data-aos="fade-up"
+                            data-aos-delay={i * 150}
+                        >
+                            <CourseCard
+                                thumbnail={
+                                    [
+                                        "/images/uiuxfundamentals.webp",
+                                        "/images/htmlcss.jpg",
+                                        "/images/jsessentials.jpg",
+                                    ][i]
+                                }
+                                category={
+                                    [
+                                        "UI/UX Design",
+                                        "Frontend Development",
+                                        "JavaScript",
+                                    ][i]
+                                }
+                                title={
+                                    [
+                                        "UI/UX Design Fundamentals",
+                                        "HTML & CSS Masterclass",
+                                        "JavaScript Essentials",
+                                    ][i]
+                                }
+                                instructor={
+                                    ["Sarah Kim", "Daniel Park", "Kevin Lee"][i]
+                                }
+                                rating={5.0}
+                                students={[2746, 2589, 2456][i]}
+                                price={[49, 39, 29][i]}
+                                oldPrice={[150, 99, 85][i]}
+                            />
+                        </div>
+                    ))}
 
-                    <CourseCard
-                        thumbnail="/images/htmlcss.jpg"
-                        category="Frontend Development"
-                        title="HTML & CSS Masterclass"
-                        instructor="Daniel Park"
-                        rating={5.0}
-                        students={2589}
-                        price={39}
-                        oldPrice={99}
-                    />
-
-                    <CourseCard
-                        thumbnail="/images/jsessentials.jpg"
-                        category="JavaScript"
-                        title="JavaScript Essentials"
-                        instructor="Kevin Lee"
-                        rating={5.0}
-                        students={2456}
-                        price={29}
-                        oldPrice={85}
-                    />
-
-                    {/* CARD TAMBAHAN */}
                     {showMore &&
                         extraCourses.map((c, i) => (
-                            <CourseCard
+                            <div
                                 key={i}
-                                thumbnail={c.thumbnail}
-                                category={c.category}
-                                title={c.title}
-                                instructor={c.instructor}
-                                rating={c.rating}
-                                students={c.students}
-                                price={c.price}
-                                oldPrice={c.oldPrice}
-                            />
+                                data-aos="fade-up"
+                                data-aos-delay={200 + i * 150}
+                            >
+                                <CourseCard {...c} />
+                            </div>
                         ))}
                 </div>
 
-                {/* BUTTON SHOW / HIDE */}
-                <div className="flex justify-center mt-12">
+                <div className="flex justify-center mt-10" data-aos="fade-up">
                     <button
                         onClick={() => setShowMore(!showMore)}
                         className="px-6 py-3 bg-[#004FC5] text-white rounded-full hover:bg-blue-700 transition"
@@ -270,127 +321,122 @@ export default function Landing() {
                     </button>
                 </div>
             </section>
-            {/* ABOUT SECTION CLEAN */}
-            <section id="whydev" className="py-24 px-8 lg:px-24 bg-[#F4F7FF]">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                    {/* LEFT — FEATURE CARDS */}
-                    <div className="space-y-6">
-                        {/* CARD 1 */}
-                        <div className="flex items-start gap-5 bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition">
-                            <div className="w-14 h-14 bg-blue-100 text-[#004FC5] flex items-center justify-center rounded-xl text-2xl">
-                                📘
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-lg">
-                                    Learn Anytime, Anywhere
-                                </h3>
-                                <p className="text-gray-600 text-sm">
-                                    Study with flexible access wherever you are.
-                                </p>
-                            </div>
-                        </div>
 
-                        {/* CARD 2 */}
-                        <div className="flex items-start gap-5 bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition">
-                            <div className="w-14 h-14 bg-purple-100 text-purple-600 flex items-center justify-center rounded-xl text-2xl">
-                                🎓
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-lg">
-                                    Official Certificate
-                                </h3>
-                                <p className="text-gray-600 text-sm">
-                                    Earn verified certificates to boost your
-                                    portfolio.
-                                </p>
-                            </div>
-                        </div>
+            {/* ================= ABOUT SECTION ================= */}
+            <section id="whydev" className="py-20 px-6 lg:px-20 bg-[#F4F7FF]">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-20 items-start">
+                    {/* FEATURE CARDS */}
+                    <div className="space-y-6" data-aos="fade-right">
+                        {[
+                            [
+                                "📘",
+                                "Learn Anytime, Anywhere",
+                                "Study with flexible access wherever you are.",
+                            ],
+                            [
+                                "🎓",
+                                "Official Certificate",
+                                "Earn verified certificates to boost your portfolio.",
+                            ],
+                            [
+                                "🔄",
+                                "Updated Materials",
+                                "Courses are always updated to match industry trends.",
+                            ],
+                        ].map(([icon, title, desc], i) => (
+                            <div
+                                key={i}
+                                className="flex items-start gap-5 bg-white p-6 md:p-7 rounded-2xl shadow-sm hover:shadow-xl transition border"
+                                data-aos="fade-right"
+                                data-aos-delay={150 * i}
+                            >
+                                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-[#E7F0FF] flex items-center justify-center text-2xl md:text-3xl text-[#004FC5] shadow-sm">
+                                    {icon}
+                                </div>
 
-                        {/* CARD 3 */}
-                        <div className="flex items-start gap-5 bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition">
-                            <div className="w-14 h-14 bg-pink-100 text-pink-600 flex items-center justify-center rounded-xl text-2xl">
-                                🔄
+                                <div>
+                                    <h3 className="font-semibold text-lg md:text-xl mb-1 text-gray-800">
+                                        {title}
+                                    </h3>
+                                    <p className="text-gray-600 text-sm md:text-base">
+                                        {desc}
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="font-semibold text-lg">
-                                    Updated Materials
-                                </h3>
-                                <p className="text-gray-600 text-sm">
-                                    Courses are always updated to match industry
-                                    trends.
-                                </p>
-                            </div>
-                        </div>
+                        ))}
                     </div>
 
-                    {/* RIGHT — TEXT */}
-                    <div>
-                        <h2 className="text-4xl font-bold text-[#004FC5] mb-4 leading-snug">
+                    {/* TEXT BLOCK */}
+                    <div data-aos="fade-left">
+                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-[#004FC5] mb-5 leading-tight">
                             Why Choose{" "}
-                            <span className="text-[#004FC5]">DevCourse?</span>
+                            <span className="text-[#003a90]">DevCourse?</span>
                         </h2>
 
-                        <p className="text-gray-600 text-lg mb-8 max-w-lg">
-                            We provide a structured and practical learning
-                            experience designed to prepare you for real-world
-                            careers in technology.
+                        <p className="text-gray-700 text-base md:text-lg mb-8 leading-relaxed max-w-lg">
+                            We provide a structured, practical, and guided
+                            learning journey tailored for anyone who wants to
+                            build a real career in tech — from complete
+                            beginners to advanced learners.
                         </p>
 
-                        <button className="px-8 py-3 bg-[#004FC5] text-white rounded-full font-semibold shadow hover:bg-blue-700 transition">
+                        <button className="px-8 py-3 bg-[#004FC5] text-white rounded-full font-semibold shadow-md hover:bg-blue-700 transition">
                             Learn More
                         </button>
                     </div>
                 </div>
             </section>
-            {/* TESTIMONIAL SECTION CLEAN */}
-            <section id="testimoni" className="py-24 px-8 lg:px-24 relative">
+
+            {/* ================= TESTIMONIALS ================= */}
+            <section
+                id="testimoni"
+                className="py-20 px-6 lg:px-20"
+                data-aos="fade-up"
+            >
                 <TestimonialSlider />
             </section>
-            {/* FAQ SECTION */}
-            <section id="faq" className="py-24 px-8 lg:px-24 bg-[#F4F7FF]">
-                <div className="text-center mb-14">
-                    <h2 className="text-4xl font-bold text-[#004FC5]">
+
+            {/* ================= FAQ ================= */}
+            <section id="faq" className="py-20 px-6 lg:px-20 bg-[#F4F7FF]">
+                <div className="text-center mb-12">
+                    <h2 className="text-3xl lg:text-4xl font-bold text-[#004FC5]">
                         Frequently Asked Question
                     </h2>
-                    <p className="text-gray-600 mt-3">
+                    <p className="text-gray-600 mt-3 text-sm md:text-base">
                         Do you have any questions? Here are some frequently
-                        asked questions that we have answered.
+                        asked questions.
                     </p>
                 </div>
 
                 <FAQ />
             </section>
-            {/* CTA SECTION */}
-            <section className="py-24 px-6 lg:px-24">
-                <div className="relative bg-[#F4F8FF] rounded-3xl p-12 lg:p-16 overflow-hidden shadow-sm max-w-3xl mx-auto">
-                    {/* Decorative Dots / Shapes */}
 
-                    {/* CTA CONTENT */}
-                    <div className="relative z-10 text-center">
-                        <h2 className="text-3xl lg:text-4xl font-bold text-[#1E2A53] mb-3">
+            {/* ================= CTA ================= */}
+            <section className="py-20 px-6 lg:px-20">
+                <div className="bg-[#F4F8FF] rounded-3xl p-10 md:p-14 shadow-sm max-w-3xl mx-auto">
+                    <div className="text-center">
+                        <h2 className="text-3xl md:text-4xl font-bold text-[#1E2A53] mb-3">
                             Grow your skills with us.
                         </h2>
-                        <p className="text-xl text-gray-600 mb-10">
+                        <p className="text-lg text-gray-600 mb-10">
                             Join now & start learning.
                         </p>
 
-                        {/* INPUT + BUTTON */}
-                        <div className="flex justify-center">
-                            <div className="flex bg-white shadow-lg rounded-full overflow-hidden w-full max-w-lg">
-                                <input
-                                    type="email"
-                                    placeholder="Enter your email"
-                                    className="flex-1 px-5 py-3 outline-none"
-                                />
-                                <button className="px-6 py-3 bg-[#004FC5] text-white font-semibold hover:bg-blue-700 transition">
-                                    Join Now
-                                </button>
-                            </div>
+                        <div className="flex flex-col sm:flex-row bg-white shadow-lg rounded-full overflow-hidden mx-auto max-w-lg">
+                            <input
+                                type="email"
+                                placeholder="Enter your email"
+                                className="flex-1 px-5 py-3 outline-none text-sm"
+                            />
+                            <button className="px-6 py-3 bg-[#004FC5] text-white font-semibold hover:bg-blue-700 transition">
+                                Join Now
+                            </button>
                         </div>
                     </div>
                 </div>
             </section>
-            <Footer /> {/* Tambahkan ini */}
+
+            <Footer />
         </div>
     );
 }
