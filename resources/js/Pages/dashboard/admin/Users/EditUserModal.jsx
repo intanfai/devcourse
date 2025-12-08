@@ -1,6 +1,6 @@
 import { FiX } from "react-icons/fi";
 
-export default function EditUserModal({ open, close, user, onSubmit }) {
+export default function EditUserModal({ open, close, user, onSubmit, roles = [] }) {
     if (!open || !user) return null;
 
     const handleSubmit = (e) => {
@@ -13,6 +13,7 @@ export default function EditUserModal({ open, close, user, onSubmit }) {
             name: form.get("name"),
             email: form.get("email"),
             role: form.get("role"),
+            password: form.get("password"),
             status: form.get("status"),
         });
 
@@ -53,9 +54,12 @@ export default function EditUserModal({ open, close, user, onSubmit }) {
                             defaultValue={user.role}
                             className="w-full border rounded-lg px-4 py-2 mt-1"
                         >
-                            <option value="Admin">Admin</option>
-                            <option value="Instructor">Instructor</option>
-                            <option value="Student">Student</option>
+                            <option value="">Select role</option>
+                            {roles.map((r) => (
+                                <option key={r.id} value={r.name}>
+                                    {r.name}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
@@ -69,6 +73,15 @@ export default function EditUserModal({ open, close, user, onSubmit }) {
                             <option value="Active">Active</option>
                             <option value="Inactive">Inactive</option>
                         </select>
+                    </div>
+
+                    <div>
+                        <label className="text-sm font-medium">Password (leave blank to keep)</label>
+                        <input
+                            name="password"
+                            type="password"
+                            className="w-full border rounded-lg px-4 py-2 mt-1 outline-none focus:ring-2 focus:ring-blue-500"
+                        />
                     </div>
 
                     <div className="flex justify-end gap-3 mt-6">

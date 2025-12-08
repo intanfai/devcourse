@@ -1,7 +1,7 @@
 import { FiX } from "react-icons/fi";
 import { useState } from "react";
 
-export default function AddUserModal({ open, close, onSubmit }) {
+export default function AddUserModal({ open, close, onSubmit, roles = [] }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         const form = new FormData(e.target);
@@ -10,7 +10,7 @@ export default function AddUserModal({ open, close, onSubmit }) {
             name: form.get("name"),
             email: form.get("email"),
             role: form.get("role"),
-            status: form.get("status"),
+            password: form.get("password"),
         });
 
         close();
@@ -48,22 +48,25 @@ export default function AddUserModal({ open, close, onSubmit }) {
                         <select
                             name="role"
                             className="w-full border rounded-lg px-4 py-2 mt-1"
+                            required
                         >
-                            <option value="Admin">Admin</option>
-                            <option value="Instructor">Instructor</option>
-                            <option value="Student">Student</option>
+                            <option value="">Select role</option>
+                            {roles.map((r) => (
+                                <option key={r.id} value={r.name}>
+                                    {r.name}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
                     <div>
-                        <label className="text-sm font-medium">Status</label>
-                        <select
-                            name="status"
-                            className="w-full border rounded-lg px-4 py-2 mt-1"
-                        >
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
-                        </select>
+                        <label className="text-sm font-medium">Password</label>
+                        <input
+                            name="password"
+                            required
+                            type="password"
+                            className="w-full border rounded-lg px-4 py-2 mt-1 outline-none focus:ring-2 focus:ring-blue-500"
+                        />
                     </div>
 
                     <div className="flex justify-end gap-3 mt-6">

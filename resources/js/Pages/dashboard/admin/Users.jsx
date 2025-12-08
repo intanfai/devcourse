@@ -1,18 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminLayout from "../../../layouts/AdminLayout";
 import { FiEdit, FiTrash2, FiPlus, FiSearch, FiFilter } from "react-icons/fi";
 import AddUserModal from "./AddUserModal";
 import EditUserModal from "./Users/EditUserModal";
 import ConfirmModal from "../../../Components/ConfirmModal";
+import axios from "../../../axios";
 
 export default function UsersPage() {
-    const [users, setUsers] = useState([
-        { id: 1, name: "Rina", email: "rina@gmail.com", role: "Student" },
-        { id: 2, name: "Dita", email: "dita@gmail.com", role: "Instructor" },
-        { id: 3, name: "Andi", email: "andi@gmail.com", role: "Admin" },
-        { id: 4, name: "Bayu", email: "bayu@gmail.com", role: "Student" },
-        { id: 5, name: "Lia", email: "lia@gmail.com", role: "Student" },
-    ]);
+    const [users, setUsers] = useState([]);
+    const [roles, setRoles] = useState([]);
 
     const [openAdd, setOpenAdd] = useState(false);
     const [openEdit, setOpenEdit] = useState(false);
@@ -28,39 +24,132 @@ export default function UsersPage() {
 
     // FILTER (Tanpa status)
     const filteredUsers = users.filter((u) => {
+        const roleName = (u.role?.name || u.role || "").toString();
+
         const matchSearch =
             u.name.toLowerCase().includes(search.toLowerCase()) ||
             u.email.toLowerCase().includes(search.toLowerCase());
 
-        const matchRole = filterRole === "All" ? true : u.role === filterRole;
+        const matchRole =
+            filterRole === "All"
+                ? true
+                : roleName.toLowerCase() === filterRole.toString().toLowerCase();
 
         return matchSearch && matchRole;
     });
 
-    const usersPerPage = 5;
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [currentPage, setCurrentPage] = useState(1);
-    const indexLast = currentPage * usersPerPage;
-    const indexFirst = indexLast - usersPerPage;
+    const indexLast = currentPage * rowsPerPage;
+    const indexFirst = indexLast - rowsPerPage;
     const currentUsers = filteredUsers.slice(indexFirst, indexLast);
-    const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+    const totalPages = Math.max(1, Math.ceil(filteredUsers.length / rowsPerPage));
 
     const handlePageChange = (page) => setCurrentPage(page);
+    const resetPage = () => setCurrentPage(1);
 
     // ADD USER
     const handleAddUser = (newUser) => {
-        setUsers([...users, { id: users.length + 1, ...newUser }]);
+        const token = localStorage.getItem("token");
+        const roleObj = roles.find((r) => r.name === newUser.role);
+
+        if (!roleObj) {
+            alert("Selected role not found. Please reload the page.");
+            return;
+        }
+
+        axios
+            .post(
+                "/users",
+                {
+                    name: newUser.name,
+                    email: newUser.email,
+                    password: newUser.password || "password123",
+                    role_id: roleObj ? roleObj.id : null,
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+            )
+            .then((res) => {
+                if (res.data) setUsers((prev) => [...prev, res.data]);
+            })
+            .catch((err) => {
+                console.error("Failed to create user", err);
+                const msg = err.response?.data?.message ||
+                    (err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : err.message);
+                alert(`Failed to create user: ${msg}`);
+            });
     };
 
     // UPDATE USER
     const handleUpdateUser = (updatedUser) => {
-        setUsers(users.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
+        const token = localStorage.getItem("token");
+        const roleObj = roles.find((r) => r.name === updatedUser.role);
+
+        if (!roleObj) {
+            alert("Selected role not found. Please reload the page.");
+            return;
+        }
+
+        axios
+            .put(
+                `/users/${updatedUser.id}`,
+                {
+                    name: updatedUser.name,
+                    email: updatedUser.email,
+                    password: updatedUser.password || null,
+                    role_id: roleObj ? roleObj.id : null,
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+            )
+            .then((res) => {
+                if (res.data) {
+                    setUsers(users.map((u) => (u.id === res.data.id ? res.data : u)));
+                }
+            })
+            .catch((err) => {
+                console.error("Failed to update user", err);
+                const msg = err.response?.data?.message ||
+                    (err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : err.message);
+                alert(`Failed to update user: ${msg}`);
+            });
     };
 
     // DELETE USER
     const handleDeleteConfirm = () => {
-        setUsers(users.filter((u) => u.id !== confirmDelete.user.id));
-        setConfirmDelete({ open: false, user: null });
+        const token = localStorage.getItem("token");
+
+        axios
+            .delete(`/users/${confirmDelete.user.id}`, { headers: { Authorization: `Bearer ${token}` } })
+            .then(() => {
+                setUsers(users.filter((u) => u.id !== confirmDelete.user.id));
+                setConfirmDelete({ open: false, user: null });
+            })
+            .catch((err) => {
+                console.error("Failed to delete user", err);
+                const msg = err.response?.data?.message || err.message;
+                alert(`Failed to delete user: ${msg}`);
+            });
     };
+
+    // load users & roles from API
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        axios
+            .get("/users", { headers: { Authorization: `Bearer ${token}` } })
+            .then((res) => {
+                if (res.data) setUsers(res.data);
+            })
+            .catch((err) => console.error("Failed to load users", err));
+
+        axios
+            .get("/roles", { headers: { Authorization: `Bearer ${token}` } })
+            .then((res) => {
+                if (res.data) setRoles(res.data);
+            })
+            .catch((err) => console.error("Failed to load roles", err));
+    }, []);
 
     return (
         <AdminLayout>
@@ -76,7 +165,10 @@ export default function UsersPage() {
                             type="text"
                             placeholder="Search users..."
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => {
+                                setSearch(e.target.value);
+                                resetPage();
+                            }}
                             className="ml-2 bg-transparent outline-none text-sm"
                         />
                     </div>
@@ -93,13 +185,18 @@ export default function UsersPage() {
                             <p className="text-xs text-gray-500 mb-1">Role</p>
                             <select
                                 value={filterRole}
-                                onChange={(e) => setFilterRole(e.target.value)}
+                                onChange={(e) => {
+                                    setFilterRole(e.target.value);
+                                    resetPage();
+                                }}
                                 className="w-full border px-2 py-1 rounded"
                             >
                                 <option value="All">All</option>
-                                <option value="Admin">Admin</option>
-                                <option value="Instructor">Instructor</option>
-                                <option value="Student">Student</option>
+                                {roles.map((r) => (
+                                    <option key={r.id} value={r.name}>
+                                        {r.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                     </details>
@@ -146,12 +243,16 @@ export default function UsersPage() {
 
                                 <td className="py-3 px-3">{user.name}</td>
                                 <td className="py-3 px-3">{user.email}</td>
-                                <td className="py-3 px-3">{user.role}</td>
+                                <td className="py-3 px-3">{user.role?.name || user.role}</td>
 
                                 <td className="py-3 px-3 flex justify-center gap-3">
                                     <button
                                         onClick={() => {
-                                            setSelectedUser(user);
+                                            setSelectedUser({
+                                                ...user,
+                                                role: user.role?.name || user.role,
+                                                status: user.status || "Active",
+                                            });
                                             setOpenEdit(true);
                                         }}
                                         className="text-blue-600 hover:text-blue-800"
@@ -177,20 +278,82 @@ export default function UsersPage() {
                 </table>
 
                 {/* PAGINATION */}
-                <div className="flex justify-end mt-4 gap-2">
-                    {[...Array(totalPages)].map((_, i) => (
-                        <button
-                            key={i}
-                            onClick={() => setCurrentPage(i + 1)}
-                            className={`px-3 py-1 rounded ${
-                                currentPage === i + 1
-                                    ? "bg-blue-600 text-white"
-                                    : "bg-gray-200 hover:bg-gray-300"
-                            }`}
+                <div className="mt-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500">Rows per page:</span>
+                        <select
+                            value={rowsPerPage}
+                            onChange={(e) => {
+                                setRowsPerPage(Number(e.target.value));
+                                resetPage();
+                            }}
+                            className="border px-3 py-1 rounded text-sm"
                         >
-                            {i + 1}
+                            <option value={5}>5</option>
+                            <option value={10}>10</option>
+                            <option value={20}>20</option>
+                        </select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <button
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            className="px-3 py-1 rounded bg-gray-200 text-sm"
+                        >
+                            Prev
                         </button>
-                    ))}
+
+                        {/* sliding window: show up to 3 page buttons */}
+                        {(() => {
+                            const maxStart = Math.max(1, totalPages - 2);
+                            const start = Math.min(Math.max(1, currentPage), maxStart);
+                            const pageButtons = [];
+
+                            for (let i = 0; i < 3; i++) {
+                                const p = start + i;
+                                if (p <= totalPages) {
+                                    pageButtons.push(
+                                        <button
+                                            key={p}
+                                            onClick={() => setCurrentPage(p)}
+                                            className={`px-3 py-1 rounded text-sm ${
+                                                currentPage === p
+                                                    ? "bg-blue-600 text-white"
+                                                    : "bg-gray-100"
+                                            }`}
+                                        >
+                                            {p}
+                                        </button>
+                                    );
+                                }
+                            }
+
+                            return (
+                                <>
+                                    {pageButtons}
+                                    {start + 3 <= totalPages && (
+                                        <button
+                                            onClick={() =>
+                                                setCurrentPage((_) => Math.min(totalPages, start + 3))
+                                            }
+                                            className="px-3 py-1 rounded text-sm bg-gray-100"
+                                        >
+                                            ...
+                                        </button>
+                                    )}
+                                </>
+                            );
+                        })()}
+
+                        <button
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                            className="px-3 py-1 rounded bg-gray-200 text-sm"
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -199,6 +362,7 @@ export default function UsersPage() {
                 open={openAdd}
                 close={() => setOpenAdd(false)}
                 onSubmit={handleAddUser}
+                roles={roles}
             />
 
             <EditUserModal
@@ -206,6 +370,7 @@ export default function UsersPage() {
                 close={() => setOpenEdit(false)}
                 user={selectedUser}
                 onSubmit={handleUpdateUser}
+                roles={roles}
             />
 
             <ConfirmModal
