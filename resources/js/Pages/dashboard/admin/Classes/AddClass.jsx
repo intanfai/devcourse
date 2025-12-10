@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import axios from "../../../../axios";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../../../layouts/AdminLayout";
 import { FiPlus, FiTrash2, FiArrowLeft } from "react-icons/fi";
 
 /* ---------------------------- HELPERS ---------------------------- */
 function emptyQuestion() {
-    return { question: "", points: 1, correct: "", choices: ["", "", ""] };
+    return { question: "", points: 1, correct: "", choices: ["", "", "", ""] };
 }
 
 function emptyMaterial() {
@@ -42,11 +43,57 @@ export default function AddClass() {
     const [form, setForm] = useState({
         title: "",
         category: "",
-        level: "Beginner",
+        level: "",
         price: "",
+        thumbnail: null,
         description: "",
         chapters: [emptyChapter()],
     });
+    const priceInputRef = useRef(null);
+
+    const onlyDigits = (s) => (s || "").toString().replace(/\D/g, "");
+    const formatRupiah = (s) => {
+        if (!s) return "";
+        try {
+            return Number(s).toLocaleString("id-ID");
+        } catch (e) {
+            return s;
+        }
+    };
+
+    const handlePriceChange = (e) => {
+        const rawInput = e.target.value || "";
+
+        // count digits before caret in the raw input string
+        const selectionStart = e.target.selectionStart || 0;
+        const digitsBefore = (rawInput.slice(0, selectionStart).match(/\d/g) || []).length;
+
+        const newRaw = onlyDigits(rawInput);
+
+        // update raw value in state
+        setForm((f) => ({ ...f, price: newRaw }));
+
+        // After state updates and re-render, restore caret position based on digitsBefore
+        setTimeout(() => {
+            const el = priceInputRef.current;
+            if (!el) return;
+
+            const newDisplay = formatRupiah(newRaw);
+
+            // find position in display that corresponds to digitsBefore
+            let pos = 0;
+            let digitsSeen = 0;
+            while (pos < newDisplay.length && digitsSeen < digitsBefore) {
+                if (/\d/.test(newDisplay[pos])) digitsSeen++;
+                pos++;
+            }
+
+            // if digitsBefore is greater than available digits, place at end
+            if (digitsSeen < digitsBefore) pos = newDisplay.length;
+
+            el.setSelectionRange(pos, pos);
+        }, 0);
+    };
 
     const updateField = (key, value) =>
         setForm((f) => ({ ...f, [key]: value }));
@@ -192,15 +239,73 @@ export default function AddClass() {
     /* -------- SUBMIT -------- */
     const handleSubmit = (e) => {
         e.preventDefault();
+        const token = localStorage.getItem('token');
 
-        const payload = {
-            ...form,
-            finalQuiz,
-        };
+        const payload = new FormData();
+        payload.append('title', form.title);
+        payload.append('description', form.description);
+        payload.append('price', Number(form.price || 0));
+        if (form.category) payload.append('category', form.category);
+        if (form.level) payload.append('level', form.level);
+        // status will default to pending if not provided
+        if (form.thumbnail) payload.append('thumbnail', form.thumbnail);
 
-        console.log("FINAL SUBMIT DATA:", payload);
-        alert("Class saved! (check console)");
-        navigate("/admin/classes");
+        // include chapters and finalQuiz in payload
+        const chaptersPayload = form.chapters.map((ch) => {
+            return {
+                title: ch.title,
+                materials: ch.materials.map((m) => ({
+                    title: m.title,
+                    type: m.type,
+                    content: m.content || null,
+                    // videoFile will be handled separately
+                    video_field: m.videoFile ? `material_video_${ch.id}_${m.id}` : null,
+                    duration: m.duration || null,
+                })),
+                quiz: {
+                    title: ch.quiz?.title || null,
+                    passing: ch.quiz?.passing || 0,
+                    questions: ch.quiz?.questions || [],
+                },
+            };
+        });
+
+        payload.append('chapters', JSON.stringify(chaptersPayload));
+        payload.append('final_quiz', JSON.stringify(finalQuiz));
+
+        // attach any material video files
+        form.chapters.forEach((ch) => {
+            ch.materials.forEach((m) => {
+                if (m.videoFile) {
+                    // key must match the video_field used above
+                    const key = `material_video_${ch.id}_${m.id}`;
+                    payload.append(key, m.videoFile);
+                }
+            });
+        });
+
+        // send to backend
+        axios.post('/courses', payload, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data',
+            }
+        })
+        .then(res => {
+            alert('Class saved');
+            // navigate to the newly created class detail page
+            const newId = res.data?.id || res.data?.course_id || null;
+            if (newId) {
+                navigate(`/admin/classes/${newId}`);
+            } else {
+                navigate('/admin/classes');
+            }
+        })
+        .catch(err => {
+            console.error('Failed to save class', err);
+            const msg = err.response?.data?.message || (err.response?.data ? JSON.stringify(err.response.data) : err.message);
+            alert('Failed to save class: ' + msg);
+        });
     };
 
     return (
@@ -235,14 +340,21 @@ export default function AddClass() {
                                     updateField("title", e.target.value)
                                 }
                             />
-                            <input
+                            <select
                                 className="px-4 py-2 border rounded-lg"
-                                placeholder="Category"
                                 value={form.category}
                                 onChange={(e) =>
                                     updateField("category", e.target.value)
                                 }
-                            />
+                            >
+                                <option value="">Select category</option>
+                                <option value="Web Development">Web Development</option>
+                                <option value="Frontend">Frontend</option>
+                                <option value="Backend">Backend</option>
+                                <option value="Programming">Programming</option>
+                                <option value="Design">Design</option>
+                                <option value="UI/UX">UI/UX</option>
+                            </select>
                             <select
                                 className="px-4 py-2 border rounded-lg"
                                 value={form.level}
@@ -250,18 +362,32 @@ export default function AddClass() {
                                     updateField("level", e.target.value)
                                 }
                             >
-                                <option>Beginner</option>
-                                <option>Intermediate</option>
-                                <option>Advanced</option>
+                                <option value="">Select level</option>
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced">Advanced</option>
                             </select>
-                            <input
-                                className="px-4 py-2 border rounded-lg"
-                                placeholder="Price"
-                                value={form.price}
-                                onChange={(e) =>
-                                    updateField("price", e.target.value)
-                                }
-                            />
+                            <div className="relative">
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-600">Rp</div>
+                                <input
+                                    ref={priceInputRef}
+                                    inputMode="numeric"
+                                    className="pl-10 px-4 py-2 border rounded-lg w-full"
+                                    placeholder="0"
+                                    value={formatRupiah(form.price)}
+                                    onChange={handlePriceChange}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-sm font-medium">Thumbnail</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => updateField('thumbnail', e.target.files && e.target.files[0])}
+                                    className="w-full mt-1"
+                                />
+                            </div>
                         </div>
 
                         <textarea

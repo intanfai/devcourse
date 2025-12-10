@@ -1,35 +1,64 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import AdminLayout from "../../../../layouts/AdminLayout";
-import { FiClock, FiArrowLeft, FiPlayCircle } from "react-icons/fi";
+import { FiClock, FiArrowLeft, FiPlayCircle, FiFileText } from "react-icons/fi";
+import axios from "../../../../axios";
 
 export default function MaterialDetail() {
     const { classId, materialId } = useParams();
     const navigate = useNavigate();
+    const [material, setMaterial] = useState(null);
+    const [course, setCourse] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    // Dummy data (sementara)
-    const material = {
-        id: materialId,
-        title: "React Components",
-        videoUrl: "/videos/sample.mp4",
-        thumbnail: "/images/class-thumb.jpg",
-        duration: "08:20",
-        status: "Published",
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const token = localStorage.getItem("token");
+                const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-        // 🔥 materi dalam bentuk paragraf
-        content: `
-            In this module, you will learn how React components work, how they are structured, 
-            and how to build reusable UI elements. Components are the core building blocks of any 
-            React application. Each component can manage its own state, receive data through props, 
-            and render UI elements based on logic.
+                // Fetch material data
+                const materialRes = await axios.get(`/materials/${materialId}`, { headers });
+                setMaterial(materialRes.data);
 
-            You will also explore functional components, which are the modern React standard, 
-            and understand how to pass data between components, handle events, and maintain clean 
-            component architecture.
+                // Fetch course data for thumbnail
+                const courseRes = await axios.get(`/courses/${classId}`, { headers });
+                setCourse(courseRes.data);
+            } catch (err) {
+                console.error("Failed to fetch material:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-            By mastering components, you are building the foundation for more advanced concepts such 
-            as state management, hooks, and component composition.
-        `,
-    };
+        if (materialId && classId) {
+            fetchData();
+        }
+    }, [materialId, classId]);
+
+    if (loading) {
+        return (
+            <AdminLayout>
+                <div className="flex justify-center items-center h-64">
+                    <p className="text-gray-500">Loading material...</p>
+                </div>
+            </AdminLayout>
+        );
+    }
+
+    if (!material) {
+        return (
+            <AdminLayout>
+                <div className="flex justify-center items-center h-64">
+                    <p className="text-gray-500">Material not found</p>
+                </div>
+            </AdminLayout>
+        );
+    }
+
+    const thumbnail = course?.thumbnail ? `/${course.thumbnail}` : "/images/htmlcss.jpg";
+    const hasVideo = material.video_url;
 
     return (
         <AdminLayout>
@@ -50,36 +79,55 @@ export default function MaterialDetail() {
                     {/* Thumbnail */}
                     <div className="relative">
                         <img
-                            src={material.thumbnail}
+                            src={thumbnail}
+                            alt={material.title}
                             className="w-full h-64 object-cover rounded-xl"
+                            onError={(e) => {
+                                e.target.src = "/images/htmlcss.jpg";
+                            }}
                         />
-                        <FiPlayCircle className="text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-6xl opacity-80" />
                     </div>
 
                     {/* Title */}
                     <h2 className="text-xl font-bold mt-4">{material.title}</h2>
 
-                    {/* Duration + Status */}
-                    <div className="flex items-center gap-6 mt-3 text-gray-600 text-sm">
-                        <div className="flex items-center gap-2">
-                            <FiClock /> {material.duration}
-                        </div>
-
-                        <span
-                            className={`px-3 py-1 rounded-lg text-xs ${
-                                material.status === "Published"
-                                    ? "bg-green-100 text-green-700"
-                                    : "bg-yellow-100 text-yellow-700"
-                            }`}
-                        >
-                            {material.status}
+                    {/* Type Badge */}
+                    <div className="flex items-center gap-3 mt-3">
+                        <span className="px-3 py-1 rounded-lg text-xs bg-blue-100 text-blue-700">
+                            {hasVideo ? "Video Material" : "Text Material"}
                         </span>
                     </div>
 
+                    {/* Video URL (if exists) */}
+                    {hasVideo && (
+                        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                            <p className="text-sm text-gray-600 mb-1">Video URL:</p>
+                            <a 
+                                href={material.video_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline text-sm break-all"
+                            >
+                                {material.video_url}
+                            </a>
+                        </div>
+                    )}
+
                     {/* CONTENT (PARAGRAPH MATERIAL) */}
-                    <div className="mt-4 text-gray-700 leading-relaxed whitespace-pre-line">
-                        {material.content}
-                    </div>
+                    {material.content && (
+                        <div className="mt-6">
+                            <h3 className="text-lg font-semibold mb-3">Content</h3>
+                            <div className="text-gray-700 leading-relaxed whitespace-pre-line bg-gray-50 p-4 rounded-lg">
+                                {material.content}
+                            </div>
+                        </div>
+                    )}
+
+                    {!material.content && !hasVideo && (
+                        <div className="mt-6 text-center text-gray-500">
+                            No content available for this material
+                        </div>
+                    )}
                 </div>
             </div>
         </AdminLayout>

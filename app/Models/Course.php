@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Course extends Model
 {
     protected $fillable = [
-        'title', 'description', 'thumbnail', 'price', 'instructor_id', 'status'
+        'title', 'description', 'thumbnail', 'price', 'instructor_id', 'status', 'category', 'level'
     ];
 
     public function instructor()
@@ -18,6 +18,11 @@ class Course extends Model
     public function materials()
     {
         return $this->hasMany(Material::class);
+    }
+
+    public function chapters()
+    {
+        return $this->hasMany(Chapter::class)->orderBy('order');
     }
 
     public function quizzes()

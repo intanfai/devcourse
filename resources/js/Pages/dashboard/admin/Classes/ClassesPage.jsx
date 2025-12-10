@@ -1,51 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminLayout from "../../../../layouts/AdminLayout";
 import { FiSearch, FiFilter, FiEye, FiPlus } from "react-icons/fi";
 import ClassDetail from "./ClassDetail";
 import { Link } from "react-router-dom";
 import AddClass from "./AddClass";
 import { useNavigate } from "react-router-dom";
+import axios from "../../../../axios";
 
 export default function ClassesPage() {
     const navigate = useNavigate();
-    const [classes, setClasses] = useState([
-        {
-            id: 1,
-            title: "React Basics",
-            instructor: "John Doe",
-            category: "Web Development",
-            level: "Beginner",
-            price: 150000,
-            status: "Pending",
-        },
-        {
-            id: 2,
-            title: "UI/UX Fundamental",
-            instructor: "Rina",
-            category: "Design",
-            level: "Intermediate",
-            price: 90000,
-            status: "Active",
-        },
-        {
-            id: 3,
-            title: "Backend with Laravel",
-            instructor: "Bayu",
-            category: "Programming",
-            level: "Advanced",
-            price: 150000,
-            status: "Rejected",
-        },
-        {
-            id: 4,
-            title: "Laravel API Development",
-            instructor: "Andi Wijaya",
-            category: "Programming",
-            level: "Intermediate",
-            price: 200000,
-            status: "Approved",
-        },
-    ]);
+    const [classes, setClasses] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     /* ---------------- STATE FILTER ---------------- */
     const [search, setSearch] = useState("");
@@ -69,17 +34,46 @@ export default function ClassesPage() {
     });
 
     /* ---------------- PAGINATION ---------------- */
-    const classesPerPage = 5;
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [currentPage, setCurrentPage] = useState(1);
 
-    const indexLast = currentPage * classesPerPage;
-    const indexFirst = indexLast - classesPerPage;
+    const indexLast = currentPage * rowsPerPage;
+    const indexFirst = indexLast - rowsPerPage;
 
     const currentClasses = filteredClasses.slice(indexFirst, indexLast);
 
-    const totalPages = Math.ceil(filteredClasses.length / classesPerPage);
+    const totalPages = Math.max(1, Math.ceil(filteredClasses.length / rowsPerPage));
 
     const handlePageChange = (page) => setCurrentPage(page);
+    const resetPage = () => setCurrentPage(1);
+
+    // load courses from API
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        setLoading(true);
+        axios
+            .get("/courses", { headers: { Authorization: `Bearer ${token}` } })
+            .then((res) => {
+                // API uses pagination; if response has data key (paginated), extract data
+                const data = res.data.data ? res.data.data : res.data;
+                // map to expected shape (instructor name available in relation)
+                const mapped = data.map((c) => ({
+                    id: c.id,
+                    title: c.title,
+                    instructor: c.instructor ? c.instructor.name : "",
+                    category: c.category || "",
+                    level: c.level || "",
+                    price: c.price || 0,
+                    status: c.status || "Pending",
+                }));
+
+                setClasses(mapped);
+            })
+            .catch((err) => console.error("Failed to load courses", err))
+            .finally(() => setLoading(false));
+    }, []);
 
     return (
         <AdminLayout>
@@ -121,10 +115,11 @@ export default function ClassesPage() {
                             >
                                 <option value="All">All</option>
                                 <option value="Programming">Programming</option>
+                                <option value="Web Development">Web Development</option>
                                 <option value="Design">Design</option>
-                                <option value="Web Development">
-                                    Web Development
-                                </option>
+                                <option value="UI/UX">UI/UX</option>
+                                <option value="Frontend">Frontend</option>
+                                <option value="Backend">Backend</option>
                             </select>
 
                             {/* LEVEL */}
@@ -153,9 +148,9 @@ export default function ClassesPage() {
                             >
                                 <option value="All">All</option>
                                 <option value="Pending">Pending</option>
-                                <option value="Active">Active</option>
                                 <option value="Rejected">Rejected</option>
                                 <option value="Approved">Approved</option>
+                                <option value="Published">Published</option>
                                 <option value="Archived">Archived</option>
                             </select>
                         </div>
@@ -227,15 +222,17 @@ export default function ClassesPage() {
                                 <td className="py-3 px-4 text-left">
                                     <span
                                         className={`px-3 py-1.5 text-xs rounded-lg font-medium ${
-                                            cls.status === "Approved"
+                                            cls.status === "Published"
                                                 ? "bg-green-100 text-green-700"
                                                 : cls.status === "Rejected"
                                                 ? "bg-red-100 text-red-600"
-                                                : cls.status === "Active"
+                                                : cls.status === "Pending"
+                                                ? "bg-yellow-100 text-yellow-700"
+                                                : cls.status === "Approved"
                                                 ? "bg-blue-100 text-blue-700"
                                                 : cls.status === "Archived"
                                                 ? "bg-gray-300 text-gray-700"
-                                                : "bg-yellow-100 text-yellow-700"
+                                                : "bg-gray-100 text-gray-700"
                                         }`}
                                     >
                                         {cls.status}
@@ -258,20 +255,82 @@ export default function ClassesPage() {
                 </table>
 
                 {/* PAGINATION */}
-                <div className="flex justify-end mt-4 gap-2">
-                    {[...Array(totalPages)].map((_, i) => (
-                        <button
-                            key={i}
-                            onClick={() => handlePageChange(i + 1)}
-                            className={`px-3 py-1 rounded ${
-                                currentPage === i + 1
-                                    ? "bg-blue-600 text-white"
-                                    : "bg-gray-200 hover:bg-gray-300"
-                            }`}
+                <div className="mt-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500">Rows per page:</span>
+                        <select
+                            value={rowsPerPage}
+                            onChange={(e) => {
+                                setRowsPerPage(Number(e.target.value));
+                                resetPage();
+                            }}
+                            className="border px-3 py-1 rounded text-sm"
                         >
-                            {i + 1}
+                            <option value={5}>5</option>
+                            <option value={10}>10</option>
+                            <option value={20}>20</option>
+                        </select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <button
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            className="px-3 py-1 rounded bg-gray-200 text-sm disabled:opacity-50"
+                        >
+                            Prev
                         </button>
-                    ))}
+
+                        {/* sliding window: show up to 3 page buttons */}
+                        {(() => {
+                            const maxStart = Math.max(1, totalPages - 2);
+                            const start = Math.min(Math.max(1, currentPage), maxStart);
+                            const pageButtons = [];
+
+                            for (let i = 0; i < 3; i++) {
+                                const p = start + i;
+                                if (p <= totalPages) {
+                                    pageButtons.push(
+                                        <button
+                                            key={p}
+                                            onClick={() => setCurrentPage(p)}
+                                            className={`px-3 py-1 rounded text-sm ${
+                                                currentPage === p
+                                                    ? "bg-blue-600 text-white"
+                                                    : "bg-gray-100"
+                                            }`}
+                                        >
+                                            {p}
+                                        </button>
+                                    );
+                                }
+                            }
+
+                            return (
+                                <>
+                                    {pageButtons}
+                                    {start + 3 <= totalPages && (
+                                        <button
+                                            onClick={() =>
+                                                setCurrentPage((_) => Math.min(totalPages, start + 3))
+                                            }
+                                            className="px-3 py-1 rounded text-sm bg-gray-100"
+                                        >
+                                            ...
+                                        </button>
+                                    )}
+                                </>
+                            );
+                        })()}
+
+                        <button
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                            className="px-3 py-1 rounded bg-gray-200 text-sm disabled:opacity-50"
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             </div>
         </AdminLayout>

@@ -1,48 +1,70 @@
 import { useParams, useNavigate } from "react-router-dom";
 import AdminLayout from "../../../../layouts/AdminLayout";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FiArrowLeft, FiHelpCircle, FiList, FiCheck } from "react-icons/fi";
+import axios from "../../../../axios";
 
 export default function QuizDetail() {
     const { classId, quizId } = useParams();
     const navigate = useNavigate();
+    const [quiz, setQuiz] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    // ====== Dummy Quiz Data ======
-    const [quiz] = useState({
-        id: quizId,
-        title: "React Components Quiz",
-        questions: [
-            {
-                id: 1,
-                question: "What is a React component?",
-                options: [
-                    "Reusable UI element",
-                    "CSS class",
-                    "JavaScript variable",
-                    "Database schema",
-                ],
-                correct: 0,
-            },
-            {
-                id: 2,
-                question: "Which hook is used for state?",
-                options: ["useFetch", "useState", "useEvent", "useForm"],
-                correct: 1,
-            },
-            {
-                id: 3,
-                question: "Props are…",
-                options: [
-                    "Mutable data",
-                    "Used to pass data",
-                    "Only for styling",
-                    "Database connection",
-                ],
-                correct: 1,
-            },
-        ],
-        passing: 70,
-    });
+    useEffect(() => {
+        const fetchQuiz = async () => {
+            setLoading(true);
+            try {
+                const token = localStorage.getItem("token");
+                const headers = token ? { Authorization: `Bearer ${token}` } : {};
+                
+                const res = await axios.get(`/quizzes/${quizId}`, { headers });
+                const quizData = res.data;
+
+                // Transform questions data to match UI expectations
+                const formattedQuestions = (quizData.questions || []).map((q) => ({
+                    id: q.id,
+                    question: q.question,
+                    options: [q.option_a, q.option_b, q.option_c, q.option_d].filter(Boolean),
+                    correct: q.correct_answer, // This should be the correct answer text or index
+                }));
+
+                setQuiz({
+                    id: quizData.id,
+                    title: quizData.title,
+                    passing: quizData.passing || 60,
+                    questions: formattedQuestions,
+                });
+            } catch (err) {
+                console.error("Failed to fetch quiz:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (quizId) {
+            fetchQuiz();
+        }
+    }, [quizId]);
+
+    if (loading) {
+        return (
+            <AdminLayout>
+                <div className="flex justify-center items-center h-64">
+                    <p className="text-gray-500">Loading quiz...</p>
+                </div>
+            </AdminLayout>
+        );
+    }
+
+    if (!quiz) {
+        return (
+            <AdminLayout>
+                <div className="flex justify-center items-center h-64">
+                    <p className="text-gray-500">Quiz not found</p>
+                </div>
+            </AdminLayout>
+        );
+    }
 
     return (
         <AdminLayout>
@@ -89,21 +111,24 @@ export default function QuizDetail() {
 
                                 {/* OPTIONS */}
                                 <div className="ml-5 space-y-1">
-                                    {q.options.map((opt, idx) => (
-                                        <div
-                                            key={idx}
-                                            className={`flex items-center gap-2 ${
-                                                q.correct === idx
-                                                    ? "text-green-700 font-semibold"
-                                                    : "text-gray-700"
-                                            }`}
-                                        >
-                                            {q.correct === idx && (
-                                                <FiCheck className="text-green-600" />
-                                            )}
-                                            <span>{opt}</span>
-                                        </div>
-                                    ))}
+                                    {q.options.map((opt, idx) => {
+                                        const isCorrect = opt === q.correct;
+                                        return (
+                                            <div
+                                                key={idx}
+                                                className={`flex items-center gap-2 ${
+                                                    isCorrect
+                                                        ? "text-green-700 font-semibold"
+                                                        : "text-gray-700"
+                                                }`}
+                                            >
+                                                {isCorrect && (
+                                                    <FiCheck className="text-green-600" />
+                                                )}
+                                                <span>{opt}</span>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         ))}

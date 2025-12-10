@@ -47,6 +47,7 @@ Route::get('/courses', [CourseController::class, 'index']);
 Route::post('/courses', [CourseController::class, 'store']);
 Route::get('/courses/{id}', [CourseController::class, 'show']);
 Route::put('/courses/{id}', [CourseController::class, 'update']);
+Route::patch('/courses/{id}', [CourseController::class, 'update']);
 Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
 
 Route::post('/materials', [MaterialController::class, 'store']);
@@ -115,6 +116,7 @@ Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRe
     Route::post('/courses', [CourseController::class, 'store']);
     Route::get('/courses/{id}', [CourseController::class, 'show']);
     Route::put('/courses/{id}', [CourseController::class, 'update']);
+    Route::patch('/courses/{id}', [CourseController::class, 'update']);
     Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
 
 
@@ -191,7 +193,7 @@ Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRe
     Route::middleware('role:1')->get('/admin/dashboard', function () {
     return 'Admin only';
     });
-    Route::middleware('role:2')->post('/courses', [CourseController::class, 'store']);
+    Route::middleware('role:1,2')->post('/courses', [CourseController::class, 'store']);
     Route::middleware('role:3')->get('/my-courses', [EnrollmentController::class, 'index']);
     Route::middleware('role:1,2')->post('/materials', [MaterialController::class, 'store']);
 
@@ -201,7 +203,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/courses', [CourseController::class, 'index']);
 
     Route::post('/courses', [CourseController::class, 'store'])
-        ->middleware('role:2'); // hanya instructor
+        ->middleware('role:1,2'); // instructor or admin
 
     Route::get('/notifications', [NotificationController::class, 'index']);
 
