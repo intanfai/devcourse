@@ -1,7 +1,8 @@
 import StudentLayout from "../../../layouts/StudentLayout";
 import { FiSearch, FiStar, FiUsers } from "react-icons/fi";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "../../../axios";
 
 export default function ExploreCoursesPage() {
     const [search, setSearch] = useState("");
@@ -9,49 +10,44 @@ export default function ExploreCoursesPage() {
     const [levelFilter, setLevelFilter] = useState("All");
     const [priceFilter, setPriceFilter] = useState("All");
     const [sortBy, setSortBy] = useState("popular");
+    const [courses, setCourses] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch courses from API
+    useEffect(() => {
+        fetchExploreCourses();
+    }, []);
+
+    const fetchExploreCourses = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axios.get("/dashboard/explore-courses", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            console.log("Explore courses response:", res.data);
+            console.log("Total courses:", res.data.courses?.length || 0);
+            setCourses(res.data.courses || []);
+        } catch (err) {
+            console.error("Failed to fetch courses:", err);
+            console.error("Error details:", err.response?.data);
+            setCourses([]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const categories = [
         "All",
-        "Web Development",
-        "Frontend",
-        "Backend",
-        "Design",
-        "Programming",
-        "UI/UX",
+        ...new Set(courses.map(c => c.category).filter(Boolean))
     ];
 
-    const courses = [
-        {
-            id: 1,
-            title: "React Fundamentals",
-            category: "Web Development",
-            rating: 4.8,
-            students: 12000,
-            level: "Beginner",
-            price: "Paid",
-            thumbnail: "/images/htmlcss.jpg",
-        },
-        {
-            id: 2,
-            title: "Laravel Basics",
-            category: "Backend",
-            rating: 4.7,
-            students: 8500,
-            level: "Intermediate",
-            price: "Paid",
-            thumbnail: "/images/jsessentials.jpg",
-        },
-        {
-            id: 3,
-            title: "UI/UX Design Starter",
-            category: "Design",
-            rating: 4.6,
-            students: 6700,
-            level: "Beginner",
-            price: "Free",
-            thumbnail: "/images/node.png",
-        },
-    ];
+    const getCategories = () => {
+        const uniqueCategories = new Set(["All"]);
+        courses.forEach(c => {
+            if (c.category) uniqueCategories.add(c.category);
+        });
+        return Array.from(uniqueCategories);
+    };
 
     const filteredCourses = courses
         .filter((c) => {
@@ -64,7 +60,9 @@ export default function ExploreCoursesPage() {
 
             const matchLevel = levelFilter === "All" || c.level === levelFilter;
 
-            const matchPrice = priceFilter === "All" || c.price === priceFilter;
+            const matchPrice = priceFilter === "All" 
+                ? true 
+                : (priceFilter === "Free" && c.price === 0) || (priceFilter === "Paid" && c.price > 0);
 
             return matchSearch && matchCategory && matchLevel && matchPrice;
         })
@@ -104,7 +102,7 @@ export default function ExploreCoursesPage() {
 
                 {/* CATEGORY FILTER */}
                 <div className="flex gap-3 mb-6 overflow-x-auto pb-2 hide-scrollbar">
-                    {categories.map((ct) => (
+                    {getCategories().map((ct) => (
                         <button
                             key={ct}
                             onClick={() => setActiveCategory(ct)}
@@ -157,44 +155,61 @@ export default function ExploreCoursesPage() {
                     </select>
                 </div>
 
+                {/* LOADING STATE */}
+                {loading && (
+                    <div className="flex items-center justify-center py-12">
+                        <p className="text-gray-500">Loading courses...</p>
+                    </div>
+                )}
+
                 {/* COURSE GRID */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredCourses.map((course) => (
-                        <Link
-                            key={course.id}
-                            to={`/student/course/${course.id}/preview`}
-                            className="bg-white rounded-2xl border shadow-sm hover:shadow-lg transition overflow-hidden"
-                        >
-                            <img
-                                src={course.thumbnail}
-                                className="w-full h-40 md:h-44 object-cover"
-                                alt={course.title}
-                            />
+                {!loading && (
+                    <>
+                        {filteredCourses.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {filteredCourses.map((course) => (
+                                    <Link
+                                        key={course.id}
+                                        to={`/student/course/${course.id}/preview`}
+                                        className="bg-white rounded-2xl border shadow-sm hover:shadow-lg transition overflow-hidden"
+                                    >
+                                        <img
+                                            src={course.thumbnail || "/images/course-thumb.jpg"}
+                                            className="w-full h-40 md:h-44 object-cover"
+                                            alt={course.title}
+                                        />
 
-                            <div className="p-5">
-                                <h3 className="font-semibold text-gray-800 text-base md:text-lg mb-1">
-                                    {course.title}
-                                </h3>
+                                        <div className="p-5">
+                                            <h3 className="font-semibold text-gray-800 text-base md:text-lg mb-1">
+                                                {course.title}
+                                            </h3>
 
-                                <p className="text-gray-500 text-sm mb-2">
-                                    {course.category} • {course.level}
-                                </p>
+                                            <p className="text-gray-500 text-sm mb-2">
+                                                {course.category} • {course.level}
+                                            </p>
 
-                                <div className="flex justify-between text-sm text-gray-600">
-                                    <span className="flex items-center gap-1">
-                                        <FiStar className="text-yellow-500" />
-                                        {course.rating}
-                                    </span>
+                                            <div className="flex justify-between text-sm text-gray-600">
+                                                <span className="flex items-center gap-1">
+                                                    <FiStar className="text-yellow-500" />
+                                                    {course.rating}
+                                                </span>
 
-                                    <span className="flex items-center gap-1">
-                                        <FiUsers />
-                                        {course.students.toLocaleString()}
-                                    </span>
-                                </div>
+                                                <span className="flex items-center gap-1">
+                                                    <FiUsers />
+                                                    {course.students.toLocaleString()}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
                             </div>
-                        </Link>
-                    ))}
-                </div>
+                        ) : (
+                            <div className="flex items-center justify-center py-12">
+                                <p className="text-gray-500">No courses found</p>
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
         </StudentLayout>
     );

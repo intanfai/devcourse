@@ -114,13 +114,16 @@ export default function ClassDetail() {
 
         // Update status via API
         try {
-            await axios.patch(`/courses/${cls.id}`, { status: newStatus }, {
+            const response = await axios.patch(`/courses/${cls.id}`, { status: newStatus }, {
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
             });
+            console.log("Update response:", response.data);
             setCls((prev) => (prev ? { ...prev, status: newStatus } : prev));
+            alert("Status berhasil diubah");
         } catch (err) {
             console.error("Failed to update status:", err);
-            alert("Gagal mengubah status class");
+            console.error("Error response:", err.response?.data);
+            alert(`Gagal mengubah status class: ${err.response?.data?.message || err.message}`);
         }
 
         setConfirmModal({ open: false, action: null, title: "", message: "" });

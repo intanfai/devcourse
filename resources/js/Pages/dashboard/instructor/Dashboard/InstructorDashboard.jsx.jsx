@@ -1,9 +1,67 @@
+import { useState, useEffect } from "react";
 import InstructorLayout from "../../../../layouts/InstructorLayout";
-import { FiUsers, FiBookOpen, FiDollarSign, FiClock } from "react-icons/fi";
+import { FiUsers, FiBookOpen, FiDollarSign, FiClock, FiEye, FiEdit } from "react-icons/fi";
 import InstructorCourseChart from "../../../../Components/Charts/InstructorCourseChart";
 import InstructorEarningsChart from "../../../../Components/Charts/InstructorEarningsChart";
+import axios from "../../../../axios";
+import { Link } from "react-router-dom";
 
 export default function InstructorDashboard() {
+    const [dashboardData, setDashboardData] = useState({
+        total_courses: 0,
+        total_students: 0,
+        pending_reviews: 0,
+        total_earnings: 0,
+    });
+    const [myClasses, setMyClasses] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [classesLoading, setClassesLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            setLoading(true);
+            try {
+                const token = localStorage.getItem("token");
+                const res = await axios.get("/dashboard/instructor", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                setDashboardData(res.data);
+            } catch (err) {
+                console.error("Failed to fetch dashboard data:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, []);
+
+    useEffect(() => {
+        const fetchMyClasses = async () => {
+            setClassesLoading(true);
+            try {
+                const token = localStorage.getItem("token");
+                const res = await axios.get("/dashboard/instructor-classes", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                setMyClasses(res.data.courses || []);
+            } catch (err) {
+                console.error("Failed to fetch my classes:", err);
+            } finally {
+                setClassesLoading(false);
+            }
+        };
+
+        fetchMyClasses();
+    }, []);
+
+    const formatRupiah = (num) => {
+        if (!num) return "Rp 0";
+        return "Rp " + num.toLocaleString("id-ID");
+    };
+
     return (
         <InstructorLayout>
             {/* OVERVIEW */}
@@ -20,7 +78,9 @@ export default function InstructorDashboard() {
                             <p className="text-sm text-gray-500">
                                 Total Courses
                             </p>
-                            <h3 className="text-xl font-bold">12</h3>
+                            <h3 className="text-xl font-bold">
+                                {loading ? "-" : dashboardData.total_courses}
+                            </h3>
                         </div>
                     </div>
 
@@ -33,7 +93,9 @@ export default function InstructorDashboard() {
                             <p className="text-sm text-gray-500">
                                 Total Students
                             </p>
-                            <h3 className="text-xl font-bold">327</h3>
+                            <h3 className="text-xl font-bold">
+                                {loading ? "-" : dashboardData.total_students}
+                            </h3>
                         </div>
                     </div>
 
@@ -46,7 +108,9 @@ export default function InstructorDashboard() {
                             <p className="text-sm text-gray-500">
                                 Total Earnings
                             </p>
-                            <h3 className="text-xl font-bold">Rp 12.300.000</h3>
+                            <h3 className="text-xl font-bold">
+                                {loading ? "-" : formatRupiah(dashboardData.total_earnings)}
+                            </h3>
                         </div>
                     </div>
 
@@ -59,7 +123,9 @@ export default function InstructorDashboard() {
                             <p className="text-sm text-gray-500">
                                 Pending Reviews
                             </p>
-                            <h3 className="text-xl font-bold">5</h3>
+                            <h3 className="text-xl font-bold">
+                                {loading ? "-" : dashboardData.pending_reviews}
+                            </h3>
                         </div>
                     </div>
                 </div>
@@ -80,6 +146,106 @@ export default function InstructorDashboard() {
                     </p>
                     <InstructorEarningsChart />
                 </div>
+            </div>
+
+            {/* MY CLASSES */}
+            <div className="bg-white p-6 rounded-xl shadow-sm mb-12">
+                <div className="flex justify-between items-center mb-6">
+                    <p className="font-semibold border-l-4 pl-3 border-[#3C64EF] text-lg">
+                        My Classes
+                    </p>
+
+                    <Link to="/instructor/classes" className="text-[#3C64EF] hover:underline flex items-center gap-1">
+                        View All
+                        <span>›</span>
+                    </Link>
+                </div>
+
+                {classesLoading ? (
+                    <div className="flex items-center justify-center h-48">
+                        <p className="text-gray-400">Loading classes...</p>
+                    </div>
+                ) : myClasses.length === 0 ? (
+                    <p className="text-center text-gray-500 py-4">
+                        No classes yet. Create your first class!
+                    </p>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left">
+                            <thead>
+                                <tr className="border-b text-gray-500">
+                                    <th className="py-3">No</th>
+                                    <th className="py-3">Title</th>
+                                    <th className="py-3">Category</th>
+                                    <th className="py-3">Students</th>
+                                    <th className="py-3">Price</th>
+                                    <th className="py-3">Status</th>
+                                    <th className="py-3">Date</th>
+                                    <th className="py-3 text-center">Action</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {myClasses.slice(0, 5).map((cls, i) => (
+                                    <tr
+                                        key={cls.id}
+                                        className="border-b hover:bg-gray-50"
+                                    >
+                                        <td className="py-3">{i + 1}</td>
+                                        <td className="py-3 font-medium">
+                                            {cls.title}
+                                        </td>
+                                        <td className="py-3">{cls.category}</td>
+                                        <td className="py-3">{cls.students}</td>
+                                        <td className="py-3">
+                                            Rp {cls.price.toLocaleString("id-ID")}
+                                        </td>
+
+                                        {/* STATUS */}
+                                        <td className="py-3">
+                                            <span
+                                                className={`px-3 py-1 rounded-full text-xs font-medium
+                                                ${
+                                                    cls.status === "Published"
+                                                        ? "bg-green-100 text-green-700"
+                                                        : cls.status === "Pending"
+                                                        ? "bg-yellow-100 text-yellow-700"
+                                                        : cls.status === "Draft"
+                                                        ? "bg-gray-200 text-gray-700"
+                                                        : cls.status === "Rejected"
+                                                        ? "bg-red-100 text-red-600"
+                                                        : "bg-purple-100 text-purple-700"
+                                                }`}
+                                            >
+                                                {cls.status}
+                                            </span>
+                                        </td>
+
+                                        <td className="py-3">{cls.date}</td>
+
+                                        {/* ACTION */}
+                                        <td className="py-3 text-center flex justify-center gap-3">
+                                            {/* VIEW */}
+                                            <button
+                                                className="text-blue-600 hover:text-blue-800"
+                                            >
+                                                <FiEye size={18} />
+                                            </button>
+
+                                            {/* EDIT */}
+                                            <Link
+                                                to={`/instructor/classes/edit/${cls.id}`}
+                                                className="text-green-600 hover:text-green-800"
+                                            >
+                                                <FiEdit size={18} />
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
 
             {/* RECENT ACTIVITY */}

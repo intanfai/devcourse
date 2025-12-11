@@ -14,7 +14,6 @@ export default function EditUserModal({ open, close, user, onSubmit, roles = [] 
             email: form.get("email"),
             role: form.get("role"),
             password: form.get("password"),
-            status: form.get("status"),
         });
 
         close();
@@ -60,18 +59,6 @@ export default function EditUserModal({ open, close, user, onSubmit, roles = [] 
                                     {r.name}
                                 </option>
                             ))}
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="text-sm font-medium">Status</label>
-                        <select
-                            name="status"
-                            defaultValue={user.status}
-                            className="w-full border rounded-lg px-4 py-2 mt-1"
-                        >
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
                         </select>
                     </div>
 

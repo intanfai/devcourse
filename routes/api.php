@@ -15,6 +15,7 @@ use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\QuizQuestionController;
+use App\Http\Controllers\DashboardController;
 
 Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin/data', function () {
     return response()->json(['message' => 'Admin only']);
@@ -198,6 +199,15 @@ Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRe
     Route::middleware('role:1,2')->post('/materials', [MaterialController::class, 'store']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
+
+    // Dashboard routes
+    Route::get('/dashboard/instructor', [DashboardController::class, 'instructorDashboard'])->middleware('role:2');
+    Route::get('/dashboard/admin', [DashboardController::class, 'adminDashboard'])->middleware('role:1');
+    Route::get('/dashboard/student', [DashboardController::class, 'studentDashboard'])->middleware('role:3');
+    Route::get('/dashboard/course-performance', [DashboardController::class, 'coursePerformance'])->middleware('role:2');
+    Route::get('/dashboard/monthly-earnings', [DashboardController::class, 'monthlyEarnings'])->middleware('role:2');
+    Route::get('/dashboard/instructor-classes', [DashboardController::class, 'instructorClasses'])->middleware('role:2');
+    Route::get('/dashboard/explore-courses', [DashboardController::class, 'exploreCourses'])->middleware('role:3');
 
     // semua route ini butuh token
     Route::get('/courses', [CourseController::class, 'index']);

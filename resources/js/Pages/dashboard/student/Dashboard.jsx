@@ -1,10 +1,50 @@
 import { FiBookOpen, FiAward, FiClock } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import StudentLayout from "../../../layouts/StudentLayout";
 
 export default function StudentDashboard() {
     const storedUser = localStorage.getItem("user");
     const user = storedUser ? JSON.parse(storedUser) : null;
+
+    const [dashboardData, setDashboardData] = useState({
+        first_name: "",
+        active_courses: 0,
+        hours_learned: 0,
+        certificates_earned: 0,
+    });
+    const [loading, setLoading] = useState(true);
+
+    // Calculate overall progress based on hours learned and certificates
+    const calculateProgress = () => {
+        const maxHours = 100;
+        const maxCertificates = 10;
+        const hoursProgress = (dashboardData.hours_learned / maxHours) * 50;
+        const certProgress = (dashboardData.certificates_earned / maxCertificates) * 50;
+        return Math.min(100, Math.round(hoursProgress + certProgress));
+    };
+
+    const overallProgress = calculateProgress();
+
+    // Fetch dashboard data from API
+    useEffect(() => {
+        fetchDashboardData();
+    }, []);
+
+    const fetchDashboardData = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axios.get("/dashboard/student", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setDashboardData(res.data);
+        } catch (err) {
+            console.error("Failed to fetch dashboard data:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const hour = new Date().getHours();
     const greet =
@@ -13,34 +53,6 @@ export default function StudentDashboard() {
             : hour < 18
             ? "Good afternoon"
             : "Good evening";
-
-    const continueCourses = [
-        {
-            id: 1,
-            title: "React Fundamentals",
-            category: "Web Development",
-            lessons: 18,
-            progress: 60,
-            thumbnail: "/images/htmlcss.jpg",
-        },
-        {
-            id: 2,
-            title: "Laravel Basics",
-            category: "Backend",
-            lessons: 22,
-            progress: 40,
-            thumbnail: "/images/jsessentials.jpg",
-        },
-        {
-            id: 3,
-            title: "UI/UX Design Starter",
-            category: "Design",
-            lessons: 12,
-            progress: 75,
-            thumbnail: "/images/node.png",
-        },
-    ];
-
     const recommended = [
         {
             id: 10,
@@ -74,8 +86,6 @@ export default function StudentDashboard() {
         },
     ];
 
-    const overallProgress = 68;
-
     if (!user) return <div className="p-6">Loading...</div>;
 
     return (
@@ -98,7 +108,7 @@ export default function StudentDashboard() {
                         />
                         <div>
                             <h1 className="text-xl md:text-2xl font-semibold text-gray-800">
-                                {greet}, {user.name}! 👋
+                                {greet}, {dashboardData.first_name || user?.name}! 👋
                             </h1>
                             <p className="text-gray-600 mt-1 text-xs md:text-sm">
                                 Ready to continue your learning journey today?
@@ -173,21 +183,21 @@ export default function StudentDashboard() {
                         {
                             icon: <FiBookOpen className="text-3xl" />,
                             label: "Active Courses",
-                            value: continueCourses.length,
+                            value: dashboardData.active_courses,
                             gradient: "from-blue-400 to-blue-600",
                             link: "/student/courses",
                         },
                         {
                             icon: <FiClock className="text-3xl" />,
                             label: "Hours Learned",
-                            value: "15.2 h",
+                            value: `${dashboardData.hours_learned} h`,
                             gradient: "from-yellow-400 to-yellow-600",
                             link: "/student/progress",
                         },
                         {
                             icon: <FiAward className="text-3xl" />,
                             label: "Certificates Earned",
-                            value: 2,
+                            value: dashboardData.certificates_earned,
                             gradient: "from-green-400 to-green-700",
                             link: "/student/certificates",
                         },

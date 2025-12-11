@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Material extends Model
 {
     protected $fillable = [
-        'course_id', 'chapter_id', 'title', 'content', 'video_url', 'order'
+        'course_id', 'chapter_id', 'title', 'content', 'video_url', 'order', 'duration'
     ];
 
     public function course()

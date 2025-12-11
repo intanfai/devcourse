@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import InstructorLayout from "../../../../layouts/InstructorLayout";
 import { FiSearch, FiFilter, FiEdit, FiTrash2, FiEye } from "react-icons/fi";
@@ -6,57 +6,52 @@ import ConfirmModal from "../../../../Components/ConfirmModal";
 import ViewClassModal from "./ViewClassModal";
 import EditClassPage from "./EditClassPage";
 import { Link } from "react-router-dom";
+import axios from "../../../../axios";
 
 export default function MyClassesPage() {
     const navigate = useNavigate();
 
-    const [classes, setClasses] = useState([
-        {
-            id: 1,
-            title: "React Basics",
-            category: "Web Development",
-            students: 120,
-            price: 150000,
-            status: "Published",
-            date: "2025-01-21",
-        },
-        {
-            id: 2,
-            title: "UI/UX Design Fundamentals",
-            category: "Design",
-            students: 80,
-            price: 120000,
-            status: "Pending Review",
-            date: "2025-01-18",
-        },
-        {
-            id: 3,
-            title: "Laravel API Masterclass",
-            category: "Backend",
-            students: 45,
-            price: 200000,
-            status: "Draft",
-            date: "2025-01-12",
-        },
-        {
-            id: 4,
-            title: "Mobile Design Basics",
-            category: "Design",
-            students: 30,
-            price: 90000,
-            status: "Rejected",
-            date: "2025-01-05",
-        },
-    ]);
+    const [classes, setClasses] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const [search, setSearch] = useState("");
     const [filterStatus, setFilterStatus] = useState("All");
 
     // PAGINATION
-    const rowsPerPage = 5;
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [page, setPage] = useState(1);
     const start = (page - 1) * rowsPerPage;
 
+    // MODALS
+    const [viewModal, setViewModal] = useState({ open: false, data: null });
+    const [deleteModal, setDeleteModal] = useState({ open: false, data: null });
+
+    // Fetch classes from API
+    useEffect(() => {
+        fetchMyClasses();
+    }, []);
+
+    const fetchMyClasses = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axios.get("/dashboard/instructor-classes", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            setClasses(res.data.courses || []);
+        } catch (err) {
+            console.error("Failed to fetch classes:", err);
+            setError("Failed to load classes. Please try again.");
+            setClasses([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Filter and pagination logic
     const filtered = classes.filter((c) => {
         const matchSearch = c.title
             .toLowerCase()
@@ -66,12 +61,29 @@ export default function MyClassesPage() {
         return matchSearch && matchStatus;
     });
 
-    const totalPages = Math.ceil(filtered.length / rowsPerPage);
+    const totalPages = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
     const currentData = filtered.slice(start, start + rowsPerPage);
 
-    // MODALS
-    const [viewModal, setViewModal] = useState({ open: false, data: null });
-    const [deleteModal, setDeleteModal] = useState({ open: false, data: null });
+    const resetPage = () => setPage(1);
+
+    // Handle delete
+    const handleDelete = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            await axios.delete(`/courses/${deleteModal.data.id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            // Remove from local state
+            setClasses((prev) =>
+                prev.filter((x) => x.id !== deleteModal.data.id)
+            );
+            setDeleteModal({ open: false, data: null });
+        } catch (err) {
+            console.error("Failed to delete class:", err);
+            alert("Failed to delete class. Please try again.");
+        }
+    };
 
     return (
         <InstructorLayout>
@@ -114,11 +126,10 @@ export default function MyClassesPage() {
                                 >
                                     <option value="All">All</option>
                                     <option value="Published">Published</option>
-                                    <option value="Pending Review">
-                                        Pending Review
-                                    </option>
+                                    <option value="Pending">Pending</option>
                                     <option value="Draft">Draft</option>
                                     <option value="Rejected">Rejected</option>
+                                    <option value="Archived">Archived</option>
                                 </select>
                             </div>
                         </details>
@@ -127,121 +138,200 @@ export default function MyClassesPage() {
 
                 {/* TABLE */}
                 <div className="bg-white rounded-xl shadow p-6">
-                    <table className="w-full text-sm text-left">
-                        <thead>
-                            <tr className="border-b text-gray-500">
-                                <th className="py-3">No</th>
-                                <th className="py-3">Title</th>
-                                <th className="py-3">Category</th>
-                                <th className="py-3">Students</th>
-                                <th className="py-3">Price</th>
-                                <th className="py-3">Status</th>
-                                <th className="py-3">Date</th>
-                                <th className="py-3 text-center">Action</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {currentData.map((c, i) => (
-                                <tr
-                                    key={c.id}
-                                    className="border-b hover:bg-gray-50"
-                                >
-                                    <td className="py-3">{start + i + 1}</td>
-                                    <td className="py-3 font-medium">
-                                        {c.title}
-                                    </td>
-                                    <td className="py-3">{c.category}</td>
-                                    <td className="py-3">{c.students}</td>
-                                    <td className="py-3">
-                                        Rp {c.price.toLocaleString("id-ID")}
-                                    </td>
-
-                                    {/* STATUS */}
-                                    <td className="py-3">
-                                        <span
-                                            className={`px-3 py-1 rounded-full text-xs font-medium
-                                            ${
-                                                c.status === "Published"
-                                                    ? "bg-green-100 text-green-700"
-                                                    : c.status ===
-                                                      "Pending Review"
-                                                    ? "bg-yellow-100 text-yellow-700"
-                                                    : c.status === "Draft"
-                                                    ? "bg-gray-200 text-gray-700"
-                                                    : "bg-red-100 text-red-600"
-                                            }`}
-                                        >
-                                            {c.status}
-                                        </span>
-                                    </td>
-
-                                    <td className="py-3">{c.date}</td>
-
-                                    {/* ACTION */}
-                                    <td className="py-3 text-center flex justify-center gap-3">
-                                        {/* VIEW */}
-                                        <button
-                                            className="text-blue-600 hover:text-blue-800"
-                                            onClick={() =>
-                                                setViewModal({
-                                                    open: true,
-                                                    data: c,
-                                                })
-                                            }
-                                        >
-                                            <FiEye size={18} />
-                                        </button>
-
-                                        {/* EDIT → GO TO PAGE */}
-                                        <Link
-                                            to={`/instructor/classes/edit/${c.id}`}
-                                            className="text-green-600 hover:text-green-800"
-                                        >
-                                            <FiEdit size={18} />
-                                        </Link>
-
-                                        {/* DELETE */}
-                                        <button
-                                            className="text-red-600 hover:text-red-800"
-                                            onClick={() =>
-                                                setDeleteModal({
-                                                    open: true,
-                                                    data: c,
-                                                })
-                                            }
-                                        >
-                                            <FiTrash2 size={18} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-
-                    {/* EMPTY STATE */}
-                    {filtered.length === 0 && (
-                        <p className="text-center text-gray-500 py-4">
-                            No classes found.
-                        </p>
+                    {error && (
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                            {error}
+                        </div>
                     )}
 
-                    {/* PAGINATION */}
-                    <div className="flex justify-end mt-4 gap-2">
-                        {[...Array(totalPages)].map((_, i) => (
-                            <button
-                                key={i}
-                                onClick={() => setPage(i + 1)}
-                                className={`px-3 py-1 rounded ${
-                                    page === i + 1
-                                        ? "bg-blue-600 text-white"
-                                        : "bg-gray-200 hover:bg-gray-300"
-                                }`}
-                            >
-                                {i + 1}
-                            </button>
-                        ))}
-                    </div>
+                    {loading ? (
+                        <div className="flex items-center justify-center h-48">
+                            <p className="text-gray-400">Loading classes...</p>
+                        </div>
+                    ) : (
+                        <>
+                            <table className="w-full text-sm text-left">
+                                <thead>
+                                    <tr className="border-b text-gray-500">
+                                        <th className="py-3">No</th>
+                                        <th className="py-3">Title</th>
+                                        <th className="py-3">Category</th>
+                                        <th className="py-3">Students</th>
+                                        <th className="py-3">Price</th>
+                                        <th className="py-3">Status</th>
+                                        <th className="py-3">Date</th>
+                                        <th className="py-3 text-center">Action</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {currentData.map((c, i) => (
+                                        <tr
+                                            key={c.id}
+                                            className="border-b hover:bg-gray-50"
+                                        >
+                                            <td className="py-3">{start + i + 1}</td>
+                                            <td className="py-3 font-medium">
+                                                {c.title}
+                                            </td>
+                                            <td className="py-3">{c.category}</td>
+                                            <td className="py-3">{c.students}</td>
+                                            <td className="py-3">
+                                                Rp {c.price.toLocaleString("id-ID")}
+                                            </td>
+
+                                            {/* STATUS */}
+                                            <td className="py-3">
+                                                <span
+                                                    className={`px-3 py-1 rounded-full text-xs font-medium
+                                                    ${
+                                                        c.status === "Published"
+                                                            ? "bg-green-100 text-green-700"
+                                                            : c.status === "Pending"
+                                                            ? "bg-yellow-100 text-yellow-700"
+                                                            : c.status === "Draft"
+                                                            ? "bg-gray-200 text-gray-700"
+                                                            : c.status === "Rejected"
+                                                            ? "bg-red-100 text-red-600"
+                                                            : c.status === "Archived"
+                                                            ? "bg-blue-100 text-blue-600"
+                                                            : "bg-purple-100 text-purple-700"
+                                                    }`}
+                                                >
+                                                    {c.status}
+                                                </span>
+                                            </td>
+
+                                            <td className="py-3">{c.date}</td>
+
+                                            {/* ACTION */}
+                                            <td className="py-3 text-center flex justify-center gap-3">
+                                                {/* VIEW */}
+                                                <button
+                                                    className="text-blue-600 hover:text-blue-800"
+                                                    onClick={() =>
+                                                        setViewModal({
+                                                            open: true,
+                                                            data: c,
+                                                        })
+                                                    }
+                                                >
+                                                    <FiEye size={18} />
+                                                </button>
+
+                                                {/* EDIT → GO TO PAGE */}
+                                                <Link
+                                                    to={`/instructor/classes/edit/${c.id}`}
+                                                    className="text-green-600 hover:text-green-800"
+                                                >
+                                                    <FiEdit size={18} />
+                                                </Link>
+
+                                                {/* DELETE */}
+                                                <button
+                                                    className="text-red-600 hover:text-red-800"
+                                                    onClick={() =>
+                                                        setDeleteModal({
+                                                            open: true,
+                                                            data: c,
+                                                        })
+                                                    }
+                                                >
+                                                    <FiTrash2 size={18} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+
+                            {/* EMPTY STATE */}
+                            {filtered.length === 0 && (
+                                <p className="text-center text-gray-500 py-4">
+                                    No classes found.
+                                </p>
+                            )}
+
+                            {/* PAGINATION */}
+                            <div className="mt-4 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-500">Rows per page:</span>
+                                    <select
+                                        value={rowsPerPage}
+                                        onChange={(e) => {
+                                            setRowsPerPage(Number(e.target.value));
+                                            resetPage();
+                                        }}
+                                        className="border px-3 py-1 rounded text-sm"
+                                    >
+                                        <option value={5}>5</option>
+                                        <option value={10}>10</option>
+                                        <option value={20}>20</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        disabled={page === 1}
+                                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                        className="px-3 py-1 rounded bg-gray-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Prev
+                                    </button>
+
+                                    {/* sliding window: show up to 3 page buttons */}
+                                    {(() => {
+                                        const maxStart = Math.max(1, totalPages - 2);
+                                        const start = Math.min(Math.max(1, page), maxStart);
+                                        const pageButtons = [];
+
+                                        for (let i = 0; i < 3; i++) {
+                                            const p = start + i;
+                                            if (p <= totalPages) {
+                                                pageButtons.push(
+                                                    <button
+                                                        key={p}
+                                                        onClick={() => setPage(p)}
+                                                        className={`px-3 py-1 rounded text-sm ${
+                                                            page === p
+                                                                ? "bg-blue-600 text-white"
+                                                                : "bg-gray-100"
+                                                        }`}
+                                                    >
+                                                        {p}
+                                                    </button>
+                                                );
+                                            }
+                                        }
+
+                                        return (
+                                            <>
+                                                {pageButtons}
+                                                {start + 3 <= totalPages && (
+                                                    <button
+                                                        onClick={() =>
+                                                            setPage((_) => Math.min(totalPages, start + 3))
+                                                        }
+                                                        className="px-3 py-1 rounded text-sm bg-gray-100"
+                                                    >
+                                                        ...
+                                                    </button>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
+
+                                    <button
+                                        disabled={page === totalPages}
+                                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                                        className="px-3 py-1 rounded bg-gray-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -257,12 +347,7 @@ export default function MyClassesPage() {
                 open={deleteModal.open}
                 title="Delete Class?"
                 message={`Are you sure you want to delete "${deleteModal.data?.title}"?`}
-                onConfirm={() => {
-                    setClasses((prev) =>
-                        prev.filter((x) => x.id !== deleteModal.data.id)
-                    );
-                    setDeleteModal({ open: false, data: null });
-                }}
+                onConfirm={handleDelete}
                 onClose={() => setDeleteModal({ open: false, data: null })}
             />
         </InstructorLayout>
