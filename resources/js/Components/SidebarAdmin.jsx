@@ -17,9 +17,7 @@ import { NavLink } from "react-router-dom";
 import { useState } from "react";
 import LogoutModal from "./LogoutModal";
 
-export default function SidebarAdmin({ isOpen, toggle }) {
-    const [openLogout, setOpenLogout] = useState(false);
-
+export default function SidebarAdmin({ isOpen, toggle, setOpenLogout }) {
     const menu = [
         {
             name: "Dashboard",
@@ -122,32 +120,21 @@ export default function SidebarAdmin({ isOpen, toggle }) {
                 ))}
             </nav>
 
-            {/* LOGOUT BUTTON */}
+            {/* LOGOUT */}
             <div className="mt-auto px-2">
                 <button
-                    onClick={() => setOpenLogout(true)}
                     className="
                         flex items-center gap-3 w-full 
                         px-4 py-3 rounded-xl text-sm
                         text-red-400 hover:bg-red-500/20
                         transition-all
                     "
+                    onClick={() => setOpenLogout(true)}
                 >
                     <FiLogOut size={18} />
                     {isOpen && <span>Logout</span>}
                 </button>
             </div>
-
-            {/* LOGOUT MODAL*/}
-
-            <LogoutModal
-                open={openLogout}
-                onClose={() => setOpenLogout(false)}
-                onConfirm={() => {
-                    localStorage.clear();
-                    window.location.href = "/login";
-                }}
-            />
         </div>
     );
 }

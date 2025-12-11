@@ -63,12 +63,10 @@ export default function NotificationsPage() {
     const openDetail = (notif) => {
         setSelectedNotif(notif);
         setDetailOpen(true);
-
-        // Auto mark as read when opened
         markAsRead(notif.id);
     };
 
-    // FILTER DATA
+    // FILTER
     const filtered = notifications.filter((n) => {
         const matchSearch =
             n.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -81,12 +79,16 @@ export default function NotificationsPage() {
         return matchSearch && matchType && matchStatus;
     });
 
-    // PAGINATION
-    const rowsPerPage = 5;
+    // PAGINATION — PAYMENT STYLE
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [page, setPage] = useState(1);
+
     const totalPages = Math.ceil(filtered.length / rowsPerPage);
-    const start = (page - 1) * rowsPerPage;
-    const currentData = filtered.slice(start, start + rowsPerPage);
+
+    const resetPage = () => setPage(1);
+
+    const startIdx = (page - 1) * rowsPerPage;
+    const currentData = filtered.slice(startIdx, startIdx + rowsPerPage);
 
     // MARK READ
     const markAsRead = (id) => {
@@ -95,7 +97,7 @@ export default function NotificationsPage() {
         );
     };
 
-    // MARK ALL READ
+    // MARK ALL
     const markAllAsRead = () => {
         setNotifications((prev) => prev.map((n) => ({ ...n, status: "Read" })));
     };
@@ -122,7 +124,7 @@ export default function NotificationsPage() {
                                 value={search}
                                 onChange={(e) => {
                                     setSearch(e.target.value);
-                                    setPage(1);
+                                    resetPage();
                                 }}
                                 className="ml-2 bg-transparent outline-none text-sm w-full"
                             />
@@ -142,7 +144,7 @@ export default function NotificationsPage() {
                                     value={filterType}
                                     onChange={(e) => {
                                         setFilterType(e.target.value);
-                                        setPage(1);
+                                        resetPage();
                                     }}
                                     className="w-full border px-2 py-1 rounded mb-3"
                                 >
@@ -160,7 +162,7 @@ export default function NotificationsPage() {
                                     value={filterStatus}
                                     onChange={(e) => {
                                         setFilterStatus(e.target.value);
-                                        setPage(1);
+                                        resetPage();
                                     }}
                                     className="w-full border px-2 py-1 rounded"
                                 >
@@ -199,14 +201,13 @@ export default function NotificationsPage() {
                             {currentData.map((n, i) => (
                                 <tr
                                     key={n.id}
-                                    className={`border-b transition ${
+                                    className={`border-b ${
                                         n.status === "Unread"
-                                            ? "bg-[#F0F6FF] animate-fadeIn"
+                                            ? "bg-[#F0F6FF]"
                                             : ""
                                     } hover:bg-gray-50`}
                                 >
-                                    <td className="py-3">{start + i + 1}</td>
-
+                                    <td className="py-3">{startIdx + i + 1}</td>
                                     <td className="py-3">
                                         <p
                                             className={`font-medium ${
@@ -221,25 +222,20 @@ export default function NotificationsPage() {
                                             {n.message}
                                         </p>
                                     </td>
-
                                     <td className="py-3">{n.type}</td>
                                     <td className="py-3">{n.date}</td>
-
                                     <td className="py-3">
                                         <span
-                                            className={`px-3 py-1 text-xs rounded-full font-medium 
-                                                ${
-                                                    n.status === "Unread"
-                                                        ? "bg-blue-100 text-blue-700"
-                                                        : "bg-gray-200 text-gray-700"
-                                                }`}
+                                            className={`px-3 py-1 text-xs rounded-full font-medium ${
+                                                n.status === "Unread"
+                                                    ? "bg-blue-100 text-blue-700"
+                                                    : "bg-gray-200 text-gray-700"
+                                            }`}
                                         >
                                             {n.status}
                                         </span>
                                     </td>
-
                                     <td className="py-3 flex items-center justify-center gap-3">
-                                        {/* DETAIL MODAL */}
                                         <button
                                             onClick={() => openDetail(n)}
                                             className="text-blue-600 hover:text-blue-800"
@@ -247,7 +243,6 @@ export default function NotificationsPage() {
                                             <FiEye size={18} />
                                         </button>
 
-                                        {/* MARK AS READ */}
                                         {n.status === "Unread" && (
                                             <button
                                                 onClick={() => markAsRead(n.id)}
@@ -257,7 +252,6 @@ export default function NotificationsPage() {
                                             </button>
                                         )}
 
-                                        {/* DELETE */}
                                         <button
                                             onClick={() => deleteNotif(n.id)}
                                             className="text-red-600 hover:text-red-800"
@@ -270,36 +264,113 @@ export default function NotificationsPage() {
                         </tbody>
                     </table>
 
-                    {/* EMPTY */}
                     {filtered.length === 0 && (
                         <p className="text-center text-gray-500 py-4">
                             No notifications found.
                         </p>
                     )}
 
-                    {/* PAGINATION */}
-                    <div className="flex justify-end mt-4 gap-2">
-                        {[...Array(totalPages)].map((_, i) => (
-                            <button
-                                key={i}
-                                onClick={() => setPage(i + 1)}
-                                className={`px-3 py-1 rounded ${
-                                    page === i + 1
-                                        ? "bg-blue-600 text-white"
-                                        : "bg-gray-200 hover:bg-gray-300"
-                                }`}
+                    {/* === PAYMENT STYLE PAGINATION === */}
+                    <div className="mt-4 flex items-center justify-between">
+                        {/* ROWS PER PAGE */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">
+                                Rows per page:
+                            </span>
+                            <select
+                                value={rowsPerPage}
+                                onChange={(e) => {
+                                    setRowsPerPage(Number(e.target.value));
+                                    resetPage();
+                                }}
+                                className="border px-3 py-1 rounded text-sm"
                             >
-                                {i + 1}
+                                <option value={5}>5</option>
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                            </select>
+                        </div>
+
+                        {/* PAGINATION BUTTONS */}
+                        <div className="flex items-center gap-2">
+                            <button
+                                disabled={page === 1}
+                                onClick={() =>
+                                    setPage((p) => Math.max(1, p - 1))
+                                }
+                                className="px-3 py-1 rounded bg-gray-200 text-sm disabled:opacity-40"
+                            >
+                                Prev
                             </button>
-                        ))}
+
+                            {/* SLIDING WINDOW */}
+                            {(() => {
+                                const maxStart = Math.max(1, totalPages - 2);
+                                const start = Math.min(
+                                    Math.max(1, page),
+                                    maxStart
+                                );
+
+                                const btns = [];
+                                for (let i = 0; i < 3; i++) {
+                                    const p = start + i;
+                                    if (p <= totalPages) {
+                                        btns.push(
+                                            <button
+                                                key={p}
+                                                onClick={() => setPage(p)}
+                                                className={`px-3 py-1 rounded text-sm ${
+                                                    page === p
+                                                        ? "bg-blue-600 text-white"
+                                                        : "bg-gray-100"
+                                                }`}
+                                            >
+                                                {p}
+                                            </button>
+                                        );
+                                    }
+                                }
+
+                                return (
+                                    <>
+                                        {btns}
+                                        {start + 3 <= totalPages && (
+                                            <button
+                                                onClick={() =>
+                                                    setPage(
+                                                        Math.min(
+                                                            totalPages,
+                                                            start + 3
+                                                        )
+                                                    )
+                                                }
+                                                className="px-3 py-1 rounded text-sm bg-gray-100"
+                                            >
+                                                ...
+                                            </button>
+                                        )}
+                                    </>
+                                );
+                            })()}
+
+                            <button
+                                disabled={page === totalPages}
+                                onClick={() =>
+                                    setPage((p) => Math.min(totalPages, p + 1))
+                                }
+                                className="px-3 py-1 rounded bg-gray-200 text-sm disabled:opacity-40"
+                            >
+                                Next
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* ===================== DETAIL MODAL ===================== */}
+            {/* DETAIL MODAL */}
             {detailOpen && selectedNotif && (
                 <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50">
-                    <div className="bg-white rounded-xl p-6 w-[380px] shadow-xl animate-fadeIn">
+                    <div className="bg-white rounded-xl p-6 w-[380px] shadow-xl">
                         <h2 className="text-lg font-semibold mb-3">
                             {selectedNotif.title}
                         </h2>

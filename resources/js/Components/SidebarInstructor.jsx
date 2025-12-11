@@ -15,50 +15,17 @@ import {
 import LogoutModal from "./LogoutModal";
 import { useState } from "react";
 
-export default function SidebarInstructor({ isOpen, toggle }) {
-    const [openLogout, setOpenLogout] = useState(false);
+export default function SidebarInstructor({ isOpen, toggle, setOpenLogout }) {
 
     const menu = [
-        {
-            name: "Dashboard",
-            icon: <FiHome size={18} />,
-            path: "/instructor/dashboard",
-        },
-        {
-            name: "My Classes",
-            icon: <FiBook size={18} />,
-            path: "/instructor/classes",
-        },
-        {
-            name: "Create Class",
-            icon: <FiPlusCircle size={18} />,
-            path: "/instructor/classes/create",
-        },
-        {
-            name: "Students",
-            icon: <FiUsers size={18} />,
-            path: "/instructor/students",
-        },
-        {
-            name: "Earnings",
-            icon: <FiDollarSign size={18} />,
-            path: "/instructor/earnings",
-        },
-        {
-            name: "Notifications",
-            icon: <FiBell size={18} />,
-            path: "/instructor/notifications",
-        },
-        {
-            name: "Profile",
-            icon: <FiUser size={18} />,
-            path: "/instructor/profile",
-        },
-        {
-            name: "Settings",
-            icon: <FiSettings size={18} />,
-            path: "/instructor/settings",
-        },
+        { name: "Dashboard", icon: <FiHome size={18} />, path: "/instructor/dashboard" },
+        { name: "My Classes", icon: <FiBook size={18} />, path: "/instructor/classes" },
+        { name: "Create Class", icon: <FiPlusCircle size={18} />, path: "/instructor/classes/create" },
+        { name: "Students", icon: <FiUsers size={18} />, path: "/instructor/students" },
+        { name: "Earnings", icon: <FiDollarSign size={18} />, path: "/instructor/earnings" },
+        { name: "Notifications", icon: <FiBell size={18} />, path: "/instructor/notifications" },
+        { name: "Profile", icon: <FiUser size={18} />, path: "/instructor/profile" },
+        { name: "Settings", icon: <FiSettings size={18} />, path: "/instructor/settings" },
     ];
 
     return (
@@ -85,11 +52,7 @@ export default function SidebarInstructor({ isOpen, toggle }) {
             {/* Logo */}
             <div className="flex items-center gap-3 mb-10 px-2">
                 <img src="/images/logo.png" className="w-10" />
-                {isOpen && (
-                    <h1 className="text-xl font-bold tracking-wide">
-                        DevCourse
-                    </h1>
-                )}
+                {isOpen && <h1 className="text-xl font-bold tracking-wide">DevCourse</h1>}
             </div>
 
             {/* Menu */}
@@ -128,22 +91,13 @@ export default function SidebarInstructor({ isOpen, toggle }) {
                         text-red-400 hover:bg-red-500/20
                         transition-all
                     "
-                    onClick={() => setOpenLogout(true)} // ← FIX
+                    onClick={() => setOpenLogout(true)}
                 >
                     <FiLogOut size={18} />
                     {isOpen && <span>Logout</span>}
                 </button>
             </div>
-
-            {/* Modal Logout */}
-            <LogoutModal
-                open={openLogout}
-                onClose={() => setOpenLogout(false)}
-                onConfirm={() => {
-                    localStorage.clear();
-                    window.location.href = "/login";
-                }}
-            />
         </div>
     );
 }
+

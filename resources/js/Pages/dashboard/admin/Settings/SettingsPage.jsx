@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminLayout from "../../../../layouts/AdminLayout";
 import { FiSave } from "react-icons/fi";
 
@@ -9,11 +9,24 @@ export default function SettingsPage() {
         contactEmail: "support@devcourse.com",
     });
 
-    // PROFILE SETTINGS
+    // Ambil user dari localStorage
     const [profile, setProfile] = useState({
-        name: "Admin DevCourse",
-        email: "admin@devcourse.com",
+        name: "",
+        email: "",
+        photo: null,
     });
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+            const u = JSON.parse(storedUser);
+            setProfile({
+                name: u.name || "",
+                email: u.email || "",
+                photo: null,
+            });
+        }
+    }, []);
 
     // PASSWORD
     const [passwords, setPasswords] = useState({
@@ -43,7 +56,7 @@ export default function SettingsPage() {
             <div className="px-1 pb-10">
                 <h1 className="text-2xl font-bold mb-6">Settings</h1>
 
-                {/* ======================= GENERAL SETTINGS ======================= */}
+                {/* ================= GENERAL SETTINGS ================= */}
                 <div className="bg-white p-6 rounded-xl shadow mb-6">
                     <h2 className="text-lg font-semibold mb-4">
                         General Settings
@@ -93,13 +106,42 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                {/* ======================= PROFILE SETTINGS ======================= */}
+                {/* ================= PROFILE SETTINGS ================= */}
                 <div className="bg-white p-6 rounded-xl shadow mb-6">
                     <h2 className="text-lg font-semibold mb-4">
                         Admin Profile
                     </h2>
 
                     <div className="space-y-4">
+                        {/* PROFILE PHOTO */}
+                        <div className="flex items-center gap-5">
+                            <img
+                                src={
+                                    profile.photo
+                                        ? URL.createObjectURL(profile.photo)
+                                        : "/images/default-profile.png"
+                                }
+                                className="w-20 h-20 rounded-full object-cover border"
+                            />
+
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-1">
+                                    Profile Photo
+                                </label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) =>
+                                        setProfile({
+                                            ...profile,
+                                            photo: e.target.files[0],
+                                        })
+                                    }
+                                />
+                            </div>
+                        </div>
+
+                        {/* NAME */}
                         <div>
                             <label className="text-sm text-gray-600">
                                 Full Name
@@ -117,6 +159,7 @@ export default function SettingsPage() {
                             />
                         </div>
 
+                        {/* EMAIL */}
                         <div>
                             <label className="text-sm text-gray-600">
                                 Email Address
@@ -134,6 +177,19 @@ export default function SettingsPage() {
                             />
                         </div>
 
+                        {/* ROLE */}
+                        <div>
+                            <label className="text-sm text-gray-600">
+                                Role
+                            </label>
+                            <input
+                                type="text"
+                                value="Admin"
+                                disabled
+                                className="w-full border px-4 py-2 rounded-lg mt-1 bg-gray-100 text-gray-500"
+                            />
+                        </div>
+
                         <button
                             onClick={handleSaveProfile}
                             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg"
@@ -143,7 +199,7 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                {/* ======================= CHANGE PASSWORD ======================= */}
+                {/* ================= CHANGE PASSWORD ================= */}
                 <div className="bg-white p-6 rounded-xl shadow">
                     <h2 className="text-lg font-semibold mb-4">
                         Change Password

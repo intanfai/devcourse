@@ -65,6 +65,12 @@ export default function PaymentsPage() {
     const [filterStatus, setFilterStatus] = useState("All");
     const [filterMethod, setFilterMethod] = useState("All");
 
+    // PAGINATION STATES
+    const [currentPage, setCurrentPage] = useState(1);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
+
+    const resetPage = () => setCurrentPage(1);
+
     // FILTER LOGIC
     const filteredPayments = payments.filter((p) => {
         const matchSearch =
@@ -81,6 +87,14 @@ export default function PaymentsPage() {
         return matchSearch && matchStatus && matchMethod;
     });
 
+    // PAGINATION CALCULATION
+    const totalPages = Math.ceil(filteredPayments.length / rowsPerPage);
+
+    const paginatedData = filteredPayments.slice(
+        (currentPage - 1) * rowsPerPage,
+        currentPage * rowsPerPage
+    );
+
     return (
         <AdminLayout>
             <div className="px-1 pb-10">
@@ -96,7 +110,10 @@ export default function PaymentsPage() {
                                 type="text"
                                 placeholder="Search payments..."
                                 value={search}
-                                onChange={(e) => setSearch(e.target.value)}
+                                onChange={(e) => {
+                                    setSearch(e.target.value);
+                                    resetPage();
+                                }}
                                 className="ml-2 bg-transparent outline-none text-sm"
                             />
                         </div>
@@ -109,15 +126,14 @@ export default function PaymentsPage() {
 
                             <div className="absolute right-0 mt-2 w-48 bg-white p-4 rounded-xl shadow-lg border z-20 text-sm">
                                 {/* STATUS FILTER */}
-                                <p className="text-xs text-gray-500 mb-1">
-                                    Status
-                                </p>
+                                <p className="text-xs text-gray-500 mb-1">Status</p>
                                 <select
                                     className="border w-full px-2 py-1 rounded mb-3"
                                     value={filterStatus}
-                                    onChange={(e) =>
-                                        setFilterStatus(e.target.value)
-                                    }
+                                    onChange={(e) => {
+                                        setFilterStatus(e.target.value);
+                                        resetPage();
+                                    }}
                                 >
                                     <option value="All">All</option>
                                     <option value="Paid">Paid</option>
@@ -133,9 +149,10 @@ export default function PaymentsPage() {
                                 <select
                                     className="border w-full px-2 py-1 rounded"
                                     value={filterMethod}
-                                    onChange={(e) =>
-                                        setFilterMethod(e.target.value)
-                                    }
+                                    onChange={(e) => {
+                                        setFilterMethod(e.target.value);
+                                        resetPage();
+                                    }}
                                 >
                                     <option value="All">All</option>
                                     <option value="Stripe">Stripe</option>
@@ -168,12 +185,11 @@ export default function PaymentsPage() {
                         </thead>
 
                         <tbody>
-                            {filteredPayments.map((p, i) => (
-                                <tr
-                                    key={p.id}
-                                    className="border-b hover:bg-gray-50 transition"
-                                >
-                                    <td className="py-3">{i + 1}</td>
+                            {paginatedData.map((p, i) => (
+                                <tr key={p.id} className="border-b hover:bg-gray-50 transition">
+                                    <td className="py-3">
+                                        {(currentPage - 1) * rowsPerPage + (i + 1)}
+                                    </td>
 
                                     <td className="py-3 text-blue-600 font-mono font-semibold">
                                         {p.id}
@@ -190,7 +206,6 @@ export default function PaymentsPage() {
 
                                     <td className="py-3">{p.date}</td>
 
-                                    {/* STATUS BADGE */}
                                     <td className="py-3">
                                         <span
                                             className={`px-3 py-1 rounded-full text-xs font-semibold
@@ -211,11 +226,7 @@ export default function PaymentsPage() {
 
                                     <td className="py-3 text-center">
                                         <button
-                                            onClick={() =>
-                                                navigate(
-                                                    `/admin/payments/${p.id}`
-                                                )
-                                            }
+                                            onClick={() => navigate(`/admin/payments/${p.id}`)}
                                             className="text-blue-600 hover:text-blue-800"
                                         >
                                             <FiEye size={18} />
@@ -231,6 +242,103 @@ export default function PaymentsPage() {
                             No payments found.
                         </p>
                     )}
+
+                    {/* PAGINATION */}
+                    <div className="mt-4 flex items-center justify-between">
+                        {/* ROWS PER PAGE */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">Rows per page:</span>
+                            <select
+                                value={rowsPerPage}
+                                onChange={(e) => {
+                                    setRowsPerPage(Number(e.target.value));
+                                    resetPage();
+                                }}
+                                className="border px-3 py-1 rounded text-sm"
+                            >
+                                <option value={5}>5</option>
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                            </select>
+                        </div>
+
+                        {/* NEXT PREV + SLIDING BUTTONS */}
+                        <div className="flex items-center gap-2">
+                            <button
+                                disabled={currentPage === 1}
+                                onClick={() =>
+                                    setCurrentPage((p) => Math.max(1, p - 1))
+                                }
+                                className="px-3 py-1 rounded bg-gray-200 text-sm"
+                            >
+                                Prev
+                            </button>
+
+                            {/* Sliding window */}
+                            {(() => {
+                                const maxStart = Math.max(1, totalPages - 2);
+                                const start = Math.min(
+                                    Math.max(1, currentPage),
+                                    maxStart
+                                );
+                                const pageButtons = [];
+
+                                for (let i = 0; i < 3; i++) {
+                                    const p = start + i;
+                                    if (p <= totalPages) {
+                                        pageButtons.push(
+                                            <button
+                                                key={p}
+                                                onClick={() =>
+                                                    setCurrentPage(p)
+                                                }
+                                                className={`px-3 py-1 rounded text-sm ${
+                                                    currentPage === p
+                                                        ? "bg-blue-600 text-white"
+                                                        : "bg-gray-100"
+                                                }`}
+                                            >
+                                                {p}
+                                            </button>
+                                        );
+                                    }
+                                }
+
+                                return (
+                                    <>
+                                        {pageButtons}
+                                        {start + 3 <= totalPages && (
+                                            <button
+                                                onClick={() =>
+                                                    setCurrentPage((_) =>
+                                                        Math.min(
+                                                            totalPages,
+                                                            start + 3
+                                                        )
+                                                    )
+                                                }
+                                                className="px-3 py-1 rounded text-sm bg-gray-100"
+                                            >
+                                                ...
+                                            </button>
+                                        )}
+                                    </>
+                                );
+                            })()}
+
+                            <button
+                                disabled={currentPage === totalPages}
+                                onClick={() =>
+                                    setCurrentPage((p) =>
+                                        Math.min(totalPages, p + 1)
+                                    )
+                                }
+                                className="px-3 py-1 rounded bg-gray-200 text-sm"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </AdminLayout>

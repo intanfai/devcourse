@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import SidebarInstructor from "../Components/SidebarInstructor";
 import TopbarInstructor from "../Components/TopbarInstructor";
+import LogoutModal from "../Components/LogoutModal";
 
 export default function InstructorLayout({ children }) {
     const [isOpen, setIsOpen] = useState(true);
     const [user, setUser] = useState(null);
+    const [openLogout, setOpenLogout] = useState(false);
 
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
@@ -17,13 +19,12 @@ export default function InstructorLayout({ children }) {
 
     return (
         <div className="flex bg-[#F3F4F6] min-h-screen">
-            {/* SIDEBAR */}
             <SidebarInstructor
                 isOpen={isOpen}
                 toggle={() => setIsOpen(!isOpen)}
+                setOpenLogout={setOpenLogout}   // ← KIRIM KE SIDEBAR
             />
 
-            {/* MAIN CONTENT */}
             <div
                 className={`
                     flex-1
@@ -32,12 +33,21 @@ export default function InstructorLayout({ children }) {
                     ${isOpen ? "ml-[19rem]" : "ml-[7rem]"}
                 `}
             >
-                {/* TOPBAR */}
                 <TopbarInstructor user={user} />
 
-                {/* CONTENT */}
                 <div className="pt-6">{children}</div>
             </div>
+
+            {/* Logout Modal ini YANG DIPAKAI */}
+            <LogoutModal
+                open={openLogout}
+                onClose={() => setOpenLogout(false)}
+                onConfirm={() => {
+                    localStorage.clear();
+                    window.location.href = "/login";
+                }}
+            />
         </div>
     );
 }
+
