@@ -566,50 +566,83 @@ export default function ReportsPage() {
                 <div className="bg-white p-6 rounded-xl shadow">
                     {renderTable()}
 
-                    {/* Pagination */}
-                    <div className="mt-4 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">
-                                Rows per page:
-                            </span>
+                    {/* ROWS PER PAGE */}
+                    <div className="mt-6 flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm">
+                            <span>Rows per page:</span>
                             <select
+                                className="border px-2 py-1 rounded"
                                 value={rowsPerPage}
                                 onChange={(e) => {
                                     setRowsPerPage(Number(e.target.value));
-                                    resetPage();
+                                    setCurrentPage(1);
                                 }}
-                                className="border px-3 py-1 rounded text-sm"
                             >
                                 <option value={5}>5</option>
                                 <option value={10}>10</option>
+                                <option value={20}>20</option>
                             </select>
                         </div>
 
+                        {/* PAGINATION BUTTONS */}
                         <div className="flex items-center gap-2">
+                            {/* PREV */}
                             <button
                                 disabled={currentPage === 1}
                                 onClick={() =>
                                     setCurrentPage((p) => Math.max(1, p - 1))
                                 }
-                                className="px-3 py-1 rounded bg-gray-200 text-sm"
+                                className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
                             >
                                 Prev
                             </button>
 
-                            {[...Array(totalPages)].map((_, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => setCurrentPage(i + 1)}
-                                    className={`px-3 py-1 rounded text-sm ${
-                                        currentPage === i + 1
-                                            ? "bg-blue-600 text-white"
-                                            : "bg-gray-100"
-                                    }`}
-                                >
-                                    {i + 1}
-                                </button>
-                            ))}
+                            {/* SLIDING WINDOW */}
+                            {(() => {
+                                const maxStart = Math.max(1, totalPages - 2);
+                                const startPage = Math.min(
+                                    Math.max(1, currentPage),
+                                    maxStart
+                                );
 
+                                const pages = [];
+
+                                for (let i = 0; i < 3; i++) {
+                                    const p = startPage + i;
+                                    if (p <= totalPages) {
+                                        pages.push(
+                                            <button
+                                                key={p}
+                                                onClick={() =>
+                                                    setCurrentPage(p)
+                                                }
+                                                className={`px-3 py-1 rounded ${
+                                                    currentPage === p
+                                                        ? "bg-blue-600 text-white"
+                                                        : "bg-gray-100"
+                                                }`}
+                                            >
+                                                {p}
+                                            </button>
+                                        );
+                                    }
+                                }
+
+                                if (startPage + 3 <= totalPages) {
+                                    pages.push(
+                                        <button
+                                            key="dots"
+                                            className="px-3 py-1 rounded bg-gray-100"
+                                        >
+                                            ...
+                                        </button>
+                                    );
+                                }
+
+                                return pages;
+                            })()}
+
+                            {/* NEXT */}
                             <button
                                 disabled={currentPage === totalPages}
                                 onClick={() =>
@@ -617,7 +650,7 @@ export default function ReportsPage() {
                                         Math.min(totalPages, p + 1)
                                     )
                                 }
-                                className="px-3 py-1 rounded bg-gray-200 text-sm"
+                                className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
                             >
                                 Next
                             </button>

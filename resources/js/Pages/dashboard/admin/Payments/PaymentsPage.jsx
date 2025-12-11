@@ -66,10 +66,10 @@ export default function PaymentsPage() {
     const [filterMethod, setFilterMethod] = useState("All");
 
     // PAGINATION STATES
-    const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [page, setPage] = useState(1);
 
-    const resetPage = () => setCurrentPage(1);
+    const resetPage = () => setPage(1);
 
     // FILTER LOGIC
     const filteredPayments = payments.filter((p) => {
@@ -87,12 +87,12 @@ export default function PaymentsPage() {
         return matchSearch && matchStatus && matchMethod;
     });
 
-    // PAGINATION CALCULATION
+    // PAGINATION CALC
     const totalPages = Math.ceil(filteredPayments.length / rowsPerPage);
 
     const paginatedData = filteredPayments.slice(
-        (currentPage - 1) * rowsPerPage,
-        currentPage * rowsPerPage
+        (page - 1) * rowsPerPage,
+        page * rowsPerPage
     );
 
     return (
@@ -126,7 +126,9 @@ export default function PaymentsPage() {
 
                             <div className="absolute right-0 mt-2 w-48 bg-white p-4 rounded-xl shadow-lg border z-20 text-sm">
                                 {/* STATUS FILTER */}
-                                <p className="text-xs text-gray-500 mb-1">Status</p>
+                                <p className="text-xs text-gray-500 mb-1">
+                                    Status
+                                </p>
                                 <select
                                     className="border w-full px-2 py-1 rounded mb-3"
                                     value={filterStatus}
@@ -186,9 +188,12 @@ export default function PaymentsPage() {
 
                         <tbody>
                             {paginatedData.map((p, i) => (
-                                <tr key={p.id} className="border-b hover:bg-gray-50 transition">
+                                <tr
+                                    key={p.id}
+                                    className="border-b hover:bg-gray-50 transition"
+                                >
                                     <td className="py-3">
-                                        {(currentPage - 1) * rowsPerPage + (i + 1)}
+                                        {(page - 1) * rowsPerPage + (i + 1)}
                                     </td>
 
                                     <td className="py-3 text-blue-600 font-mono font-semibold">
@@ -226,7 +231,11 @@ export default function PaymentsPage() {
 
                                     <td className="py-3 text-center">
                                         <button
-                                            onClick={() => navigate(`/admin/payments/${p.id}`)}
+                                            onClick={() =>
+                                                navigate(
+                                                    `/admin/payments/${p.id}`
+                                                )
+                                            }
                                             className="text-blue-600 hover:text-blue-800"
                                         >
                                             <FiEye size={18} />
@@ -247,7 +256,9 @@ export default function PaymentsPage() {
                     <div className="mt-4 flex items-center justify-between">
                         {/* ROWS PER PAGE */}
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">Rows per page:</span>
+                            <span className="text-sm text-gray-500">
+                                Rows per page:
+                            </span>
                             <select
                                 value={rowsPerPage}
                                 onChange={(e) => {
@@ -262,38 +273,37 @@ export default function PaymentsPage() {
                             </select>
                         </div>
 
-                        {/* NEXT PREV + SLIDING BUTTONS */}
+                        {/* PAGINATION BUTTONS */}
                         <div className="flex items-center gap-2">
+                            {/* PREV */}
                             <button
-                                disabled={currentPage === 1}
+                                disabled={page === 1}
                                 onClick={() =>
-                                    setCurrentPage((p) => Math.max(1, p - 1))
+                                    setPage((p) => Math.max(1, p - 1))
                                 }
-                                className="px-3 py-1 rounded bg-gray-200 text-sm"
+                                className="px-3 py-1 rounded bg-gray-200 text-sm disabled:opacity-40"
                             >
                                 Prev
                             </button>
 
-                            {/* Sliding window */}
+                            {/* SLIDING WINDOW */}
                             {(() => {
                                 const maxStart = Math.max(1, totalPages - 2);
                                 const start = Math.min(
-                                    Math.max(1, currentPage),
+                                    Math.max(1, page),
                                     maxStart
                                 );
-                                const pageButtons = [];
 
+                                const btns = [];
                                 for (let i = 0; i < 3; i++) {
                                     const p = start + i;
                                     if (p <= totalPages) {
-                                        pageButtons.push(
+                                        btns.push(
                                             <button
                                                 key={p}
-                                                onClick={() =>
-                                                    setCurrentPage(p)
-                                                }
+                                                onClick={() => setPage(p)}
                                                 className={`px-3 py-1 rounded text-sm ${
-                                                    currentPage === p
+                                                    page === p
                                                         ? "bg-blue-600 text-white"
                                                         : "bg-gray-100"
                                                 }`}
@@ -306,11 +316,11 @@ export default function PaymentsPage() {
 
                                 return (
                                     <>
-                                        {pageButtons}
+                                        {btns}
                                         {start + 3 <= totalPages && (
                                             <button
                                                 onClick={() =>
-                                                    setCurrentPage((_) =>
+                                                    setPage(
                                                         Math.min(
                                                             totalPages,
                                                             start + 3
@@ -326,14 +336,13 @@ export default function PaymentsPage() {
                                 );
                             })()}
 
+                            {/* NEXT */}
                             <button
-                                disabled={currentPage === totalPages}
+                                disabled={page === totalPages}
                                 onClick={() =>
-                                    setCurrentPage((p) =>
-                                        Math.min(totalPages, p + 1)
-                                    )
+                                    setPage((p) => Math.min(totalPages, p + 1))
                                 }
-                                className="px-3 py-1 rounded bg-gray-200 text-sm"
+                                className="px-3 py-1 rounded bg-gray-200 text-sm disabled:opacity-40"
                             >
                                 Next
                             </button>

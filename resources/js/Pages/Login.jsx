@@ -28,7 +28,15 @@ export default function Login() {
                 localStorage.setItem("user", JSON.stringify(res.data.user));
 
                 // role bisa berupa string ('student') atau null — fallback ke role_id
-                const roleName = res.data.user.role || (res.data.user.role_id === 1 ? 'admin' : res.data.user.role_id === 2 ? 'instructor' : res.data.user.role_id === 3 ? 'student' : null);
+                const roleName =
+                    res.data.user.role ||
+                    (res.data.user.role_id === 1
+                        ? "admin"
+                        : res.data.user.role_id === 2
+                        ? "instructor"
+                        : res.data.user.role_id === 3
+                        ? "student"
+                        : null);
 
                 // REDIRECT SESUAI ROLE
                 if (roleName === "admin") {
@@ -39,14 +47,13 @@ export default function Login() {
                     navigate("/student/dashboard");
                 } else {
                     // jika tidak diketahui, tetap di halaman saat ini dan tampilkan pesan
-                    setError('Role pengguna tidak dikenali');
+                    setError("Role pengguna tidak dikenali");
                 }
 
                 if (role === "admin") navigate("/dashboard");
                 else if (role === "instructor")
                     navigate("/instructor/dashboard");
                 else if (role === "student") navigate("/student/dashboard");
-
             } else {
                 setError("Email atau password salah!");
             }
@@ -99,6 +106,14 @@ export default function Login() {
                             placeholder="Password"
                         />
                     </div>
+                    <p className="text-right text-sm mt-1">
+                        <a
+                            href="/forgot-password"
+                            className="text-blue-600 font-medium hover:underline"
+                        >
+                            Forgot password?
+                        </a>
+                    </p>
 
                     {/* Google Button */}
                     <button

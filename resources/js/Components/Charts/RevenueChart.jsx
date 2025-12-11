@@ -18,7 +18,7 @@ export default function RevenueChart() {
             {
                 label: "Revenue",
                 data: [4500, 6500, 7000, 7500, 8200, 9000],
-                backgroundColor: "#22c55e",
+                backgroundColor: "#4f46e5",
                 borderRadius: 4,
             },
         ],

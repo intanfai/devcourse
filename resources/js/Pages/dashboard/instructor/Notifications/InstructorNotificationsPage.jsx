@@ -42,6 +42,9 @@ export default function InstructorNotificationsPage() {
     const [filterType, setFilterType] = useState("All");
     const [filterStatus, setFilterStatus] = useState("All");
 
+    // RESET PAGE KALO SEARCH / FILTER BERUBAH
+    const resetPage = () => setPage(1);
+
     // FILTER
     const filtered = notifications.filter((n) => {
         const matchSearch =
@@ -49,19 +52,33 @@ export default function InstructorNotificationsPage() {
             n.message.toLowerCase().includes(search.toLowerCase());
 
         const matchType = filterType === "All" ? true : n.type === filterType;
-        const matchStatus = filterStatus === "All" ? true : n.status === filterStatus;
+        const matchStatus =
+            filterStatus === "All" ? true : n.status === filterStatus;
 
         return matchSearch && matchType && matchStatus;
     });
 
-    // PAGINATION
-    const rowsPerPage = 5;
+    // PAGINATION SETTINGS
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [page, setPage] = useState(1);
+
     const totalPages = Math.ceil(filtered.length / rowsPerPage);
     const start = (page - 1) * rowsPerPage;
     const currentData = filtered.slice(start, start + rowsPerPage);
 
-    // MARK AS READ
+    // SLIDING PAGINATION → tampilkan 3 angka dekat page sekarang
+    const getPages = () => {
+        let start = Math.max(1, page - 1);
+        let end = Math.min(totalPages, start + 2);
+
+        if (end - start < 2) {
+            start = Math.max(1, end - 2);
+        }
+
+        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    };
+
+    // Mark as read
     const markAsRead = (id) => {
         setNotifications((prev) =>
             prev.map((n) => (n.id === id ? { ...n, status: "Read" } : n))
@@ -71,13 +88,11 @@ export default function InstructorNotificationsPage() {
     return (
         <InstructorLayout>
             <div className="px-1 pb-10">
-
                 {/* HEADER */}
                 <h1 className="text-2xl font-bold mb-6">Notifications</h1>
 
                 {/* SEARCH + FILTER */}
                 <div className="flex justify-between items-center mb-6">
-
                     {/* SEARCH */}
                     <div className="bg-white px-4 py-2 rounded-lg shadow border flex items-center w-64">
                         <FiSearch className="text-gray-500" />
@@ -85,7 +100,10 @@ export default function InstructorNotificationsPage() {
                             type="text"
                             placeholder="Search notifications..."
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => {
+                                setSearch(e.target.value);
+                                resetPage();
+                            }}
                             className="ml-2 bg-transparent outline-none text-sm w-full"
                         />
                     </div>
@@ -97,13 +115,12 @@ export default function InstructorNotificationsPage() {
                         </summary>
 
                         <div className="absolute right-0 mt-2 w-52 bg-white p-4 rounded-xl shadow-lg border text-sm z-20">
-
                             <p className="text-xs text-gray-500 mb-1">Type</p>
                             <select
                                 value={filterType}
                                 onChange={(e) => {
                                     setFilterType(e.target.value);
-                                    setPage(1);
+                                    resetPage();
                                 }}
                                 className="w-full border px-2 py-1 rounded mb-3"
                             >
@@ -119,7 +136,7 @@ export default function InstructorNotificationsPage() {
                                 value={filterStatus}
                                 onChange={(e) => {
                                     setFilterStatus(e.target.value);
-                                    setPage(1);
+                                    resetPage();
                                 }}
                                 className="w-full border px-2 py-1 rounded"
                             >
@@ -129,7 +146,6 @@ export default function InstructorNotificationsPage() {
                             </select>
                         </div>
                     </details>
-
                 </div>
 
                 {/* TABLE */}
@@ -162,7 +178,6 @@ export default function InstructorNotificationsPage() {
                                     </td>
 
                                     <td className="py-3">{n.type}</td>
-
                                     <td className="py-3">{n.date}</td>
 
                                     <td className="py-3">
@@ -172,8 +187,7 @@ export default function InstructorNotificationsPage() {
                                                     n.status === "Unread"
                                                         ? "bg-blue-100 text-blue-700"
                                                         : "bg-gray-200 text-gray-700"
-                                                }
-                                            `}
+                                                }`}
                                         >
                                             {n.status}
                                         </span>
@@ -194,28 +208,100 @@ export default function InstructorNotificationsPage() {
                         </tbody>
                     </table>
 
-                    {/* Empty State */}
                     {filtered.length === 0 && (
                         <p className="text-center py-4 text-gray-500">
                             No notifications found.
                         </p>
                     )}
 
-                    {/* PAGINATION */}
-                    <div className="flex justify-end mt-4 gap-2">
-                        {[...Array(totalPages)].map((_, i) => (
-                            <button
-                                key={i}
-                                onClick={() => setPage(i + 1)}
-                                className={`px-3 py-1 rounded ${
-                                    page === i + 1
-                                        ? "bg-blue-600 text-white"
-                                        : "bg-gray-200 hover:bg-gray-300"
-                                }`}
+                    {/* ROWS PER PAGE + PAGINATION */}
+                    <div className="mt-4 flex items-center justify-between">
+                        {/* ROWS PER PAGE */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">
+                                Rows per page:
+                            </span>
+
+                            <select
+                                value={rowsPerPage}
+                                onChange={(e) => {
+                                    setRowsPerPage(Number(e.target.value));
+                                    resetPage();
+                                }}
+                                className="border px-3 py-1 rounded text-sm"
                             >
-                                {i + 1}
+                                <option value={5}>5</option>
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                            </select>
+                        </div>
+
+                        {/* PAGINATION BUTTONS */}
+                        <div className="flex items-center gap-2">
+                            {/* PREV */}
+                            <button
+                                disabled={page === 1}
+                                onClick={() =>
+                                    setPage((p) => Math.max(1, p - 1))
+                                }
+                                className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+                            >
+                                Prev
                             </button>
-                        ))}
+
+                            {/* SLIDING WINDOW */}
+                            {(() => {
+                                const maxStart = Math.max(1, totalPages - 2);
+                                const startPage = Math.min(
+                                    Math.max(1, page),
+                                    maxStart
+                                );
+                                const pages = [];
+
+                                for (let i = 0; i < 3; i++) {
+                                    const p = startPage + i;
+                                    if (p <= totalPages) {
+                                        pages.push(
+                                            <button
+                                                key={p}
+                                                onClick={() => setPage(p)}
+                                                className={`px-3 py-1 rounded ${
+                                                    page === p
+                                                        ? "bg-blue-600 text-white"
+                                                        : "bg-gray-100"
+                                                }`}
+                                            >
+                                                {p}
+                                            </button>
+                                        );
+                                    }
+                                }
+
+                                if (startPage + 3 <= totalPages) {
+                                    pages.push(
+                                        <button
+                                            key="dots"
+                                            className="px-3 py-1 rounded bg-gray-100"
+                                        >
+                                            ...
+                                        </button>
+                                    );
+                                }
+
+                                return pages;
+                            })()}
+
+                            {/* NEXT */}
+                            <button
+                                disabled={page === totalPages}
+                                onClick={() =>
+                                    setPage((p) => Math.min(totalPages, p + 1))
+                                }
+                                className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+                            >
+                                Next
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

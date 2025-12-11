@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Auth\ForgotPasswordController as AuthForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController as AuthResetPasswordController;
 use Illuminate\Support\Facades\Route;
 
 // === CONTROLLERS ===
@@ -16,6 +18,13 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\QuizQuestionController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\ResetPasswordController;
+
+
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
+
 
 Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin/data', function () {
     return response()->json(['message' => 'Admin only']);
@@ -228,6 +237,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     //api enrollment untuk mengakses course dan materi
     Route::post('/enrollments', [EnrollmentController::class, 'store']);
+
+    //api forget Password
+    
+
 });
 
 

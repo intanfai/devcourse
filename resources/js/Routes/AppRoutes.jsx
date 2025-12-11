@@ -5,6 +5,8 @@ import Landing from "../Pages/Landing";
 import Register from "../Pages/Register";
 import Dashboard from "../Pages/Dashboard";
 import PrivateRoutes from "./PrivateRoutes";
+import ForgotPassword from "../Pages/ForgotPassword.jsx";
+import ResetPassword from "../Pages/ResetPassword.jsx";
 
 {
     /* Admin Routes */
@@ -54,7 +56,6 @@ import EditProfilePage from "../Pages/dashboard/student/Profile/EditProfilePage.
 import StudentSettingsPage from "../Pages/dashboard/student/Settings/StudentSettingsPage.jsx";
 import CheckoutPage from "../Pages/dashboard/student/CheckoutPage.jsx";
 
-
 export default function AppRoutes() {
     return (
         <Routes>
@@ -62,6 +63,8 @@ export default function AppRoutes() {
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<Landing />} />
             <Route path="/Register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* PROTECTED ROUTE */}
             <Route element={<PrivateRoutes />}>
@@ -174,10 +177,7 @@ export default function AppRoutes() {
                     path="/student/explore"
                     element={<ExploreCoursesPage />}
                 />
-                <Route
-                    path="/student/courses"
-                    element={<MyCoursesPage />}
-                />
+                <Route path="/student/courses" element={<MyCoursesPage />} />
                 <Route
                     path="/student/notifications"
                     element={<StudentNotificationsPage />}
@@ -208,7 +208,6 @@ export default function AppRoutes() {
                 path="*"
                 element={<h2 className="p-6">404 - Not Found</h2>}
             />
-            
         </Routes>
     );
 }

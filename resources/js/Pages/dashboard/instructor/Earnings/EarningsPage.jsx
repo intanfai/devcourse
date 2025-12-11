@@ -7,38 +7,10 @@ export default function EarningsPage() {
     const [filterClass, setFilterClass] = useState("All");
 
     const earnings = [
-        {
-            id: 1,
-            class: "React Basics",
-            student: "Rina Putri",
-            amount: 150000,
-            date: "2025-01-10",
-            type: "Enrollment",
-        },
-        {
-            id: 2,
-            class: "Laravel API Masterclass",
-            student: "Doni Saputra",
-            amount: 200000,
-            date: "2025-01-12",
-            type: "Enrollment",
-        },
-        {
-            id: 3,
-            class: "UI/UX Design Fundamentals",
-            student: "Salsa Nur",
-            amount: 120000,
-            date: "2025-01-15",
-            type: "Enrollment",
-        },
-        {
-            id: 4,
-            class: "React Basics",
-            student: "Bima Aditya",
-            amount: 150000,
-            date: "2025-01-18",
-            type: "Enrollment",
-        },
+        { id: 1, class: "React Basics", student: "Rina Putri", amount: 150000, date: "2025-01-10", type: "Enrollment" },
+        { id: 2, class: "Laravel API Masterclass", student: "Doni Saputra", amount: 200000, date: "2025-01-12", type: "Enrollment" },
+        { id: 3, class: "UI/UX Design Fundamentals", student: "Salsa Nur", amount: 120000, date: "2025-01-15", type: "Enrollment" },
+        { id: 4, class: "React Basics", student: "Bima Aditya", amount: 150000, date: "2025-01-18", type: "Enrollment" },
     ];
 
     const classes = ["All", ...new Set(earnings.map((e) => e.class))];
@@ -55,16 +27,18 @@ export default function EarningsPage() {
     });
 
     // PAGINATION
-    const rowsPerPage = 5;
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [page, setPage] = useState(1);
 
-    const start = (page - 1) * rowsPerPage;
     const totalPages = Math.ceil(filtered.length / rowsPerPage);
-    const currentData = filtered.slice(start, start + rowsPerPage);
+    const startIndex = (page - 1) * rowsPerPage;
+    const currentData = filtered.slice(startIndex, startIndex + rowsPerPage);
+
+    const resetPage = () => setPage(1);
 
     // SUMMARY
     const totalEarnings = earnings.reduce((sum, e) => sum + e.amount, 0);
-    const withdrawn = 500000; // dummy
+    const withdrawn = 500000;
     const pending = totalEarnings - withdrawn;
 
     return (
@@ -82,9 +56,7 @@ export default function EarningsPage() {
                         </div>
                         <div>
                             <p className="text-gray-500 text-sm">Total Earnings</p>
-                            <h3 className="text-xl font-bold">
-                                Rp {totalEarnings.toLocaleString("id-ID")}
-                            </h3>
+                            <h3 className="text-xl font-bold">Rp {totalEarnings.toLocaleString("id-ID")}</h3>
                         </div>
                     </div>
 
@@ -94,9 +66,7 @@ export default function EarningsPage() {
                         </div>
                         <div>
                             <p className="text-gray-500 text-sm">Total Withdrawn</p>
-                            <h3 className="text-xl font-bold">
-                                Rp {withdrawn.toLocaleString("id-ID")}
-                            </h3>
+                            <h3 className="text-xl font-bold">Rp {withdrawn.toLocaleString("id-ID")}</h3>
                         </div>
                     </div>
 
@@ -106,9 +76,7 @@ export default function EarningsPage() {
                         </div>
                         <div>
                             <p className="text-gray-500 text-sm">Pending Balance</p>
-                            <h3 className="text-xl font-bold">
-                                Rp {pending.toLocaleString("id-ID")}
-                            </h3>
+                            <h3 className="text-xl font-bold">Rp {pending.toLocaleString("id-ID")}</h3>
                         </div>
                     </div>
                 </div>
@@ -124,7 +92,7 @@ export default function EarningsPage() {
                             value={search}
                             onChange={(e) => {
                                 setSearch(e.target.value);
-                                setPage(1);
+                                resetPage();
                             }}
                             className="ml-2 bg-transparent outline-none text-sm"
                         />
@@ -143,7 +111,7 @@ export default function EarningsPage() {
                                 value={filterClass}
                                 onChange={(e) => {
                                     setFilterClass(e.target.value);
-                                    setPage(1);
+                                    resetPage();
                                 }}
                                 className="border w-full rounded px-2 py-1"
                             >
@@ -172,12 +140,10 @@ export default function EarningsPage() {
                         <tbody>
                             {currentData.map((e, i) => (
                                 <tr key={e.id} className="border-b hover:bg-gray-50">
-                                    <td className="py-3">{start + i + 1}</td>
+                                    <td className="py-3">{startIndex + i + 1}</td>
                                     <td className="py-3 font-medium">{e.student}</td>
                                     <td className="py-3">{e.class}</td>
-                                    <td className="py-3">
-                                        Rp {e.amount.toLocaleString("id-ID")}
-                                    </td>
+                                    <td className="py-3">Rp {e.amount.toLocaleString("id-ID")}</td>
                                     <td className="py-3">{e.date}</td>
                                     <td className="py-3">{e.type}</td>
                                 </tr>
@@ -186,29 +152,93 @@ export default function EarningsPage() {
                     </table>
 
                     {filtered.length === 0 && (
-                        <p className="text-center py-4 text-gray-500">
-                            No earnings found.
-                        </p>
+                        <p className="text-center py-4 text-gray-500">No earnings found.</p>
                     )}
 
-                    {/* PAGINATION */}
-                    <div className="flex justify-end mt-4 gap-2">
-                        {[...Array(totalPages)].map((_, i) => (
-                            <button
-                                key={i}
-                                onClick={() => setPage(i + 1)}
-                                className={`px-3 py-1 rounded ${
-                                    page === i + 1
-                                        ? "bg-blue-600 text-white"
-                                        : "bg-gray-200 hover:bg-gray-300"
-                                }`}
+                    {/* ROWS PER PAGE + PAGINATION */}
+                    <div className="mt-4 flex items-center justify-between">
+
+                        {/* ROWS PER PAGE */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">Rows per page:</span>
+
+                            <select
+                                value={rowsPerPage}
+                                onChange={(e) => {
+                                    setRowsPerPage(Number(e.target.value));
+                                    resetPage();
+                                }}
+                                className="border px-3 py-1 rounded text-sm"
                             >
-                                {i + 1}
+                                <option value={5}>5</option>
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                            </select>
+                        </div>
+
+                        {/* PAGINATION BUTTONS */}
+                        <div className="flex items-center gap-2">
+                            {/* PREV */}
+                            <button
+                                disabled={page === 1}
+                                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+                            >
+                                Prev
                             </button>
-                        ))}
+
+                            {/* SLIDING WINDOW */}
+                            {(() => {
+                                const maxStart = Math.max(1, totalPages - 2);
+                                const startPage = Math.min(Math.max(1, page), maxStart);
+                                const pages = [];
+
+                                for (let i = 0; i < 3; i++) {
+                                    const p = startPage + i;
+                                    if (p <= totalPages) {
+                                        pages.push(
+                                            <button
+                                                key={p}
+                                                onClick={() => setPage(p)}
+                                                className={`px-3 py-1 rounded ${
+                                                    page === p
+                                                        ? "bg-blue-600 text-white"
+                                                        : "bg-gray-100"
+                                                }`}
+                                            >
+                                                {p}
+                                            </button>
+                                        );
+                                    }
+                                }
+
+                                if (startPage + 3 <= totalPages) {
+                                    pages.push(
+                                        <button
+                                            key="dots"
+                                            className="px-3 py-1 rounded bg-gray-100"
+                                        >
+                                            ...
+                                        </button>
+                                    );
+                                }
+
+                                return pages;
+                            })()}
+
+                            {/* NEXT */}
+                            <button
+                                disabled={page === totalPages}
+                                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                                className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+                            >
+                                Next
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </InstructorLayout>
     );
 }
+            

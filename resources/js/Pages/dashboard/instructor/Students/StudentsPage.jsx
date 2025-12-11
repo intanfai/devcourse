@@ -7,7 +7,7 @@ export default function StudentsPage() {
     const [search, setSearch] = useState("");
     const [selectedClass, setSelectedClass] = useState("All");
 
-    // Dummy data: students enrolled in instructor's classes
+    // Dummy data
     const [students] = useState([
         {
             id: 1,
@@ -47,10 +47,9 @@ export default function StudentsPage() {
         },
     ]);
 
-    // Extract unique classes
     const classList = ["All", ...new Set(students.map((s) => s.class))];
 
-    // FILTER DATA
+    // FILTERING
     const filtered = students.filter((s) => {
         const matchSearch =
             s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -62,15 +61,15 @@ export default function StudentsPage() {
         return matchSearch && matchClass;
     });
 
-    // PAGINATION
-    const rowsPerPage = 5;
+    // PAGINATION NEW
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [page, setPage] = useState(1);
-    const start = (page - 1) * rowsPerPage;
 
     const totalPages = Math.ceil(filtered.length / rowsPerPage);
+    const start = (page - 1) * rowsPerPage;
     const currentData = filtered.slice(start, start + rowsPerPage);
 
-    // MODAL
+    // VIEW MODAL
     const [viewModal, setViewModal] = useState({ open: false, data: null });
 
     return (
@@ -81,8 +80,7 @@ export default function StudentsPage() {
                     <h1 className="text-2xl font-bold">Students</h1>
 
                     <div className="flex items-center gap-3">
-
-                        {/* SEARCH BAR */}
+                        {/* SEARCH */}
                         <div className="bg-white px-4 py-2 rounded-lg shadow border flex items-center">
                             <FiSearch className="text-gray-500" />
                             <input
@@ -104,7 +102,9 @@ export default function StudentsPage() {
                             </summary>
 
                             <div className="absolute right-0 mt-2 w-52 bg-white p-4 rounded-xl shadow-lg border text-sm z-20">
-                                <p className="text-xs text-gray-500 mb-1">Class</p>
+                                <p className="text-xs text-gray-500 mb-1">
+                                    Class
+                                </p>
 
                                 <select
                                     value={selectedClass}
@@ -141,9 +141,14 @@ export default function StudentsPage() {
 
                         <tbody>
                             {currentData.map((s, i) => (
-                                <tr key={s.id} className="border-b hover:bg-gray-50">
+                                <tr
+                                    key={s.id}
+                                    className="border-b hover:bg-gray-50"
+                                >
                                     <td className="py-3">{start + i + 1}</td>
-                                    <td className="py-3 font-medium">{s.name}</td>
+                                    <td className="py-3 font-medium">
+                                        {s.name}
+                                    </td>
                                     <td className="py-3">{s.email}</td>
                                     <td className="py-3">{s.class}</td>
                                     <td className="py-3">{s.progress}</td>
@@ -151,13 +156,14 @@ export default function StudentsPage() {
                                     <td className="py-3">
                                         <span
                                             className={`px-3 py-1 rounded-full text-xs font-medium
-                                            ${
-                                                s.status === "Active"
-                                                    ? "bg-green-100 text-green-700"
-                                                    : s.status === "Completed"
-                                                    ? "bg-blue-100 text-blue-700"
-                                                    : "bg-gray-200 text-gray-700"
-                                            }`}
+                                                ${
+                                                    s.status === "Active"
+                                                        ? "bg-green-100 text-green-700"
+                                                        : s.status ===
+                                                          "Completed"
+                                                        ? "bg-blue-100 text-blue-700"
+                                                        : "bg-gray-200 text-gray-700"
+                                                }`}
                                         >
                                             {s.status}
                                         </span>
@@ -169,7 +175,10 @@ export default function StudentsPage() {
                                         <button
                                             className="text-blue-600 hover:text-blue-800"
                                             onClick={() =>
-                                                setViewModal({ open: true, data: s })
+                                                setViewModal({
+                                                    open: true,
+                                                    data: s,
+                                                })
                                             }
                                         >
                                             <FiEye size={18} />
@@ -187,26 +196,98 @@ export default function StudentsPage() {
                         </p>
                     )}
 
-                    {/* PAGINATION */}
-                    <div className="flex justify-end mt-4 gap-2">
-                        {[...Array(totalPages)].map((_, i) => (
-                            <button
-                                key={i}
-                                onClick={() => setPage(i + 1)}
-                                className={`px-3 py-1 rounded ${
-                                    page === i + 1
-                                        ? "bg-blue-600 text-white"
-                                        : "bg-gray-200 hover:bg-gray-300"
-                                }`}
+                    {/* PAGINATION BAR */}
+                    <div className="flex items-center justify-between mt-5">
+                        {/* ROWS PER PAGE */}
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <span>Rows per page:</span>
+
+                            <select
+                                value={rowsPerPage}
+                                onChange={(e) => {
+                                    setRowsPerPage(Number(e.target.value));
+                                    setPage(1);
+                                }}
+                                className="border rounded px-2 py-1"
                             >
-                                {i + 1}
+                                <option value={5}>5</option>
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                            </select>
+                        </div>
+
+                        {/* PAGINATION BUTTONS */}
+                        <div className="flex items-center gap-2">
+                            {/* PREV */}
+                            <button
+                                disabled={page === 1}
+                                onClick={() =>
+                                    setPage((p) => Math.max(1, p - 1))
+                                }
+                                className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+                            >
+                                Prev
                             </button>
-                        ))}
+
+                            {/* SLIDING WINDOW */}
+                            {(() => {
+                                const maxStart = Math.max(1, totalPages - 2);
+                                const startPage = Math.min(
+                                    Math.max(1, page),
+                                    maxStart
+                                );
+
+                                const pages = [];
+
+                                for (let i = 0; i < 3; i++) {
+                                    const p = startPage + i;
+                                    if (p <= totalPages) {
+                                        pages.push(
+                                            <button
+                                                key={p}
+                                                onClick={() => setPage(p)}
+                                                className={`px-3 py-1 rounded ${
+                                                    page === p
+                                                        ? "bg-blue-600 text-white"
+                                                        : "bg-gray-100"
+                                                }`}
+                                            >
+                                                {p}
+                                            </button>
+                                        );
+                                    }
+                                }
+
+                                if (startPage + 3 <= totalPages) {
+                                    pages.push(
+                                        <button
+                                            key="dots"
+                                            className="px-3 py-1 rounded bg-gray-100"
+                                        >
+                                            ...
+                                        </button>
+                                    );
+                                }
+
+                                return pages;
+                            })()}
+
+                            {/* NEXT */}
+                            <button
+                                disabled={page === totalPages}
+                                onClick={() =>
+                                    setPage((p) => Math.min(totalPages, p + 1))
+                                }
+                                className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+                            >
+                                Next
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* VIEW STUDENT MODAL */}
+            {/* MODAL */}
             <ViewStudentModal
                 open={viewModal.open}
                 data={viewModal.data}
