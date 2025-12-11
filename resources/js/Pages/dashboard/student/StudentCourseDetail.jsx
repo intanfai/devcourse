@@ -9,105 +9,120 @@ import {
     FiUsers,
     FiArrowLeft,
 } from "react-icons/fi";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function StudentCourseDetail() {
     const { courseId } = useParams();
     const navigate = useNavigate();
 
-    // Dummy data (nanti diganti API)
-    const course = {
+    // =======================
+    // DUMMY BASE STRUCTURE
+    // =======================
+    const baseCourse = {
         id: courseId,
         title: "React Fundamentals",
         category: "Web Development",
         level: "Beginner",
         description:
-            "Master React from basics to advanced concepts. Learn components, hooks, props, state management, and build real-world projects.",
+            "Master React from basics to advanced concepts. Learn components, props, hooks and build projects.",
         thumbnail: "/images/course-thumb.jpg",
 
         rating: 4.8,
         reviews: 560,
         studentsCount: 12880,
+
         instructor: {
             name: "John Anderson",
             avatar: "/images/avatar.png",
         },
 
-        progress: 37,
-
         chapters: [
             {
                 id: 1,
                 title: "Introduction to React",
-                status: "completed",
                 materials: [
-                    {
-                        id: 1,
-                        title: "What is React?",
-                        duration: "05:12",
-                        done: true,
-                    },
-                    {
-                        id: 2,
-                        title: "Environment Setup",
-                        duration: "08:55",
-                        done: true,
-                    },
+                    { id: 1, title: "What is React?", duration: "05:12" },
+                    { id: 2, title: "Environment Setup", duration: "08:55" },
                 ],
-                quiz: { id: 101, title: "Chapter 1 Quiz", done: true },
+                quiz: { id: 101, title: "Chapter 1 Quiz" },
             },
             {
                 id: 2,
                 title: "Components & Props",
-                status: "in-progress",
                 materials: [
                     {
                         id: 3,
                         title: "Understanding Components",
                         duration: "10:14",
-                        done: true,
                     },
-                    {
-                        id: 4,
-                        title: "Props Deep Dive",
-                        duration: "12:34",
-                        done: false,
-                    },
+                    { id: 4, title: "Props Deep Dive", duration: "12:34" },
                 ],
-                quiz: { id: 102, title: "Chapter 2 Quiz", done: false },
+                quiz: { id: 102, title: "Chapter 2 Quiz" },
             },
             {
                 id: 3,
                 title: "React Hooks",
-                status: "locked",
                 materials: [
-                    {
-                        id: 5,
-                        title: "useState Basics",
-                        duration: "09:18",
-                        done: false,
-                    },
-                    {
-                        id: 6,
-                        title: "useEffect Explained",
-                        duration: "11:45",
-                        done: false,
-                    },
+                    { id: 5, title: "useState Basics", duration: "09:18" },
+                    { id: 6, title: "useEffect Explained", duration: "11:45" },
                 ],
-                quiz: { id: 103, title: "Chapter 3 Quiz", done: false },
+                quiz: { id: 103, title: "Chapter 3 Quiz" },
             },
         ],
 
         finalQuiz: {
             id: 999,
             title: "Final Course Quiz",
-            totalQuestions: 25,
-            done: false,
         },
     };
 
-    // Find next material/quiz
-    const nextItem = (() => {
+    // =============================
+    // LOAD PROGRESS FROM LOCALSTORAGE
+    // =============================
+    const [course, setCourse] = useState(null);
+
+    useEffect(() => {
+        const savedProgress = localStorage.getItem(`progress-${courseId}`);
+
+        if (savedProgress) {
+            setCourse(JSON.parse(savedProgress));
+        } else {
+            // Initialize with "done = false"
+            const updated = {
+                ...baseCourse,
+                chapters: baseCourse.chapters.map((c) => ({
+                    ...c,
+                    materials: c.materials.map((m) => ({
+                        ...m,
+                        done: false,
+                    })),
+                    quiz: { ...c.quiz, done: false },
+                })),
+                finalQuiz: { ...baseCourse.finalQuiz, done: false },
+            };
+
+            setCourse(updated);
+            localStorage.setItem(
+                `progress-${courseId}`,
+                JSON.stringify(updated)
+            );
+        }
+    }, [courseId]);
+
+    // Save on updates
+    const saveProgress = (data) => {
+        localStorage.setItem(`progress-${courseId}`, JSON.stringify(data));
+        setCourse(data);
+    };
+
+    if (!course) return <div>Loading...</div>;
+
+    // =============================
+    // UNLOCK LOGIC
+    // =============================
+
+    // 1) Determine NEXT ITEM
+    const getNextItem = () => {
         for (let ch of course.chapters) {
             for (let m of ch.materials) {
                 if (!m.done)
@@ -126,27 +141,30 @@ export default function StudentCourseDetail() {
                     link: `/student/course/${course.id}/quiz/${ch.quiz.id}`,
                 };
         }
+
         if (!course.finalQuiz.done)
             return {
                 type: "finalQuiz",
                 item: course.finalQuiz,
-                link: `/student/course/${course.id}/quiz/${course.finalQuiz.id}`,
+                link: `/student/course/${course.id}/final-quiz`,
             };
 
         return null;
-    })();
+    };
 
-    // FINAL QUIZ UNLOCK CONDITION
-    const isFinalQuizUnlocked = course.chapters.every((chapter) => {
-        const allMaterialsDone = chapter.materials.every((m) => m.done);
-        const quizDone = chapter.quiz.done;
-        return allMaterialsDone && quizDone;
+    const nextItem = getNextItem();
+
+    // 2) Check if Final Quiz is unlocked
+    const isFinalQuizUnlocked = course.chapters.every((ch) => {
+        const allMaterials = ch.materials.every((m) => m.done);
+        const quizDone = ch.quiz.done;
+        return allMaterials && quizDone;
     });
 
     return (
         <StudentLayout>
             <div className="pb-6">
-                {/* ================= BACK BUTTON ================= */}
+                {/* BACK BUTTON */}
                 <div className="flex items-center gap-4 mb-8">
                     <button
                         onClick={() => navigate(-1)}
@@ -157,9 +175,8 @@ export default function StudentCourseDetail() {
                     <h1 className="text-2xl font-bold">{course.title}</h1>
                 </div>
 
-                {/* ================= HEADER ================= */}
+                {/* HEADER */}
                 <div className="bg-white rounded-xl shadow p-6 mb-8 flex gap-6">
-                    {/* THUMBNAIL */}
                     <div className="w-56 h-36 overflow-hidden rounded-xl bg-gray-200">
                         <img
                             src={course.thumbnail}
@@ -167,13 +184,11 @@ export default function StudentCourseDetail() {
                         />
                     </div>
 
-                    {/* DETAILS */}
                     <div className="flex-1 pr-10">
                         <h1 className="text-2xl font-bold mb-2">
                             {course.title}
                         </h1>
 
-                        {/* LEVEL + CATEGORY */}
                         <div className="flex items-center gap-3 mb-3">
                             <span className="text-sm bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
                                 {course.level}
@@ -183,7 +198,6 @@ export default function StudentCourseDetail() {
                             </span>
                         </div>
 
-                        {/* META */}
                         <div className="flex items-center gap-8 text-sm mb-4">
                             <div className="flex items-center gap-1 text-yellow-500">
                                 <FiStar /> {course.rating}
@@ -208,24 +222,6 @@ export default function StudentCourseDetail() {
                             </div>
                         </div>
 
-                        {/* DESCRIPTION */}
-                        <p className="text-gray-600 text-sm max-w-xl leading-relaxed mb-4">
-                            {course.description}
-                        </p>
-
-                        {/* PROGRESS BAR */}
-                        <div>
-                            <div className="h-2 bg-gray-200 rounded-full w-[200px]">
-                                <div
-                                    className="h-2 bg-blue-600 rounded-full"
-                                    style={{ width: `${course.progress}%` }}
-                                ></div>
-                            </div>
-                            <p className="text-xs text-gray-500 mt-1">
-                                {course.progress}% Complete
-                            </p>
-                        </div>
-
                         {/* CONTINUE BUTTON */}
                         {nextItem ? (
                             <button
@@ -236,119 +232,151 @@ export default function StudentCourseDetail() {
                                 Continue: {nextItem.item.title}
                             </button>
                         ) : (
-                            <p className="text-green-600 font-medium mt-4">
+                            <p className="mt-4 text-green-600 font-semibold">
                                 🎉 Course Completed!
                             </p>
                         )}
                     </div>
                 </div>
 
-                {/* ================= COURSE CONTENT ================= */}
+                {/* COURSE CONTENT */}
                 <div className="bg-white p-6 rounded-xl shadow">
                     <h2 className="text-lg font-semibold mb-4 border-l-4 pl-3 border-[#3C64EF]">
                         Course Content
                     </h2>
 
                     <div className="space-y-6">
-                        {course.chapters.map((chapter) => (
-                            <div
-                                key={chapter.id}
-                                className="border rounded-xl p-4 bg-gray-50"
-                            >
-                                {/* CHAPTER TITLE */}
-                                <div className="flex justify-between mb-2">
-                                    <h3 className="font-semibold">
-                                        {chapter.title}
-                                    </h3>
+                        {course.chapters.map((chapter) => {
+                            const chapterIndex = course.chapters.findIndex(
+                                (c) => c.id === chapter.id
+                            );
 
-                                    <span
-                                        className={`text-xs px-2 py-1 rounded-full
-                                            ${
-                                                chapter.status === "completed"
-                                                    ? "bg-green-100 text-green-700"
-                                                    : chapter.status ===
-                                                      "in-progress"
-                                                    ? "bg-yellow-100 text-yellow-700"
-                                                    : "bg-gray-200 text-gray-600"
-                                            }`}
-                                    >
-                                        {chapter.status}
-                                    </span>
-                                </div>
-
-                                {/* MATERIALS */}
-                                <ul className="space-y-2">
-                                    {chapter.materials.map((m) => (
-                                        <li
-                                            key={m.id}
-                                            className="flex justify-between items-center bg-white p-3 border rounded-lg cursor-pointer hover:bg-gray-100"
-                                            onClick={() =>
-                                                navigate(
-                                                    `/student/course/${course.id}/material/${m.id}`
-                                                )
-                                            }
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <FiFileText className="text-gray-500" />
-                                                <p className="text-sm">
-                                                    {m.title}
-                                                </p>
-                                            </div>
-
-                                            <div className="flex items-center gap-4 text-xs text-gray-500">
-                                                <span>{m.duration}</span>
-                                                {m.done ? (
-                                                    <FiCheckCircle className="text-green-600" />
-                                                ) : (
-                                                    <FiPlayCircle className="text-blue-600" />
-                                                )}
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
-
-                                {/* QUIZ */}
+                            return (
                                 <div
-                                    className="mt-3 bg-white border rounded-lg p-3 flex items-center justify-between cursor-pointer hover:bg-gray-100"
-                                    onClick={() =>
-                                        navigate(
-                                            `/student/course/${course.id}/quiz/${chapter.quiz.id}`
-                                        )
-                                    }
+                                    key={chapter.id}
+                                    className="border rounded-xl p-4 bg-gray-50"
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <FiHelpCircle className="text-purple-500" />
-                                        <p className="font-medium">
-                                            {chapter.quiz.title}
-                                        </p>
+                                    <div className="flex justify-between mb-2">
+                                        <h3 className="font-semibold">
+                                            {chapter.title}
+                                        </h3>
+
+                                        <span
+                                            className={`text-xs px-2 py-1 rounded-full ${
+                                                chapter.materials.every(
+                                                    (m) => m.done
+                                                ) && chapter.quiz.done
+                                                    ? "bg-green-100 text-green-700"
+                                                    : "bg-yellow-100 text-yellow-700"
+                                            }`}
+                                        >
+                                            {chapter.materials.every(
+                                                (m) => m.done
+                                            ) && chapter.quiz.done
+                                                ? "completed"
+                                                : "in-progress"}
+                                        </span>
                                     </div>
 
-                                    {chapter.quiz.done ? (
-                                        <FiCheckCircle className="text-green-600" />
-                                    ) : (
-                                        <FiPlayCircle className="text-blue-600" />
-                                    )}
+                                    {/* MATERIALS */}
+                                    <ul className="space-y-2">
+                                        {chapter.materials.map((m, index) => {
+                                            const canOpen =
+                                                index === 0 ||
+                                                chapter.materials[index - 1]
+                                                    .done;
+
+                                            return (
+                                                <li
+                                                    key={m.id}
+                                                    onClick={() =>
+                                                        canOpen &&
+                                                        navigate(
+                                                            `/student/course/${course.id}/material/${m.id}`
+                                                        )
+                                                    }
+                                                    className={`
+                                                        flex justify-between items-center bg-white p-3 
+                                                        border rounded-lg cursor-pointer
+                                                        ${
+                                                            canOpen
+                                                                ? "hover:bg-gray-100"
+                                                                : "opacity-50 cursor-not-allowed"
+                                                        }
+                                                    `}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <FiFileText className="text-gray-500" />
+                                                        <p className="text-sm">
+                                                            {m.title}
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                                                        <span>
+                                                            {m.duration}
+                                                        </span>
+                                                        {m.done ? (
+                                                            <FiCheckCircle className="text-green-600" />
+                                                        ) : (
+                                                            <FiPlayCircle className="text-blue-600" />
+                                                        )}
+                                                    </div>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+
+                                    {/* QUIZ */}
+                                    <div
+                                        className={`mt-3 bg-white border rounded-lg p-3 flex items-center justify-between 
+                                            ${
+                                                chapter.materials.every(
+                                                    (m) => m.done
+                                                )
+                                                    ? "cursor-pointer hover:bg-gray-100"
+                                                    : "opacity-50 cursor-not-allowed"
+                                            }`}
+                                        onClick={() =>
+                                            chapter.materials.every(
+                                                (m) => m.done
+                                            ) &&
+                                            navigate(
+                                                `/student/course/${course.id}/quiz/${chapter.quiz.id}`
+                                            )
+                                        }
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <FiHelpCircle className="text-purple-500" />
+                                            <p className="font-medium">
+                                                {chapter.quiz.title}
+                                            </p>
+                                        </div>
+
+                                        {chapter.quiz.done ? (
+                                            <FiCheckCircle className="text-green-600" />
+                                        ) : (
+                                            <FiPlayCircle className="text-blue-600" />
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
 
                         {/* FINAL QUIZ */}
                         <div
-                            className={`
-        border rounded-xl p-4 bg-gray-50
-        ${
-            isFinalQuizUnlocked
-                ? "cursor-pointer hover:bg-gray-100"
-                : "opacity-60 cursor-not-allowed"
-        }
-    `}
-                            onClick={() => {
-                                if (isFinalQuizUnlocked) {
-                                    navigate(
-                                        `/student/course/${course.id}/final-quiz`
-                                    );
-                                }
-                            }}
+                            className={`border rounded-xl p-4 bg-gray-50 
+                                ${
+                                    isFinalQuizUnlocked
+                                        ? "cursor-pointer hover:bg-gray-100"
+                                        : "opacity-50 cursor-not-allowed"
+                                }`}
+                            onClick={() =>
+                                isFinalQuizUnlocked &&
+                                navigate(
+                                    `/student/course/${course.id}/final-quiz`
+                                )
+                            }
                         >
                             <h3 className="font-semibold mb-2">Final Quiz</h3>
 
@@ -364,17 +392,13 @@ export default function StudentCourseDetail() {
                                     <p>{course.finalQuiz.title}</p>
                                 </div>
 
-                                {isFinalQuizUnlocked ? (
-                                    course.finalQuiz.done ? (
-                                        <FiCheckCircle className="text-green-600" />
-                                    ) : (
-                                        <FiPlayCircle className="text-blue-600" />
-                                    )
-                                ) : (
-                                    <span className="text-red-500 text-xs font-medium">
-                                        Locked
-                                    </span>
-                                )}
+                                <FiPlayCircle
+                                    className={`${
+                                        isFinalQuizUnlocked
+                                            ? "text-blue-600"
+                                            : "text-gray-400"
+                                    }`}
+                                />
                             </div>
 
                             {!isFinalQuizUnlocked && (
