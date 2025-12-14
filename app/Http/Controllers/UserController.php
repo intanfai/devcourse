@@ -64,4 +64,39 @@ class UserController extends Controller
 
         return response()->json(['message' => 'User deleted']);
     }
+
+    // Get instructor profile (untuk student preview course)
+    public function getInstructorProfile($id)
+    {
+        $instructor = User::findOrFail($id);
+        
+        return response()->json([
+            'id' => $instructor->id,
+            'name' => $instructor->name,
+            'bio' => $instructor->bio,
+            'phone' => $instructor->phone,
+            'avatar' => $instructor->avatar,
+            'email' => $instructor->email,
+        ]);
+    }
+
+    // Update instructor profile (untuk instructor edit profile)
+    public function updateProfile(Request $request)
+    {
+        $user = auth()->user();
+
+        $data = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'bio' => 'nullable|string|max:500',
+            'phone' => 'nullable|string|max:20',
+            'avatar' => 'nullable|string', // Accept base64 or URL strings
+        ]);
+
+        $user->update($data);
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+            'user' => $user,
+        ]);
+    }
 }

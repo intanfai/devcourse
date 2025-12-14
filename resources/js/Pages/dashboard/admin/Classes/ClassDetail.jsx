@@ -21,6 +21,7 @@ export default function ClassDetail() {
     const navigate = useNavigate();
 
     const [cls, setCls] = useState(null);
+    const [instructor, setInstructor] = useState(null);
     const [loading, setLoading] = useState(true);
     const [openChapters, setOpenChapters] = useState({});
     const [confirmModal, setConfirmModal] = useState({
@@ -42,16 +43,35 @@ export default function ClassDetail() {
                 });
 
                 const course = res.data;
+                console.log('Admin ClassDetail - Course data:', course);
+                console.log('Materials:', course.chapters?.map(ch => ({
+                    chapter: ch.title,
+                    materials: ch.materials?.map(m => ({
+                        title: m.title,
+                        video_url: m.video_url,
+                        video_url_type: typeof m.video_url,
+                    }))
+                })));
 
                 const chapters = (course.chapters || []).map((ch) => ({
                     id: ch.id,
                     title: ch.title || "Untitled Chapter",
                     description: ch.description || null,
-                    materials: (ch.materials || []).map((m) => ({
-                        id: m.id,
-                        title: m.title,
-                        video: m.video_url ? "Video" : null,
-                    })),
+                    materials: (ch.materials || []).map((m) => {
+                        // Clean video_url - handle null, empty string, or string "null"
+                        const videoUrl = m.video_url && 
+                                        m.video_url !== '' && 
+                                        m.video_url !== 'null' && 
+                                        String(m.video_url).trim().length > 0 
+                                        ? m.video_url 
+                                        : null;
+                        return {
+                            id: m.id,
+                            title: m.title,
+                            video: videoUrl ? "Video" : null,
+                            videoUrl: videoUrl,
+                        };
+                    }),
                     quiz: ch.quiz
                         ? {
                               id: ch.quiz.id,
@@ -75,6 +95,7 @@ export default function ClassDetail() {
                     id: course.id,
                     title: course.title,
                     thumbnail: course.thumbnail ? `/${course.thumbnail}` : "/images/htmlcss.jpg",
+                    instructor_id: course.instructor_id,
                     instructor: course.instructor?.name || "Unknown",
                     instructorEmail: course.instructor?.email || "",
                     category: course.category || "",
@@ -88,6 +109,27 @@ export default function ClassDetail() {
                     chapters,
                     finalQuiz,
                 });
+
+                // Fetch instructor profile
+                if (course.instructor_id) {
+                    try {
+                        const instructorRes = await axios.get(
+                            `/instructors/${course.instructor_id}/profile`,
+                            { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+                        );
+                        setInstructor(instructorRes.data);
+                    } catch (err) {
+                        console.error("Failed to fetch instructor profile:", err);
+                        // Fallback ke data dari course
+                        setInstructor({
+                            id: course.instructor_id,
+                            name: course.instructor?.name || "Unknown",
+                            avatar: course.instructor?.avatar || "", // Empty string fallback to generated avatar
+                            bio: course.instructor?.bio || "Experienced instructor",
+                            email: course.instructor?.email || "",
+                        });
+                    }
+                }
             } catch (err) {
                 console.error(err);
             } finally {
@@ -296,19 +338,30 @@ export default function ClassDetail() {
 
                                     {open && (
                                         <div className="px-6 pb-4 pt-1 space-y-3 text-gray-700 text-sm">
-                                            {chapter.materials.map((m) => (
-                                                <div key={m.id} className="flex justify-between items-center py-1">
-                                                    <span>
-                                                        • {m.title} <span className="text-gray-500">({m.video || ""})</span>
-                                                    </span>
-                                                    <button
-                                                        className="text-blue-600 hover:text-blue-800"
-                                                        onClick={() => navigate(`/admin/classes/${cls.id}/materials/${m.id}`)}
-                                                    >
-                                                        View
-                                                    </button>
-                                                </div>
-                                            ))}
+                                            {chapter.materials.map((m) => {
+                                                console.log(`Material "${m.title}": video="${m.video}", videoUrl="${m.videoUrl}"`);
+                                                return (
+                                                    <div key={m.id} className="flex justify-between items-center py-2 px-2 hover:bg-gray-100 rounded">
+                                                        <span>
+                                                            {m.video ? (
+                                                                <span className="text-blue-600 font-medium">
+                                                                    📹 {m.title} <span className="text-gray-500 font-normal">(Video)</span>
+                                                                </span>
+                                                            ) : (
+                                                                <span>
+                                                                    📄 {m.title} <span className="text-gray-500">(Text)</span>
+                                                                </span>
+                                                            )}
+                                                        </span>
+                                                        <button
+                                                            className="text-blue-600 hover:text-blue-800 font-medium"
+                                                            onClick={() => navigate(`/admin/classes/${cls.id}/materials/${m.id}`)}
+                                                        >
+                                                            View
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
 
                                             {chapter.quiz && (
                                                 <div className="flex justify-between items-center pt-2 border-t">
@@ -356,18 +409,35 @@ export default function ClassDetail() {
                 </div>
 
                 <div className="mt-6 bg-white p-6 rounded-xl shadow">
-                    <h3 className="text-lg font-semibold mb-3">Instructor Info</h3>
+                    <h3 className="text-lg font-semibold mb-4">Instructor Info</h3>
 
-                    <div className="flex gap-6">
-                        <img src="/images/avatar.png" className="w-20 h-20 rounded-full border object-cover" />
+                    {instructor ? (
+                        <div className="flex gap-6 items-start">
+                            <img
+                                src={
+                                    (instructor.avatar && instructor.avatar.trim() !== '' && instructor.avatar !== 'null')
+                                        ? instructor.avatar
+                                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                            instructor.name
+                                        )}&background=0D8ABC&color=fff&size=150`
+                                }
+                                onError={(e) => {
+                                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                        instructor.name || 'User'
+                                    )}&background=0D8ABC&color=fff&size=150`;
+                                }}
+                                className="w-20 h-20 rounded-full border object-cover flex-shrink-0"
+                            />
 
-                        <div>
-                            <p className="font-semibold">{cls.instructor}</p>
-                            <p className="text-gray-500">{cls.instructorEmail}</p>
-
-                            <p className="mt-2 text-sm text-gray-700">4+ years of experience as Web Developer</p>
+                            <div className="flex-1">
+                                <p className="font-semibold text-lg">{instructor.name}</p>
+                                <p className="text-gray-600 text-sm">{instructor.bio || "Professional Instructor"}</p>
+                                <p className="text-gray-500 text-xs mt-2">{instructor.email}</p>
+                            </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="text-gray-500">Loading instructor info...</div>
+                    )}
                 </div>
             </div>
 

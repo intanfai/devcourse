@@ -55,6 +55,7 @@ import StudentProfilePage from "../Pages/dashboard/student/Profile/StudentProfil
 import EditProfilePage from "../Pages/dashboard/student/Profile/EditProfilePage.jsx";
 import StudentSettingsPage from "../Pages/dashboard/student/Settings/StudentSettingsPage.jsx";
 import CheckoutPage from "../Pages/dashboard/student/CheckoutPage.jsx";
+import PaymentPage from "../Pages/dashboard/student/Payment/PaymentPage.jsx";
 
 export default function AppRoutes() {
     return (
@@ -200,6 +201,11 @@ export default function AppRoutes() {
                 <Route
                     path="/student/checkout/:courseId"
                     element={<CheckoutPage />}
+                />
+
+                <Route
+                    path="/student/payment/:enrollmentId"
+                    element={<PaymentPage />}
                 />
             </Route>
 

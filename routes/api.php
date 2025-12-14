@@ -40,12 +40,22 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/users', [UserController::class, 'index']);
 Route::get('/users/{id}', [UserController::class, 'show']);
 
+// Get instructor profile (untuk student preview course & admin approval)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/instructors/{id}/profile', [UserController::class, 'getInstructorProfile']);
+});
+
 // Admin: create / update / delete users
 Route::middleware(['auth:sanctum', 'role:1'])->group(function () {
     Route::post('/users', [UserController::class, 'store']);
     Route::put('/users/{id}', [UserController::class, 'update']);
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
 });
+
+// Admin & Instructor & Student: update own profile
+Route::put('/profile', [UserController::class, 'updateProfile'])
+    ->middleware('auth:sanctum')
+    ->middleware('role:1,2,3');
 
 Route::get('/roles', [RoleController::class, 'index']);
 Route::post('/roles', [RoleController::class, 'store']);
@@ -72,8 +82,21 @@ Route::post('/quiz-questions', [QuizQuestionController::class, 'store']);
 
 Route::post('/enrollments', [EnrollmentController::class, 'store']);
 Route::get('/enrollments', [EnrollmentController::class, 'index']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/enrollments/{id}', [EnrollmentController::class, 'show']);
+    Route::get('/enrollments/{id}/payment-status', [EnrollmentController::class, 'getPaymentStatus']);
+});
 
 Route::post('/payments', [PaymentController::class, 'store']);
+Route::put('/payments/{id}/status', [PaymentController::class, 'updateStatus']);
+
+// Midtrans QRIS dynamic
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/payments/qris', [PaymentController::class, 'createQris']);
+    Route::get('/payments/order/{orderId}/status', [PaymentController::class, 'status']);
+    Route::get('/payments/enrollment/{enrollmentId}', [PaymentController::class, 'byEnrollment']);
+});
+Route::post('/payments/midtrans/webhook', [PaymentController::class, 'webhook']);
 
 Route::post('/progress', [ProgressController::class, 'store']);
 

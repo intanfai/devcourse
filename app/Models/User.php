@@ -23,10 +23,11 @@ public function sendPasswordResetNotification($token)
         'name',
         'email',
         'password',
-
         'role',
-
         'role_id',
+        'bio',
+        'phone',
+        'avatar',
     ];
 
     protected $hidden = [

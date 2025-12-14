@@ -1,16 +1,55 @@
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import InstructorLayout from "../../../../layouts/InstructorLayout";
+import axios from "../../../../axios";
 import { FiEdit2, FiBook, FiBriefcase, FiLink } from "react-icons/fi";
 
 export default function InstructorProfilePage() {
     const navigate = useNavigate();
+    const [instructor, setInstructor] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    // 🔥 Ambil user dari localStorage (sama persis seperti student)
-    const storedUser = localStorage.getItem("user");
-    const user = storedUser ? JSON.parse(storedUser) : null;
+    // Fetch instructor profile dari API
+    useEffect(() => {
+        const fetchInstructorProfile = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const storedUser = localStorage.getItem("user");
+                const user = storedUser ? JSON.parse(storedUser) : null;
+                
+                if (!user || !user.id) {
+                    console.error("User not found in localStorage");
+                    // Fallback: set instructor dengan data dari localStorage
+                    setInstructor(user);
+                    setLoading(false);
+                    return;
+                }
 
-    if (!user) {
-        return <div className="p-6">Loading...</div>;
+                const res = await axios.get(`/instructors/${user.id}/profile`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                
+                setInstructor(res.data);
+            } catch (error) {
+                console.error("Failed to fetch instructor profile:", error);
+                // Fallback ke localStorage jika API gagal
+                const storedUser = localStorage.getItem("user");
+                const user = storedUser ? JSON.parse(storedUser) : null;
+                setInstructor(user);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchInstructorProfile();
+    }, []);
+
+    if (loading) {
+        return <InstructorLayout><div className="p-6">Loading...</div></InstructorLayout>;
+    }
+
+    if (!instructor) {
+        return <InstructorLayout><div className="p-6">No profile data found</div></InstructorLayout>;
     }
 
     return (
@@ -25,22 +64,22 @@ export default function InstructorProfilePage() {
                     <div className="flex items-start gap-6 mb-6">
                         <img
                             src={
-                                user.avatar ||
+                                instructor.avatar ||
                                 `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                    user.name
+                                    instructor.name
                                 )}&background=0D8ABC&color=fff&size=200`
                             }
                             className="w-24 h-24 rounded-full border object-cover"
                         />
 
                         <div className="flex-1">
-                            <h2 className="text-xl font-bold">{user.name}</h2>
+                            <h2 className="text-xl font-bold">{instructor.name}</h2>
                             <p className="text-gray-600 capitalize">
-                                {user.role}
+                                Instructor
                             </p>
 
-                            {user.bio && (
-                                <p className="mt-2 text-gray-700">{user.bio}</p>
+                            {instructor.bio && (
+                                <p className="mt-2 text-gray-700">{instructor.bio}</p>
                             )}
                         </div>
 
@@ -55,18 +94,11 @@ export default function InstructorProfilePage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                         <p>
-                            <strong>Email:</strong> {user.email}
+                            <strong>Email:</strong> {instructor.email}
                         </p>
                         <p>
                             <strong>Phone:</strong>{" "}
-                            {user.phone || "Not provided"}
-                        </p>
-                        <p>
-                            <strong>Gender:</strong> {user.gender || "Unknown"}
-                        </p>
-                        <p>
-                            <strong>Address:</strong>{" "}
-                            {user.address || "No address provided"}
+                            {instructor.phone || "Not provided"}
                         </p>
                     </div>
                 </div>
@@ -74,13 +106,13 @@ export default function InstructorProfilePage() {
                 {/* =============================
                       EDUCATION
                 ============================== */}
-                {user.education && user.education.length > 0 && (
+                {instructor.education && instructor.education.length > 0 && (
                     <div className="bg-white rounded-xl shadow p-6 mb-10">
                         <h2 className="text-lg font-semibold mb-4 border-l-4 border-blue-600 pl-3 flex items-center gap-2">
                             <FiBook /> Education
                         </h2>
 
-                        {user.education.map((e, i) => (
+                        {instructor.education.map((e, i) => (
                             <div key={i} className="mb-3">
                                 <p className="font-semibold">{e.school}</p>
                                 <p className="text-gray-600">{e.degree}</p>
@@ -93,13 +125,13 @@ export default function InstructorProfilePage() {
                 {/* =============================
                       EXPERIENCE
                 ============================== */}
-                {user.experience && user.experience.length > 0 && (
+                {instructor.experience && instructor.experience.length > 0 && (
                     <div className="bg-white rounded-xl shadow p-6 mb-10">
                         <h2 className="text-lg font-semibold mb-4 border-l-4 border-blue-600 pl-3 flex items-center gap-2">
                             <FiBriefcase /> Work Experience
                         </h2>
 
-                        {user.experience.map((ex, i) => (
+                        {instructor.experience.map((ex, i) => (
                             <div key={i} className="mb-3">
                                 <p className="font-semibold">{ex.place}</p>
                                 <p className="text-gray-600">{ex.role}</p>
@@ -112,20 +144,20 @@ export default function InstructorProfilePage() {
                 {/* =============================
                       SOCIAL LINKS
                 ============================== */}
-                {user.links && (
+                {instructor.links && (
                     <div className="bg-white rounded-xl shadow p-6">
                         <h2 className="text-lg font-semibold mb-4 border-l-4 border-blue-600 pl-3 flex items-center gap-2">
                             <FiLink /> Social Links
                         </h2>
 
                         <p>
-                            <strong>LinkedIn:</strong> {user.links.linkedin}
+                            <strong>LinkedIn:</strong> {instructor.links.linkedin}
                         </p>
                         <p>
-                            <strong>GitHub:</strong> {user.links.github}
+                            <strong>GitHub:</strong> {instructor.links.github}
                         </p>
                         <p>
-                            <strong>Website:</strong> {user.links.website}
+                            <strong>Website:</strong> {instructor.links.website}
                         </p>
                     </div>
                 )}

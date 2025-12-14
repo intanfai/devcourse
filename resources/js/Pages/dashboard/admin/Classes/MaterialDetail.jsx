@@ -100,16 +100,28 @@ export default function MaterialDetail() {
 
                     {/* Video URL (if exists) */}
                     {hasVideo && (
-                        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                            <p className="text-sm text-gray-600 mb-1">Video URL:</p>
-                            <a 
-                                href={material.video_url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline text-sm break-all"
-                            >
-                                {material.video_url}
-                            </a>
+                        <div className="mt-4 space-y-3">
+                            <div>
+                                <p className="text-sm font-semibold text-gray-700 mb-2">📹 Video Preview:</p>
+                                <video 
+                                    controls 
+                                    className="w-full max-h-96 rounded-lg border bg-black"
+                                    src={material.video_url.startsWith('http') ? material.video_url : `/${material.video_url}`}
+                                >
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                            <div className="p-3 bg-gray-50 rounded-lg">
+                                <p className="text-sm text-gray-600 mb-1">Video URL:</p>
+                                <a 
+                                    href={material.video_url.startsWith('http') ? material.video_url : `/${material.video_url}`} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:underline text-sm break-all"
+                                >
+                                    {material.video_url}
+                                </a>
+                            </div>
                         </div>
                     )}
 

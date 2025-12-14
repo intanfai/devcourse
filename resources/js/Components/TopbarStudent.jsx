@@ -129,8 +129,19 @@ export default function TopbarStudent({ user, toggleSidebar, setOpenLogout }) {
                     }}
                 >
                     <img
-                        src="/images/avatar.jpg"
-                        className="w-10 h-10 rounded-full border"
+                        src={
+                            user?.avatar && user.avatar.trim() !== "" && user.avatar !== "null"
+                                ? user.avatar
+                                : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                      user?.name || "User"
+                                  )}&background=0D8ABC&color=fff&size=200`
+                        }
+                        onError={(e) =>
+                            (e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                user?.name || "User"
+                            )}&background=0D8ABC&color=fff&size=200`)
+                        }
+                        className="w-10 h-10 rounded-full border object-cover"
                     />
 
                     <div className="hidden md:block leading-tight">

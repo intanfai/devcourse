@@ -211,7 +211,17 @@ class DashboardController extends Controller
                 })
                 ->map(function ($course) {
                     // Calculate average rating (placeholder - adjust based on your reviews table)
-                    $rating = 4.5; // You can calculate this from reviews table if exists
+                    $rating = 0; // Start with 0 until students provide reviews
+                    $reviewsCount = 0; // No reviews yet
+                    
+                    // Clean thumbnail path
+                    $thumbnail = $course->thumbnail;
+                    if (!$thumbnail || $thumbnail === 'null' || trim($thumbnail) === '') {
+                        $thumbnail = '/images/course-default.jpg';
+                    } elseif (!str_starts_with($thumbnail, '/') && !str_starts_with($thumbnail, 'http')) {
+                        // Add leading slash if not present
+                        $thumbnail = '/' . $thumbnail;
+                    }
                     
                     return [
                         'id' => $course->id,
@@ -219,8 +229,9 @@ class DashboardController extends Controller
                         'category' => $course->category ?? 'General',
                         'level' => $course->level ?? 'Beginner',
                         'price' => $course->price ?? 0,
-                        'thumbnail' => $course->thumbnail,
+                        'thumbnail' => $thumbnail,
                         'rating' => $rating,
+                        'reviews' => $reviewsCount,
                         'students' => $course->enrollments->count(),
                         'instructor' => $course->instructor->name ?? 'Unknown',
                     ];

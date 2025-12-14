@@ -26,6 +26,11 @@ export default function ExploreCoursesPage() {
             });
             console.log("Explore courses response:", res.data);
             console.log("Total courses:", res.data.courses?.length || 0);
+            console.log("Courses with thumbnails:", res.data.courses?.map(c => ({
+                id: c.id,
+                title: c.title,
+                thumbnail: c.thumbnail,
+            })));
             setCourses(res.data.courses || []);
         } catch (err) {
             console.error("Failed to fetch courses:", err);
@@ -177,6 +182,9 @@ export default function ExploreCoursesPage() {
                                             src={course.thumbnail || "/images/course-thumb.jpg"}
                                             className="w-full h-40 md:h-44 object-cover"
                                             alt={course.title}
+                                            onError={(e) => {
+                                                e.target.src = "/images/course-thumb.jpg";
+                                            }}
                                         />
 
                                         <div className="p-5">
@@ -188,16 +196,15 @@ export default function ExploreCoursesPage() {
                                                 {course.category} • {course.level}
                                             </p>
 
-                                            <div className="flex justify-between text-sm text-gray-600">
-                                                <span className="flex items-center gap-1">
-                                                    <FiStar className="text-yellow-500" />
-                                                    {course.rating}
-                                                </span>
+                                            <div className="flex items-center gap-1 text-sm text-gray-600 mb-2">
+                                                <FiUsers />
+                                                {course.students.toLocaleString()} students enrolled
+                                            </div>
 
-                                                <span className="flex items-center gap-1">
-                                                    <FiUsers />
-                                                    {course.students.toLocaleString()}
-                                                </span>
+                                            <div className="flex items-center gap-1 text-sm text-yellow-500">
+                                                <FiStar size={16} fill="currentColor" />
+                                                <span>{course.rating || 0}</span>
+                                                <span className="text-gray-500">({course.reviews || 0} reviews)</span>
                                             </div>
                                         </div>
                                     </Link>

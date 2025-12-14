@@ -98,10 +98,28 @@ class CourseController extends Controller
                                 'order' => $order++,
                             ];
 
+                            // Debug: Log material data
+                            $videoField = $mat['video_field'] ?? null;
+                            \Log::info('Processing material: ' . ($mat['title'] ?? 'untitled'));
+                            \Log::info('Video field: ' . ($videoField ?? 'none'));
+
                             // if video_field provided, store uploaded file
-                            if (!empty($mat['video_field']) && $request->hasFile($mat['video_field'])) {
-                                $vpath = $request->file($mat['video_field'])->store('materials_videos', 'public');
-                                $matData['video_url'] = 'storage/' . $vpath;
+                            if (!empty($videoField)) {
+                                \Log::info('Checking for file: ' . $videoField);
+                                
+                                if ($request->hasFile($videoField)) {
+                                    try {
+                                        \Log::info('File found! Uploading video: ' . $videoField);
+                                        $vpath = $request->file($videoField)->store('materials_videos', 'public');
+                                        $matData['video_url'] = 'storage/' . $vpath;
+                                        \Log::info('Video uploaded successfully: ' . $matData['video_url']);
+                                    } catch (\Exception $e) {
+                                        \Log::error('Video upload failed: ' . $e->getMessage());
+                                    }
+                                } else {
+                                    \Log::warning('File not found in request for: ' . $videoField);
+                                    \Log::info('Available files in request: ' . json_encode(array_keys($request->allFiles())));
+                                }
                             }
 
                             \App\Models\Material::create($matData);
@@ -179,7 +197,8 @@ class CourseController extends Controller
             'instructor', 
             'chapters.materials', 
             'chapters.quiz.questions',
-            'quizzes.questions'
+            'quizzes.questions',
+            'enrollments'
         ])->findOrFail($id);
 
         // Transform chapters to include quiz data properly
@@ -194,6 +213,9 @@ class CourseController extends Controller
                 $chapter->quizzes = [];
             }
         });
+
+        // Add enrollments count
+        $course->enrollments_count = $course->enrollments->count();
 
         return response()->json($course);
     }

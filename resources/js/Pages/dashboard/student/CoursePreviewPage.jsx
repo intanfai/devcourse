@@ -7,73 +7,118 @@ import {
     FiArrowLeft,
     FiCheck,
 } from "react-icons/fi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import StudentLayout from "../../../layouts/StudentLayout";
+import axios from "../../../axios";
 
 export default function CoursePreviewPage() {
     const { courseId } = useParams();
     const navigate = useNavigate();
     const [showVideo, setShowVideo] = useState(false);
+    const [course, setCourse] = useState(null);
+    const [instructor, setInstructor] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    // Dummy Data
-    const course = {
-        id: courseId,
-        title: "React Fundamentals",
-        thumbnail: "/images/course-thumb.jpg",
-        previewVideo: "https://www.youtube.com/embed/w7ejDZ8SWv8",
-        category: "Web Development",
-        level: "Beginner",
-        rating: 4.8,
-        reviews: 2589,
-        students: 12800,
-        price: 1,
-        oldPrice: null,
+    // Fetch course data from backend
+    useEffect(() => {
+        fetchCourseDetail();
+    }, [courseId]);
 
-        description:
-            "Pelajari React dari dasar hingga mahir. Termasuk komponen, props, hooks, state management, hingga real-world projects.",
-        requirements: [
-            "Tidak perlu pengalaman coding sebelumnya.",
-            "Laptop / PC dengan koneksi internet.",
-            "Semangat belajar tinggi.",
-        ],
-        instructor: {
-            name: "John Anderson",
-            avatar: "/images/avatar.png",
-            role: "Senior Frontend Engineer",
-            bio: "Seorang engineer dengan 10+ tahun pengalaman membangun aplikasi React skala besar.",
-        },
-        learningPoints: [
-            "Membuat komponen React dari nol",
-            "Memahami props & state",
-            "Menggunakan React Hooks",
-            "State management modern",
-            "Membangun aplikasi real-world",
-        ],
-        reviewsList: [
-            {
-                user: "Sarah L.",
-                avatar: "/images/avatar.png",
-                rating: 5,
-                comment: "Kursus terbaik! Penjelasannya sangat mudah dipahami.",
-            },
-            {
-                user: "Michael B.",
-                avatar: "/images/avatar.png",
-                rating: 4,
-                comment: "Sangat membantu untuk memahami dasar React.",
-            },
-        ],
-        chapters: [
-            {
-                id: 1,
-                title: "Introduction to React",
-                materials: [
-                    { id: 1, title: "What is React?" },
-                    { id: 2, title: "Environment Setup" },
-                ],
-            },
-        ],
+    const fetchCourseDetail = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axios.get(`/courses/${courseId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            console.log("Course detail:", res.data);
+            
+            // Clean thumbnail path
+            let thumbnailPath = res.data.thumbnail;
+            if (!thumbnailPath || thumbnailPath === 'null' || thumbnailPath.trim() === '') {
+                thumbnailPath = "/images/course-thumb.jpg";
+            } else if (!thumbnailPath.startsWith('/') && !thumbnailPath.startsWith('http')) {
+                // Add leading slash if not present
+                thumbnailPath = '/' + thumbnailPath;
+            }
+            
+            // Transform backend data to match frontend structure
+            const courseData = {
+                id: res.data.id,
+                title: res.data.title,
+                thumbnail: thumbnailPath,
+                previewVideo: null, // Add if you have preview video in backend
+                category: res.data.category,
+                level: res.data.level,
+                rating: 0, // Will be calculated from reviews
+                reviews: 0,
+                students: res.data.enrollments_count || 0,
+                price: res.data.price,
+                oldPrice: null,
+                description: res.data.description,
+                requirements: [], // Add if you have requirements field
+                instructor_id: res.data.instructor_id,
+                learningPoints: [], // Add if you have learning points field
+                reviewsList: [], // Will be populated from reviews
+                chapters: res.data.chapters?.map(chapter => ({
+                    id: chapter.id,
+                    title: chapter.title,
+                    materials: chapter.materials?.map(mat => ({
+                        id: mat.id,
+                        title: mat.title,
+                        duration: mat.duration,
+                        video_url: mat.video_url,
+                    })) || [],
+                })) || [],
+            };
+            
+            setCourse(courseData);
+
+            // Fetch instructor profile
+            if (res.data.instructor_id) {
+                try {
+                    const instructorRes = await axios.get(
+                        `/instructors/${res.data.instructor_id}/profile`,
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                    setInstructor(instructorRes.data);
+                } catch (err) {
+                    console.error("Failed to fetch instructor profile:", err);
+                    // Fallback ke data dari course
+                    setInstructor({
+                        id: res.data.instructor_id,
+                        name: res.data.instructor?.name || "Unknown",
+                        avatar: res.data.instructor?.avatar || "", // Empty string fallback to generated avatar
+                        bio: res.data.instructor?.bio || "Experienced instructor",
+                        email: res.data.instructor?.email || "",
+                    });
+                }
+            }
+        } catch (err) {
+            console.error("Failed to fetch course:", err);
+        } finally {
+            setLoading(false);
+        }
     };
+
+    if (loading) {
+        return (
+            <StudentLayout>
+                <div className="flex items-center justify-center py-12">
+                    <p className="text-gray-500">Loading course...</p>
+                </div>
+            </StudentLayout>
+        );
+    }
+
+    if (!course) {
+        return (
+            <StudentLayout>
+                <div className="flex items-center justify-center py-12">
+                    <p className="text-gray-500">Course not found</p>
+                </div>
+            </StudentLayout>
+        );
+    }
 
     return (
         <StudentLayout>
@@ -96,26 +141,28 @@ export default function CoursePreviewPage() {
                         {/* Thumbnail */}
                         <div
                             className="lg:w-1/2 relative group cursor-pointer"
-                            onClick={() => setShowVideo(true)}
+                            onClick={() => course.previewVideo && setShowVideo(true)}
                         >
                             <img
                                 src={course.thumbnail}
-                                onError={(e) =>
-                                    (e.currentTarget.src =
-                                        "/images/placeholder.png")
-                                }
+                                alt={course.title}
+                                onError={(e) => {
+                                    e.currentTarget.src = "/images/course-thumb.jpg";
+                                }}
                                 className="rounded-xl w-full h-64 object-cover shadow"
                             />
 
-                            {/* PLAY ICON */}
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition rounded-xl">
-                                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
-                                    <FiPlayCircle
-                                        size={40}
-                                        className="text-blue-600"
-                                    />
+                            {/* PLAY ICON - Only show if preview video exists */}
+                            {course.previewVideo && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition rounded-xl">
+                                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
+                                        <FiPlayCircle
+                                            size={40}
+                                            className="text-blue-600"
+                                        />
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
 
                         {/* RIGHT INFO */}
@@ -173,59 +220,118 @@ export default function CoursePreviewPage() {
                     </div>
                 </div>
 
-                {/* ================= WHAT YOU’LL LEARN ================= */}
-                <div className="bg-white rounded-xl shadow p-6 mb-10">
-                    <h2 className="text-xl font-semibold mb-4">
-                        What You'll Learn
-                    </h2>
+                {/* ================= WHAT YOU'LL LEARN ================= */}
+                {course.learningPoints && course.learningPoints.length > 0 && (
+                    <div className="bg-white rounded-xl shadow p-6 mb-10">
+                        <h2 className="text-xl font-semibold mb-4">
+                            What You'll Learn
+                        </h2>
 
-                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                        {course.learningPoints.map((p, i) => (
-                            <li key={i} className="flex items-center gap-2">
-                                <FiCheck className="text-blue-600" /> {p}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+                        <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                            {course.learningPoints.map((p, i) => (
+                                <li key={i} className="flex items-center gap-2">
+                                    <FiCheck className="text-blue-600" /> {p}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
                 {/* ================= REQUIREMENTS ================= */}
-                <div className="bg-white rounded-xl shadow p-6 mb-10">
-                    <h2 className="text-xl font-semibold mb-4">Requirements</h2>
+                {course.requirements && course.requirements.length > 0 && (
+                    <div className="bg-white rounded-xl shadow p-6 mb-10">
+                        <h2 className="text-xl font-semibold mb-4">Requirements</h2>
 
-                    <ul className="space-y-2 text-sm text-gray-700">
-                        {course.requirements.map((r, i) => (
-                            <li key={i} className="flex items-center gap-2">
-                                <FiCheck className="text-green-600" /> {r}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+                        <ul className="space-y-2 text-sm text-gray-700">
+                            {course.requirements.map((r, i) => (
+                                <li key={i} className="flex items-center gap-2">
+                                    <FiCheck className="text-green-600" /> {r}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
                 {/* ================= INSTRUCTOR ================= */}
                 <div className="bg-white rounded-xl shadow p-6 mb-10">
                     <h2 className="text-xl font-semibold mb-4">Instructor</h2>
 
-                    <div className="flex items-center gap-4">
-                        <img
-                            src={course.instructor.avatar}
-                            onError={(e) =>
-                                (e.currentTarget.src = "/images/avatar.png")
-                            }
-                            className="w-16 h-16 rounded-full object-cover border"
-                        />
-
+                    {instructor ? (
                         <div>
-                            <h3 className="font-semibold">
-                                {course.instructor.name}
-                            </h3>
-                            <p className="text-sm text-gray-500">
-                                {course.instructor.role}
-                            </p>
-                            <p className="mt-2 text-gray-600 text-sm">
-                                {course.instructor.bio}
-                            </p>
+                            <div className="flex items-center gap-4">
+                                <img
+                                    src={
+                                        (instructor.avatar && instructor.avatar.trim() !== '' && instructor.avatar !== 'null')
+                                            ? instructor.avatar
+                                            : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                                instructor.name
+                                            )}&background=0D8ABC&color=fff&size=150`
+                                    }
+                                    onError={(e) => {
+                                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                            instructor.name || 'User'
+                                        )}&background=0D8ABC&color=fff&size=150`;
+                                    }}
+                                    className="w-16 h-16 rounded-full object-cover border"
+                                />
+
+                                <div className="flex-1">
+                                    <h3 className="font-semibold text-lg">
+                                        {instructor.name}
+                                    </h3>
+                                    <p className="text-gray-600 text-sm">
+                                        {instructor.bio || "Professional Instructor"}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="text-gray-500">Loading instructor info...</div>
+                    )}
+                </div>
+
+                {/* ================= COURSE CURRICULUM ================= */}
+                <div className="bg-white rounded-xl shadow p-6 mb-10">
+                    <h2 className="text-xl font-semibold mb-4">Course Curriculum</h2>
+
+                    {course.chapters && course.chapters.length > 0 ? (
+                        <div className="space-y-4">
+                            {course.chapters.map((chapter, idx) => (
+                                <div key={chapter.id} className="border rounded-lg overflow-hidden">
+                                    <div className="bg-gray-50 px-4 py-3 border-b">
+                                        <h3 className="font-semibold text-gray-800">
+                                            Chapter {idx + 1}: {chapter.title}
+                                        </h3>
+                                        <p className="text-sm text-gray-500 mt-1">
+                                            {chapter.materials?.length || 0} materials
+                                        </p>
+                                    </div>
+
+                                    <div className="p-3">
+                                        {chapter.materials && chapter.materials.length > 0 ? (
+                                            <ul className="space-y-2">
+                                                {chapter.materials.map((mat) => (
+                                                    <li key={mat.id} className="flex items-center gap-3 text-sm text-gray-700">
+                                                        <FiLock className="text-gray-400" size={16} />
+                                                        <span>{mat.title}</span>
+                                                        {mat.duration > 0 && (
+                                                            <span className="ml-auto text-gray-500 text-xs">
+                                                                {mat.duration} min
+                                                            </span>
+                                                        )}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        ) : (
+                                            <p className="text-sm text-gray-500">No materials available</p>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-gray-500 text-sm">No curriculum available</p>
+                    )}
                 </div>
 
                 {/* ================= REVIEWS ================= */}
@@ -234,26 +340,30 @@ export default function CoursePreviewPage() {
                         Student Reviews
                     </h2>
 
-                    {course.reviewsList.map((rev, i) => (
-                        <div key={i} className="border-b py-4">
-                            <div className="flex items-center gap-3 mb-2">
-                                <img
-                                    src={rev.avatar}
-                                    className="w-10 h-10 rounded-full border object-cover"
-                                />
-                                <div>
-                                    <p className="font-medium">{rev.user}</p>
-                                    <p className="text-yellow-500 text-sm flex items-center gap-1">
-                                        <FiStar /> {rev.rating}
-                                    </p>
+                    {course.reviewsList && course.reviewsList.length > 0 ? (
+                        course.reviewsList.map((rev, i) => (
+                            <div key={i} className="border-b py-4">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <img
+                                        src={rev.avatar}
+                                        className="w-10 h-10 rounded-full border object-cover"
+                                    />
+                                    <div>
+                                        <p className="font-medium">{rev.user}</p>
+                                        <p className="text-yellow-500 text-sm flex items-center gap-1">
+                                            <FiStar /> {rev.rating}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <p className="text-gray-600 text-sm">
-                                {rev.comment}
-                            </p>
-                        </div>
-                    ))}
+                                <p className="text-gray-600 text-sm">
+                                    {rev.comment}
+                                </p>
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-gray-500 text-sm">No reviews yet. Be the first to review this course!</p>
+                    )}
                 </div>
 
                 {/* ================= VIDEO MODAL ================= */}

@@ -33,6 +33,9 @@ class AuthController extends Controller
             'email' => $user->email,
             'role_id' => $user->role_id,
             'role' => optional($user->role)->name,
+            'bio' => $user->bio,
+            'phone' => $user->phone,
+            'avatar' => $user->avatar,
         ];
 
         return response()->json([
@@ -77,6 +80,9 @@ class AuthController extends Controller
             'email' => $user->email,
             'role_id' => $user->role_id,
             'role' => optional($user->role)->name,
+            'bio' => $user->bio,
+            'phone' => $user->phone,
+            'avatar' => $user->avatar,
         ];
 
         return response()->json([

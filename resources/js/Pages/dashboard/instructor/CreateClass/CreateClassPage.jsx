@@ -11,18 +11,18 @@ function emptyQuestion() {
 
 function emptyMaterial() {
     return {
-        id: Date.now() + Math.random(),
+        id: Math.random().toString(36).substr(2, 9),
         title: "",
         type: "text",
         content: "",
         videoFile: null,
-        duration: "",
+        duration: "", // can be MM:SS or number of minutes
     };
 }
 
 function emptyChapter() {
     return {
-        id: Date.now() + Math.random(),
+        id: Math.random().toString(36).substr(2, 9),
         title: "",
         materials: [emptyMaterial()],
         quiz: {
@@ -278,10 +278,22 @@ export default function CreateClassPage() {
                 if (m.videoFile) {
                     // key must match the video_field used above
                     const key = `material_video_${ch.id}_${m.id}`;
+                    console.log(`Appending video file: ${key}`, m.videoFile.name, m.videoFile.size);
                     payload.append(key, m.videoFile);
+                } else {
+                    console.log(`Material ${m.title}: No video file (type: ${m.type})`);
                 }
             });
         });
+
+        console.log('FormData entries:');
+        for (let pair of payload.entries()) {
+            if (typeof pair[1] === 'object' && pair[1] instanceof File) {
+                console.log(pair[0], ':', pair[1].name, '(' + pair[1].size + ' bytes)');
+            } else {
+                console.log(pair[0], ':', pair[1]);
+            }
+        }
 
         // send to backend
         axios.post('/courses', payload, {
@@ -506,49 +518,104 @@ export default function CreateClassPage() {
                                                             </select>
 
                                                             {m.type === "text" ? (
-                                                                <textarea
-                                                                    className="px-3 py-2 border rounded w-full"
-                                                                    rows="2"
-                                                                    placeholder="Paragraph content..."
-                                                                    value={m.content}
-                                                                    onChange={(e) =>
-                                                                        updateMaterial(
-                                                                            chapter.id,
-                                                                            m.id,
-                                                                            "content",
-                                                                            e.target.value
-                                                                        )
-                                                                    }
-                                                                />
+                                                                <>
+                                                                    <textarea
+                                                                        className="px-3 py-2 border rounded w-full"
+                                                                        rows="2"
+                                                                        placeholder="Paragraph content..."
+                                                                        value={m.content}
+                                                                        onChange={(e) =>
+                                                                            updateMaterial(
+                                                                                chapter.id,
+                                                                                m.id,
+                                                                                "content",
+                                                                                e.target.value
+                                                                            )
+                                                                        }
+                                                                    />
+                                                                    <div className="flex items-center gap-2 mt-2">
+                                                                        <input
+                                                                            className="border px-2 py-1 rounded text-sm"
+                                                                            placeholder="Duration (mm:ss or minutes)"
+                                                                            value={m.duration}
+                                                                            onChange={(e) =>
+                                                                                updateMaterial(
+                                                                                    chapter.id,
+                                                                                    m.id,
+                                                                                    "duration",
+                                                                                    e.target.value
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                        <button
+                                                                            type="button"
+                                                                            className="text-blue-600 text-sm"
+                                                                            onClick={() => {
+                                                                                const words = (m.content || "").trim().split(/\s+/).filter(Boolean).length;
+                                                                                const minutes = Math.max(1, Math.ceil(words / 220 * 1.3));
+                                                                                updateMaterial(chapter.id, m.id, "duration", String(minutes));
+                                                                            }}
+                                                                        >
+                                                                            Estimate
+                                                                        </button>
+                                                                    </div>
+                                                                </>
                                                             ) : (
                                                                 <>
                                                                     <input
                                                                         type="file"
                                                                         className="text-sm"
                                                                         accept="video/*"
-                                                                        onChange={(e) =>
+                                                                        onChange={(e) => {
+                                                                            const file = e.target.files && e.target.files[0];
                                                                             updateMaterial(
                                                                                 chapter.id,
                                                                                 m.id,
                                                                                 "videoFile",
-                                                                                e.target.files[0]
-                                                                            )
-                                                                        }
+                                                                                file
+                                                                            );
+                                                                            if (file) {
+                                                                                const url = URL.createObjectURL(file);
+                                                                                const video = document.createElement('video');
+                                                                                video.preload = 'metadata';
+                                                                                video.onloadedmetadata = () => {
+                                                                                    URL.revokeObjectURL(url);
+                                                                                    const secs = Math.floor(video.duration || 0);
+                                                                                    const mins = Math.floor(secs / 60);
+                                                                                    const rem = secs % 60;
+                                                                                    const mmss = `${String(mins).padStart(2,'0')}:${String(rem).padStart(2,'0')}`;
+                                                                                    updateMaterial(chapter.id, m.id, "duration", mmss);
+                                                                                };
+                                                                                video.src = url;
+                                                                            }
+                                                                        }}
                                                                     />
 
-                                                                    <input
-                                                                        className="border px-2 py-1 rounded text-sm"
-                                                                        placeholder="Duration (08:20)"
-                                                                        value={m.duration}
-                                                                        onChange={(e) =>
-                                                                            updateMaterial(
-                                                                                chapter.id,
-                                                                                m.id,
-                                                                                "duration",
-                                                                                e.target.value
-                                                                            )
-                                                                        }
-                                                                    />
+                                                                    <div className="flex items-center gap-2 mt-2">
+                                                                        <input
+                                                                            className="border px-2 py-1 rounded text-sm"
+                                                                            placeholder="Duration (mm:ss or minutes)"
+                                                                            value={m.duration}
+                                                                            onChange={(e) =>
+                                                                                updateMaterial(
+                                                                                    chapter.id,
+                                                                                    m.id,
+                                                                                    "duration",
+                                                                                    e.target.value
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                        <button
+                                                                            type="button"
+                                                                            className="text-blue-600 text-sm"
+                                                                            onClick={() => {
+                                                                                // if file selected, duration already estimated above
+                                                                                // otherwise, keep as manual input
+                                                                            }}
+                                                                        >
+                                                                            Estimate
+                                                                        </button>
+                                                                    </div>
                                                                 </>
                                                             )}
                                                         </div>

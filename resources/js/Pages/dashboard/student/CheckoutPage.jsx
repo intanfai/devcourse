@@ -5,12 +5,15 @@ import StudentLayout from "../../../layouts/StudentLayout";
 import PaymentFailedModal from "../../../Components/Payment/PaymentFailedModal";
 import PaymentLoadingModal from "../../../Components/Payment/PaymentLoadingModal";
 import PaymentSuccessModal from "../../../Components/Payment/PaymentSuccessModal";
+import axios from "../../../axios";
 
 export default function CheckoutPage() {
     const { courseId } = useParams();
     const navigate = useNavigate();
 
     const [user, setUser] = useState(null);
+    const [course, setCourse] = useState(null);
+    const [loadingCourse, setLoadingCourse] = useState(true);
     const [paymentMethod, setPaymentMethod] = useState("qris");
 
     //Payment
@@ -20,29 +23,103 @@ export default function CheckoutPage() {
 
     const [invoice, setInvoice] = useState(null);
 
-    const handlePlaceOrder = () => {
+    // Fetch course data
+    useEffect(() => {
+        fetchCourseData();
+    }, [courseId]);
+
+    const fetchCourseData = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axios.get(`/courses/${courseId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            
+            // Clean thumbnail path
+            let thumbnailPath = res.data.thumbnail;
+            if (!thumbnailPath || thumbnailPath === 'null' || thumbnailPath.trim() === '') {
+                thumbnailPath = "/images/course-thumb.jpg";
+            } else if (!thumbnailPath.startsWith('/') && !thumbnailPath.startsWith('http')) {
+                thumbnailPath = '/' + thumbnailPath;
+            }
+            
+            setCourse({
+                id: res.data.id,
+                title: res.data.title,
+                price: res.data.price,
+                thumbnail: thumbnailPath,
+            });
+        } catch (err) {
+            console.error("Failed to fetch course:", err);
+        } finally {
+            setLoadingCourse(false);
+        }
+    };
+
+    const handlePlaceOrder = async () => {
+        if (!course || !user) return;
+        
+        console.log("DEBUG: user =", user);
+        console.log("DEBUG: course =", course);
+        
         setLoading(true);
 
-        // simulasi pembayaran API
-        setTimeout(() => {
-            const random = Math.random();
+        try {
+            const token = localStorage.getItem("token");
 
-            if (random > 0.2) {
-                // 80% success
-                setLoading(false);
-                setSuccess(true);
+            // Create enrollment
+            console.log("DEBUG: Creating enrollment with course_id=" + course.id);
+            
+            const enrollRes = await axios.post(
+                "/enrollments",
+                {
+                    course_id: course.id,
+                },
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
 
-                setInvoice({
-                    id: "INV-" + Math.floor(Math.random() * 999999),
-                    course: course.title,
-                    amount: course.price,
-                });
-            } else {
-                // 20% gagal
-                setLoading(false);
-                setFailed(true);
+            const enrollmentId = enrollRes.data.enrollment.id;
+
+            // Create QRIS dynamic payment via Midtrans
+            const paymentRes = await axios.post(
+                "/payments/qris",
+                {
+                    enrollment_id: enrollmentId,
+                },
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+
+            // Directly navigate to payment page (no success popup)
+            navigate(`/student/payment/${enrollmentId}`);
+        } catch (err) {
+            console.error("Failed to place order:", err);
+            const errMsg = err.response?.data?.message || err.message;
+            console.error("Error details:", errMsg);
+            // If already enrolled, fetch existing enrollment and redirect to payment page
+            if (err.response?.status === 400 && errMsg === 'You are already enrolled in this course.') {
+                try {
+                    const token = localStorage.getItem("token");
+                    const listRes = await axios.get("/enrollments", {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+                    const existing = (listRes.data.enrollments || []).find(e => e.course?.id === course.id);
+                    if (existing) {
+                        navigate(`/student/payment/${existing.id}`);
+                        return;
+                    }
+                } catch (listErr) {
+                    console.error("Failed to fetch enrollments:", listErr);
+                }
             }
-        }, 2000);
+            alert("Error: " + errMsg);
+            setFailed(true);
+        } finally {
+            setLoading(false);
+        }
     };
 
     // Ambil data user
@@ -53,13 +130,25 @@ export default function CheckoutPage() {
         }
     }, []);
 
-    // Dummy course data
-    const course = {
-        id: courseId,
-        title: "React Fundamentals",
-        price: 1,
-        thumbnail: "/images/course-thumb.jpg",
-    };
+    if (loadingCourse) {
+        return (
+            <StudentLayout>
+                <div className="flex items-center justify-center py-12">
+                    <p className="text-gray-500">Loading checkout...</p>
+                </div>
+            </StudentLayout>
+        );
+    }
+
+    if (!course) {
+        return (
+            <StudentLayout>
+                <div className="flex items-center justify-center py-12">
+                    <p className="text-gray-500">Course not found</p>
+                </div>
+            </StudentLayout>
+        );
+    }
 
     return (
         <StudentLayout>
@@ -90,6 +179,10 @@ export default function CheckoutPage() {
                             <div className="flex items-center gap-4">
                                 <img
                                     src={course.thumbnail}
+                                    alt={course.title}
+                                    onError={(e) => {
+                                        e.currentTarget.src = "/images/course-thumb.jpg";
+                                    }}
                                     className="w-20 h-20 rounded-xl object-cover"
                                 />
                                 <div>
@@ -170,10 +263,6 @@ export default function CheckoutPage() {
                                         }
                                     />
                                     <span className="font-medium">QRIS</span>
-                                    <img
-                                        src="/images/qris.png"
-                                        className="h-6 ml-auto"
-                                    />
                                 </label>
 
                                 {/* BCA VA */}

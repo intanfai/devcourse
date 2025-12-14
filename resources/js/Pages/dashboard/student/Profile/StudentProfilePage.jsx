@@ -1,20 +1,33 @@
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import StudentLayout from "../../../../layouts/StudentLayout";
 import {
     FiMail,
-    FiCalendar,
+    FiPhone,
     FiEdit2,
-    FiMapPin,
-    FiUser,
     FiBookOpen,
 } from "react-icons/fi";
 
 export default function ProfilePage() {
     const navigate = useNavigate();
+    const [user, setUser] = useState(null);
 
-    // Ambil user dari localStorage (sama seperti dashboard)
-    const storedUser = localStorage.getItem("user");
-    const user = storedUser ? JSON.parse(storedUser) : null;
+    // Load user dari localStorage dan listen untuk updates
+    useEffect(() => {
+        const loadUser = () => {
+            const storedUser = localStorage.getItem("user");
+            if (storedUser) {
+                setUser(JSON.parse(storedUser));
+            }
+        };
+
+        loadUser();
+
+        const handleUserUpdated = () => loadUser();
+        window.addEventListener("user-updated", handleUserUpdated);
+
+        return () => window.removeEventListener("user-updated", handleUserUpdated);
+    }, []);
 
     if (!user) {
         return <div className="p-6">Loading...</div>;
@@ -33,10 +46,16 @@ export default function ProfilePage() {
                     <div className="flex items-start gap-6 mb-10">
                         <img
                             src={
-                                user.avatar ||
-                                `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                    user.name
-                                )}&background=0D8ABC&color=fff&size=200`
+                                (user.avatar && user.avatar.trim() !== "" && user.avatar !== "null")
+                                    ? user.avatar
+                                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                        user.name
+                                    )}&background=0D8ABC&color=fff&size=200`
+                            }
+                            onError={(e) =>
+                                (e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                    user.name || "User"
+                                )}&background=0D8ABC&color=fff&size=200`)
                             }
                             className="w-28 h-28 rounded-full object-cover shadow-sm"
                         />
@@ -73,29 +92,11 @@ export default function ProfilePage() {
                             <p className="text-gray-700">{user.email}</p>
                         </div>
 
-                        {/* NO PHONE REMOVED */}
-
-                        {/* ADDRESS */}
+                        {/* PHONE */}
                         <div className="flex items-center gap-3">
-                            <FiMapPin className="text-red-500" size={20} />
+                            <FiPhone className="text-green-600" size={20} />
                             <p className="text-gray-700">
-                                {user.address || "No address provided"}
-                            </p>
-                        </div>
-
-                        {/* GENDER */}
-                        <div className="flex items-center gap-3">
-                            <FiUser className="text-purple-600" size={20} />
-                            <p className="text-gray-700">
-                                Gender: {user.gender || "Unknown"}
-                            </p>
-                        </div>
-
-                        {/* JOIN DATE */}
-                        <div className="flex items-center gap-3">
-                            <FiCalendar className="text-orange-500" size={20} />
-                            <p className="text-gray-700">
-                                Joined: {user.joinDate || "N/A"}
+                                {user.phone || "No phone provided"}
                             </p>
                         </div>
 

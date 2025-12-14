@@ -11,7 +11,7 @@ function emptyQuestion() {
 
 function emptyMaterial() {
     return {
-        id: Date.now() + Math.random(),
+        id: Math.random().toString(36).substr(2, 9),
         title: "",
         type: "text",
         content: "",
@@ -22,7 +22,7 @@ function emptyMaterial() {
 
 function emptyChapter() {
     return {
-        id: Date.now() + Math.random(),
+        id: Math.random().toString(36).substr(2, 9),
         title: "",
         materials: [emptyMaterial()],
         quiz: {
@@ -120,15 +120,25 @@ export default function EditClassPage() {
                     return {
                         id: ch.id,
                         title: ch.title,
-                        materials: (ch.materials || []).map(m => ({
-                            id: m.id,
-                            title: m.title,
-                            type: m.video_url ? 'video' : 'text',
-                            content: m.content || '',
-                            videoFile: null,
-                            duration: m.duration || '',
-                            existingVideoUrl: m.video_url || null,
-                        })),
+                        materials: (ch.materials || []).map(m => {
+                            // Clean video_url - handle null, empty string, or string "null"
+                            const cleanVideoUrl = m.video_url && 
+                                                 m.video_url !== '' && 
+                                                 m.video_url !== 'null' && 
+                                                 String(m.video_url).trim().length > 0 
+                                                 ? m.video_url 
+                                                 : null;
+                            
+                            return {
+                                id: m.id,
+                                title: m.title,
+                                type: cleanVideoUrl ? 'video' : 'text',
+                                content: m.content || '',
+                                videoFile: null,
+                                duration: m.duration || '',
+                                existingVideoUrl: cleanVideoUrl,
+                            };
+                        }),
                         quiz: {
                             id: quizData?.id || null,
                             title: quizData?.title || '',
@@ -661,42 +671,66 @@ export default function EditClassPage() {
                                                                 />
                                                             ) : (
                                                                 <>
-                                                                    <input
-                                                                        type="file"
-                                                                        className="text-sm"
-                                                                        accept="video/*"
-                                                                        onChange={(e) =>
-                                                                            updateMaterial(
-                                                                                chapter.id,
-                                                                                m.id,
-                                                                                "videoFile",
-                                                                                e
-                                                                                    .target
-                                                                                    .files[0]
-                                                                            )
-                                                                        }
-                                                                    />
                                                                     {m.existingVideoUrl && (
-                                                                        <p className="text-xs text-gray-500">Current: {m.existingVideoUrl}</p>
+                                                                        <div className="mb-3 p-2 bg-gray-50 rounded border">
+                                                                            <p className="text-xs font-semibold text-gray-700 mb-2">
+                                                                                📹 Current Video:
+                                                                            </p>
+                                                                            <video 
+                                                                                controls 
+                                                                                className="w-full max-h-48 rounded border bg-black"
+                                                                                src={m.existingVideoUrl.startsWith('http') ? m.existingVideoUrl : `/${m.existingVideoUrl}`}
+                                                                            >
+                                                                                Your browser does not support the video tag.
+                                                                            </video>
+                                                                            <p className="text-xs text-gray-600 mt-1 break-all">
+                                                                                {m.existingVideoUrl}
+                                                                            </p>
+                                                                        </div>
                                                                     )}
+                                                                    
+                                                                    <div className="mb-2">
+                                                                        <label className="text-sm font-semibold text-gray-700 block mb-1">
+                                                                            {m.existingVideoUrl ? '🔄 Replace Video (optional):' : '⬆️ Upload Video:'}
+                                                                        </label>
+                                                                        <input
+                                                                            type="file"
+                                                                            className="text-sm w-full border rounded px-2 py-1"
+                                                                            accept="video/*"
+                                                                            onChange={(e) =>
+                                                                                updateMaterial(
+                                                                                    chapter.id,
+                                                                                    m.id,
+                                                                                    "videoFile",
+                                                                                    e.target.files[0]
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                        {m.videoFile && (
+                                                                            <p className="text-xs text-green-600 mt-1 font-medium">
+                                                                                ✓ New file: {m.videoFile.name}
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
 
-                                                                    <input
-                                                                        className="border px-2 py-1 rounded text-sm"
-                                                                        placeholder="Duration (08:20)"
-                                                                        value={
-                                                                            m.duration
-                                                                        }
-                                                                        onChange={(e) =>
-                                                                            updateMaterial(
-                                                                                chapter.id,
-                                                                                m.id,
-                                                                                "duration",
-                                                                                e
-                                                                                    .target
-                                                                                    .value
-                                                                            )
-                                                                        }
-                                                                    />
+                                                                    <div>
+                                                                        <label className="text-sm font-semibold text-gray-700 block mb-1">
+                                                                            ⏱️ Duration:
+                                                                        </label>
+                                                                        <input
+                                                                            className="border px-2 py-1 rounded text-sm w-full"
+                                                                            placeholder="Duration (MM:SS e.g., 08:20)"
+                                                                            value={m.duration}
+                                                                            onChange={(e) =>
+                                                                                updateMaterial(
+                                                                                    chapter.id,
+                                                                                    m.id,
+                                                                                    "duration",
+                                                                                    e.target.value
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                    </div>
                                                                 </>
                                                             )}
                                                         </div>

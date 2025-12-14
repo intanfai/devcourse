@@ -11,10 +11,28 @@ export default function AdminLayout({ children }) {
     const [openLogout, setOpenLogout] = useState(false);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
+        const loadUser = () => {
+            const storedUser = localStorage.getItem("user");
+            if (storedUser) {
+                setUser(JSON.parse(storedUser));
+            }
+        };
+
+        loadUser();
+
+        const handleStorage = (e) => {
+            if (e.key === "user") loadUser();
+        };
+
+        const handleUserUpdated = () => loadUser();
+
+        window.addEventListener("storage", handleStorage);
+        window.addEventListener("user-updated", handleUserUpdated);
+
+        return () => {
+            window.removeEventListener("storage", handleStorage);
+            window.removeEventListener("user-updated", handleUserUpdated);
+        };
     }, []);
 
     if (!user) return <div className="p-5">Loading...</div>;

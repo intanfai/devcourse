@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import InstructorLayout from "../../../../layouts/InstructorLayout";
+import axios from "../../../../axios";
 import {
     FiUpload,
     FiMail,
@@ -41,6 +42,49 @@ export default function InstructorEditProfilePage() {
             website: "",
         },
     });
+
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState("");
+
+    // =====================
+    // IMAGE COMPRESSION
+    // =====================
+    const compressImage = (file, maxWidth = 400, maxHeight = 400, quality = 0.7) => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let { width, height } = img;
+
+                    // Maintain aspect ratio
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width = Math.round((width * maxHeight) / height);
+                            height = maxHeight;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Convert to base64 with compression
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+                    resolve(compressedBase64);
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    };
 
     // =====================
     // HANDLERS
@@ -97,9 +141,38 @@ export default function InstructorEditProfilePage() {
     // =====================
     // SAVE BUTTON
     // =====================
-    const saveChanges = () => {
-        localStorage.setItem("user", JSON.stringify(form));
-        navigate("/instructor/profile");
+    const saveChanges = async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem("token");
+
+            // Siapkan data yang akan dikirim ke API
+            const profileData = {
+                name: form.name,
+                phone: form.phone,
+                bio: form.bio,
+                avatar: form.avatar,
+            };
+
+            const res = await axios.put("/profile", profileData, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            // Update localStorage dengan data terbaru
+            const updatedUser = {
+                ...user,
+                ...res.data.user,
+            };
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            
+            setMessage("✓ Profile updated successfully");
+            setTimeout(() => navigate("/instructor/profile"), 1500);
+        } catch (error) {
+            console.error("Error saving profile:", error);
+            setMessage("✗ Failed to save profile. " + (error.response?.data?.message || error.message));
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -136,13 +209,17 @@ export default function InstructorEditProfilePage() {
                             <input
                                 type="file"
                                 className="hidden"
-                                onChange={(e) => {
+                                accept="image/*"
+                                onChange={async (e) => {
                                     const file = e.target.files[0];
                                     if (file) {
-                                        updateField(
-                                            "avatar",
-                                            URL.createObjectURL(file)
-                                        );
+                                        try {
+                                            const compressedBase64 = await compressImage(file);
+                                            updateField("avatar", compressedBase64);
+                                        } catch (error) {
+                                            console.error("Error compressing image:", error);
+                                            setMessage("Failed to process image");
+                                        }
                                     }
                                 }}
                             />
@@ -365,11 +442,17 @@ export default function InstructorEditProfilePage() {
 
                 {/* SAVE BUTTON */}
                 <div className="mt-8">
+                    {message && (
+                        <div className={`mb-4 p-4 rounded-lg ${message.includes("✓") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                            {message}
+                        </div>
+                    )}
                     <button
                         onClick={saveChanges}
-                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+                        disabled={loading}
+                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
                     >
-                        Save Changes
+                        {loading ? "Saving..." : "Save Changes"}
                     </button>
 
                     <button
