@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import StudentLayout from "../../../layouts/StudentLayout";
 import {
     FiArrowLeft,
@@ -6,81 +7,133 @@ import {
     FiCheckCircle,
     FiHelpCircle,
 } from "react-icons/fi";
+import axios from "../../../axios";
 
 export default function MaterialPage() {
     const { courseId, materialId } = useParams();
     const navigate = useNavigate();
 
-    // Dummy data
-    const course = {
-        id: courseId,
-        title: "React Fundamentals",
-        finalQuiz: {
-            id: 999,
-            title: "Final Course Quiz",
-            totalQuestions: 25,
-            done: false,
-        },
-        chapters: [
-            {
-                id: 1,
-                title: "Introduction to React",
-                materials: [
-                    {
-                        id: 1,
-                        title: "What is React?",
-                        type: "text",
-                        done: true,
-                        content: `
-React adalah library JavaScript yang digunakan untuk membangun UI
-secara deklaratif dan efisien. Dengan React, UI dipecah menjadi komponen
-kecil yang dapat digunakan kembali sehingga membuat development lebih cepat.`,
-                    },
-                    {
-                        id: 2,
-                        title: "Environment Setup",
-                        type: "video",
-                        done: true,
-                        url: "https://www.youtube.com/embed/Tn6-PIqc4UM",
-                        content: `
-Cara setup React menggunakan Vite atau Create React App
-dan memahami struktur folder.`,
-                    },
-                ],
-                quiz: { id: 101, title: "Chapter 1 Quiz", done: true },
-            },
-            {
-                id: 2,
-                title: "Components & Props",
-                materials: [
-                    {
-                        id: 3,
-                        title: "Understanding Components",
-                        type: "text",
-                        done: false,
-                        content: `
-Komponen adalah fondasi utama React. Bisa berbentuk function atau class.`,
-                    },
-                    {
-                        id: 4,
-                        title: "Props Deep Dive",
-                        type: "video",
-                        done: false,
-                        url: "https://www.youtube.com/embed/w7ejDZ8SWv8",
-                        content: `
-Props adalah data yang dikirim dari parent ke child component.`,
-                    },
-                ],
-                quiz: { id: 102, title: "Chapter 2 Quiz", done: false },
-            },
-        ],
+    const [course, setCourse] = useState(null);
+    const [currentChapter, setCurrentChapter] = useState(null);
+    const [material, setMaterial] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [completedIds, setCompletedIds] = useState(new Set());
+
+    useEffect(() => {
+        fetchCourse();
+    }, [courseId, materialId]);
+
+    const fetchCourse = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axios.get(`/courses/${courseId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            const data = res.data;
+
+            const chapters = (data.chapters || []).map((chapter) => ({
+                id: chapter.id,
+                title: chapter.title,
+                materials: (chapter.materials || []).map((mat) => ({
+                    id: mat.id,
+                    title: mat.title,
+                    duration: mat.duration || "",
+                    content: mat.content || "",
+                    video_url: mat.video_url || "",
+                })),
+                quiz: chapter.quiz ? { id: chapter.quiz.id, title: chapter.quiz.title } : null,
+            }));
+
+            const finalQuiz = (data.quizzes || []).find((q) => !q.chapter_id);
+
+            const courseData = {
+                id: data.id,
+                title: data.title,
+                finalQuiz: finalQuiz
+                    ? { id: finalQuiz.id, title: finalQuiz.title, done: false }
+                    : { id: 999, title: "Final Course Quiz", done: false },
+                chapters,
+            };
+
+            const foundChapter = chapters.find((ch) =>
+                ch.materials.some((m) => String(m.id) === String(materialId))
+            );
+            const foundMaterial = foundChapter?.materials.find(
+                (m) => String(m.id) === String(materialId)
+            );
+
+            setCourse(courseData);
+            setCurrentChapter(foundChapter || null);
+            setMaterial(foundMaterial || null);
+
+            // load completed materials
+            const stored = localStorage.getItem(`material-progress-${courseId}`);
+            if (stored) {
+                const arr = JSON.parse(stored);
+                setCompletedIds(new Set(arr.map(String)));
+            } else {
+                setCompletedIds(new Set());
+            }
+        } catch (err) {
+            console.error("Failed to fetch material:", err);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const chapter = course.chapters.find((ch) =>
-        ch.materials.some((m) => m.id == materialId)
-    );
+    // Mark current material as completed and unlock next
+    useEffect(() => {
+        if (!material) return;
+        const idStr = String(material.id);
 
-    const material = chapter.materials.find((m) => m.id == materialId);
+        setCompletedIds((prev) => {
+            if (prev.has(idStr)) return prev;
+            const next = new Set(prev);
+            next.add(idStr);
+            const arr = Array.from(next);
+            localStorage.setItem(`material-progress-${courseId}` , JSON.stringify(arr));
+
+            // sync with course progress storage if exists
+            const saved = localStorage.getItem(`progress-${courseId}`);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    parsed.chapters = (parsed.chapters || []).map((ch) => ({
+                        ...ch,
+                        materials: (ch.materials || []).map((m) =>
+                            String(m.id) === idStr ? { ...m, done: true } : m
+                        ),
+                    }));
+                    localStorage.setItem(`progress-${courseId}`, JSON.stringify(parsed));
+                } catch (e) {
+                    console.warn("Failed to sync progress storage", e);
+                }
+            }
+
+            return next;
+        });
+    }, [material, courseId]);
+
+    if (loading) {
+        return (
+            <StudentLayout>
+                <div className="flex items-center justify-center py-12">
+                    <p className="text-gray-500">Loading material...</p>
+                </div>
+            </StudentLayout>
+        );
+    }
+
+    if (!course || !material) {
+        return (
+            <StudentLayout>
+                <div className="flex items-center justify-center py-12">
+                    <p className="text-gray-500">Material not found</p>
+                </div>
+            </StudentLayout>
+        );
+    }
 
     return (
         <StudentLayout>
@@ -90,7 +143,7 @@ Props adalah data yang dikirim dari parent ke child component.`,
                     <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow w-full">
                         <div className="flex items-center gap-4 mb-6">
                             <button
-                                onClick={() => navigate(-1)}
+                                onClick={() => navigate(`/student/course/${courseId}`)}
                                 className="p-2 bg-blue-600 hover:bg-blue-700 rounded-full text-white"
                             >
                                 <FiArrowLeft size={18} />
@@ -103,11 +156,11 @@ Props adalah data yang dikirim dari parent ke child component.`,
 
                         <div className="mb-4">
                             {/* VIDEO */}
-                            {material.type === "video" && (
+                            {material.video_url && (
                                 <div className="w-full aspect-video rounded-lg overflow-hidden mb-4">
                                     <iframe
                                         className="w-full h-full"
-                                        src={material.url}
+                                        src={material.video_url}
                                         title={material.title}
                                         allowFullScreen
                                     ></iframe>
@@ -115,16 +168,11 @@ Props adalah data yang dikirim dari parent ke child component.`,
                             )}
 
                             {/* TEXT */}
-                            {material.type === "text" && (
-                                <p className="text-gray-700 text-sm leading-relaxed mb-4 whitespace-pre-line">
+                            {material.content && (
+                                <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
                                     {material.content}
-                                </p>
+                                </div>
                             )}
-
-                            {/* Extra content */}
-                            <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
-                                {material.content}
-                            </div>
                         </div>
                     </div>
 
@@ -145,89 +193,91 @@ Props adalah data yang dikirim dari parent ke child component.`,
                                     </h3>
 
                                     <ul className="space-y-1">
-                                        {ch.materials.map((m) => (
-                                            <li
-                                                key={m.id}
-                                                onClick={() =>
-                                                    navigate(
-                                                        `/student/course/${course.id}/material/${m.id}`
-                                                    )
-                                                }
-                                                className={`
-                                                    p-2 rounded-lg flex justify-between items-start cursor-pointer
-                                                    break-words
-                                                    ${
-                                                        m.id == materialId
-                                                            ? "bg-blue-100"
-                                                            : "bg-white"
-                                                    }
-                                                    hover:bg-gray-100 border
-                                                `}
-                                            >
-                                                <p className="text-sm w-[80%] break-words">
-                                                    {m.title}
-                                                </p>
+                                        {ch.materials.map((m, idx) => {
+                                            const mId = String(m.id);
+                                            const prevId = idx > 0 ? String(ch.materials[idx - 1].id) : null;
+                                            const isCompleted = completedIds.has(mId);
+                                            const prevCompleted = !prevId || completedIds.has(prevId);
+                                            const unlocked = isCompleted || prevCompleted;
 
-                                                {m.done ? (
-                                                    <FiCheckCircle className="text-green-600 text-lg" />
-                                                ) : (
-                                                    <FiPlayCircle className="text-blue-600 text-lg" />
-                                                )}
-                                            </li>
-                                        ))}
+                                            return (
+                                            <li
+                                                    key={m.id}
+                                                    onClick={() =>
+                                                        unlocked &&
+                                                        navigate(
+                                                            `/student/course/${course.id}/material/${m.id}`
+                                                        )
+                                                    }
+                                                    className={`
+                                                        p-2 rounded-lg flex justify-between items-start cursor-pointer
+                                                        break-words
+                                                        ${m.id == materialId ? "bg-blue-100" : "bg-white"}
+                                                        ${unlocked ? "hover:bg-gray-100" : "opacity-50 cursor-not-allowed"}
+                                                        border
+                                                    `}
+                                                >
+                                                    <p className="text-sm w-[80%] break-words">
+                                                        {m.title}
+                                                    </p>
+
+                                                    {isCompleted ? (
+                                                        <FiCheckCircle className="text-green-600 text-lg" />
+                                                    ) : (
+                                                        <FiPlayCircle className="text-blue-600 text-lg" />
+                                                    )}
+                                                </li>
+                                            );
+                                        })}
                                     </ul>
 
                                     {/* QUIZ */}
-                                    <div
-                                        className="mt-3 p-3 bg-white rounded-lg border cursor-pointer hover:bg-gray-100 flex justify-between items-center"
-                                        onClick={() =>
-                                            navigate(
-                                                `/student/course/${course.id}/quiz/${ch.quiz.id}`
-                                            )
-                                        }
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <FiHelpCircle className="text-purple-500" />
-                                            <p className="text-sm font-medium">
-                                                {ch.quiz.title}
-                                            </p>
-                                        </div>
+                                    {ch.quiz && (
+                                        <div
+                                            className="mt-3 p-3 bg-white rounded-lg border cursor-pointer hover:bg-gray-100 flex justify-between items-center"
+                                            onClick={() =>
+                                                navigate(
+                                                    `/student/course/${course.id}/quiz/${ch.quiz.id}`
+                                                )
+                                            }
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <FiHelpCircle className="text-purple-500" />
+                                                <p className="text-sm font-medium">
+                                                    {ch.quiz.title}
+                                                </p>
+                                            </div>
 
-                                        {ch.quiz.done ? (
-                                            <FiCheckCircle className="text-green-600" />
-                                        ) : (
                                             <FiPlayCircle className="text-blue-600" />
-                                        )}
-                                    </div>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
 
                             {/* FINAL QUIZ */}
-                            <div
-                                className="border rounded-xl p-4 bg-gray-50 cursor-pointer hover:bg-gray-100"
-                                onClick={() =>
-                                    navigate(
-                                        `/student/course/${course.id}/final-quiz`
-                                    )
-                                }
-                            >
-                                <h3 className="font-semibold mb-2">
-                                    Final Quiz
-                                </h3>
+                            {course.finalQuiz && (
+                                <div
+                                    className="border rounded-xl p-4 bg-gray-50 cursor-pointer hover:bg-gray-100"
+                                    onClick={() =>
+                                        navigate(
+                                            `/student/course/${course.id}/final-quiz`
+                                        )
+                                    }
+                                >
+                                    <h3 className="font-semibold mb-2">
+                                        Final Quiz
+                                    </h3>
 
-                                <div className="flex justify-between items-center bg-white p-3 rounded-lg border">
-                                    <div className="flex items-center gap-3">
-                                        <FiHelpCircle className="text-blue-600" />
-                                        <p>{course.finalQuiz.title}</p>
-                                    </div>
+                                    <div className="flex justify-between items-center bg-white p-3 rounded-lg border">
+                                        <div className="flex items-center gap-3">
+                                            <FiHelpCircle className="text-blue-600" />
+                                            <p>{course.finalQuiz.title}</p>
+                                        </div>
 
-                                    {course.finalQuiz.done ? (
-                                        <FiCheckCircle className="text-green-600" />
-                                    ) : (
                                         <FiPlayCircle className="text-blue-600" />
-                                    )}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>

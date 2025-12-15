@@ -81,7 +81,7 @@ Route::get('/quizzes/{id}', [QuizController::class, 'show']);
 Route::post('/quiz-questions', [QuizQuestionController::class, 'store']);
 
 Route::post('/enrollments', [EnrollmentController::class, 'store']);
-Route::get('/enrollments', [EnrollmentController::class, 'index']);
+Route::get('/enrollments', [EnrollmentController::class, 'index'])->middleware('auth:sanctum');
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/enrollments/{id}', [EnrollmentController::class, 'show']);
     Route::get('/enrollments/{id}/payment-status', [EnrollmentController::class, 'getPaymentStatus']);
@@ -187,7 +187,7 @@ Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRe
     |--------------------------------------------------------------------------
     */
     Route::post('/enrollments', [EnrollmentController::class, 'store']);
-    Route::get('/enrollments', [EnrollmentController::class, 'index']);
+    Route::get('/enrollments', [EnrollmentController::class, 'index'])->middleware('auth:sanctum');
 
 
     /*

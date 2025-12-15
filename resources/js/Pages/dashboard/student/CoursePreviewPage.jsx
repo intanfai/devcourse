@@ -18,10 +18,12 @@ export default function CoursePreviewPage() {
     const [course, setCourse] = useState(null);
     const [instructor, setInstructor] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isEnrolled, setIsEnrolled] = useState(false);
 
     // Fetch course data from backend
     useEffect(() => {
         fetchCourseDetail();
+        checkEnrollmentStatus();
     }, [courseId]);
 
     const fetchCourseDetail = async () => {
@@ -97,6 +99,21 @@ export default function CoursePreviewPage() {
             console.error("Failed to fetch course:", err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const checkEnrollmentStatus = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axios.get("/enrollments", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            const enrollments = res.data.enrollments || [];
+            const alreadyEnrolled = enrollments.some(e => e.course_id === parseInt(courseId));
+            setIsEnrolled(alreadyEnrolled);
+        } catch (err) {
+            console.error("Failed to check enrollment:", err);
         }
     };
 
@@ -209,12 +226,20 @@ export default function CoursePreviewPage() {
                             </div>
 
                             <button
-                                onClick={() =>
-                                    navigate(`/student/checkout/${course.id}`)
-                                }
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold shadow transition"
+                                onClick={() => {
+                                    if (isEnrolled) {
+                                        alert("You have already enrolled in this course");
+                                    } else {
+                                        navigate(`/student/checkout/${course.id}`);
+                                    }
+                                }}
+                                className={`px-8 py-3 rounded-xl font-semibold shadow transition ${
+                                    isEnrolled
+                                        ? "bg-gray-400 text-white cursor-not-allowed"
+                                        : "bg-blue-600 hover:bg-blue-700 text-white"
+                                }`}
                             >
-                                Buy Now
+                                {isEnrolled ? "Already Enrolled" : "Buy Now"}
                             </button>
                         </div>
                     </div>

@@ -10,104 +10,123 @@ import {
     FiArrowLeft,
 } from "react-icons/fi";
 import { useEffect, useState } from "react";
+import axios from "../../../axios";
 
 export default function StudentCourseDetail() {
     const { courseId } = useParams();
     const navigate = useNavigate();
 
-    // =======================
-    // DUMMY BASE STRUCTURE
-    // =======================
-    const baseCourse = {
-        id: courseId,
-        title: "React Fundamentals",
-        category: "Web Development",
-        level: "Beginner",
-        description:
-            "Master React from basics to advanced concepts. Learn components, props, hooks and build projects.",
-        thumbnail: "/images/course-thumb.jpg",
-
-        rating: 4.8,
-        reviews: 560,
-        studentsCount: 12880,
-
-        instructor: {
-            name: "John Anderson",
-            avatar: "/images/avatar.png",
-        },
-
-        chapters: [
-            {
-                id: 1,
-                title: "Introduction to React",
-                materials: [
-                    { id: 1, title: "What is React?", duration: "05:12" },
-                    { id: 2, title: "Environment Setup", duration: "08:55" },
-                ],
-                quiz: { id: 101, title: "Chapter 1 Quiz" },
-            },
-            {
-                id: 2,
-                title: "Components & Props",
-                materials: [
-                    {
-                        id: 3,
-                        title: "Understanding Components",
-                        duration: "10:14",
-                    },
-                    { id: 4, title: "Props Deep Dive", duration: "12:34" },
-                ],
-                quiz: { id: 102, title: "Chapter 2 Quiz" },
-            },
-            {
-                id: 3,
-                title: "React Hooks",
-                materials: [
-                    { id: 5, title: "useState Basics", duration: "09:18" },
-                    { id: 6, title: "useEffect Explained", duration: "11:45" },
-                ],
-                quiz: { id: 103, title: "Chapter 3 Quiz" },
-            },
-        ],
-
-        finalQuiz: {
-            id: 999,
-            title: "Final Course Quiz",
-        },
-    };
-
-    // =============================
-    // LOAD PROGRESS FROM LOCALSTORAGE
-    // =============================
     const [course, setCourse] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const savedProgress = localStorage.getItem(`progress-${courseId}`);
+        fetchCourseDetail();
+    }, [courseId]);
 
-        if (savedProgress) {
-            setCourse(JSON.parse(savedProgress));
-        } else {
-            // Initialize with "done = false"
-            const updated = {
-                ...baseCourse,
-                chapters: baseCourse.chapters.map((c) => ({
-                    ...c,
-                    materials: c.materials.map((m) => ({
-                        ...m,
-                        done: false,
-                    })),
-                    quiz: { ...c.quiz, done: false },
+    const fetchCourseDetail = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axios.get(`/courses/${courseId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            const data = res.data;
+
+            // Clean thumbnail path
+            let thumbnailPath = data.thumbnail;
+            if (!thumbnailPath || thumbnailPath === 'null' || thumbnailPath.trim() === '') {
+                thumbnailPath = "/images/course-thumb.jpg";
+            } else if (thumbnailPath.startsWith('http')) {
+                // use as-is
+            } else if (thumbnailPath.startsWith('/')) {
+                // already absolute
+            } else if (thumbnailPath.startsWith('storage/')) {
+                thumbnailPath = `/${thumbnailPath}`;
+            } else {
+                thumbnailPath = `/storage/${thumbnailPath}`;
+            }
+
+            // Get instructor avatar
+            let instructorAvatar = data.instructor?.avatar || "";
+            if (!instructorAvatar || instructorAvatar.trim() === '' || instructorAvatar === 'null') {
+                instructorAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.instructor?.name || 'Instructor')}&background=0D8ABC&color=fff&size=100`;
+            }
+
+            // Transform chapters and materials
+            const chapters = (data.chapters || []).map((chapter) => ({
+                id: chapter.id,
+                title: chapter.title,
+                materials: (chapter.materials || []).map((mat) => ({
+                    id: mat.id,
+                    title: mat.title,
+                    duration: mat.duration ? `${mat.duration}m` : "N/A",
+                    video_url: mat.video_url,
+                    done: false,
                 })),
-                finalQuiz: { ...baseCourse.finalQuiz, done: false },
+                quiz: chapter.quiz ? { id: chapter.quiz.id, title: chapter.quiz.title, done: false } : null,
+            }));
+
+            // Get final quiz
+            const finalQuiz = (data.quizzes || []).find(q => !q.chapter_id);
+
+            const courseData = {
+                id: data.id,
+                title: data.title,
+                category: data.category || 'Course',
+                level: data.level || 'Beginner',
+                description: data.description,
+                thumbnail: thumbnailPath,
+                rating: 4.8,
+                reviews: 0,
+                studentsCount: data.enrollments_count || 0,
+                instructor: {
+                    name: data.instructor?.name || 'Unknown',
+                    avatar: instructorAvatar,
+                },
+                chapters: chapters,
+                finalQuiz: finalQuiz
+                    ? { id: finalQuiz.id, title: finalQuiz.title, done: false }
+                    : { id: 999, title: 'Final Course Quiz', done: false },
             };
 
-            setCourse(updated);
-            localStorage.setItem(
-                `progress-${courseId}`,
-                JSON.stringify(updated)
-            );
+            // Load progress from localStorage
+            const savedProgress = localStorage.getItem(`progress-${courseId}`);
+            const materialProgress = localStorage.getItem(`material-progress-${courseId}`);
+
+            if (savedProgress) {
+                const saved = JSON.parse(savedProgress);
+                courseData.chapters = courseData.chapters.map((ch) => ({
+                    ...ch,
+                    materials: ch.materials.map((m) => {
+                        const savedMat = saved.chapters
+                            ?.find((sc) => sc.id === ch.id)
+                            ?.materials?.find((sm) => sm.id === m.id);
+                        return { ...m, done: savedMat?.done || false };
+                    }),
+                    quiz: ch.quiz && saved.chapters?.find((sc) => sc.id === ch.id)?.quiz?.done
+                        ? { ...ch.quiz, done: true }
+                        : ch.quiz,
+                }));
+                courseData.finalQuiz.done = saved.finalQuiz?.done || false;
+            } else if (materialProgress) {
+                // fallback: mark done based on material-progress store
+                const doneIds = new Set((JSON.parse(materialProgress) || []).map(String));
+                courseData.chapters = courseData.chapters.map((ch) => ({
+                    ...ch,
+                    materials: ch.materials.map((m) => ({
+                        ...m,
+                        done: doneIds.has(String(m.id)),
+                    })),
+                }));
+            }
+
+            setCourse(courseData);
+        } catch (err) {
+            console.error("Failed to fetch course:", err);
+        } finally {
+            setLoading(false);
         }
-    }, [courseId]);
+    };
 
     // Save on updates
     const saveProgress = (data) => {
@@ -115,7 +134,13 @@ export default function StudentCourseDetail() {
         setCourse(data);
     };
 
-    if (!course) return <div>Loading...</div>;
+    if (!course) return (
+        <StudentLayout>
+            <div className="flex items-center justify-center py-12">
+                <p className="text-gray-500">{loading ? 'Loading course...' : 'Course not found'}</p>
+            </div>
+        </StudentLayout>
+    );
 
     // =============================
     // UNLOCK LOGIC
@@ -178,10 +203,14 @@ export default function StudentCourseDetail() {
                 {/* HEADER */}
                 <div className="bg-white rounded-xl shadow p-6 mb-8 flex gap-6">
                     <div className="w-56 h-36 overflow-hidden rounded-xl bg-gray-200">
-                        <img
-                            src={course.thumbnail}
-                            className="w-full h-full object-cover"
-                        />
+                            <img
+                                src={course.thumbnail}
+                                alt={course.title}
+                                onError={(e) => {
+                                    e.currentTarget.src = "/images/course-thumb.jpg";
+                                }}
+                                className="w-full h-full object-cover"
+                            />
                     </div>
 
                     <div className="flex-1 pr-10">
@@ -211,15 +240,19 @@ export default function StudentCourseDetail() {
                                 {course.studentsCount.toLocaleString()} students
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                <img
-                                    src={course.instructor.avatar}
-                                    className="w-8 h-8 rounded-full border"
-                                />
-                                <span className="text-gray-700">
-                                    {course.instructor.name}
-                                </span>
-                            </div>
+                        <div className="flex items-center gap-2">
+                                    <img
+                                        src={course.instructor.avatar}
+                                        alt={course.instructor.name}
+                                        onError={(e) => {
+                                            e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(course.instructor.name)}&background=0D8ABC&color=fff&size=100`;
+                                        }}
+                                        className="w-8 h-8 rounded-full border object-cover"
+                                    />
+                                    <span className="text-gray-700">
+                                        {course.instructor.name}
+                                    </span>
+                                </div>
                         </div>
 
                         {/* CONTINUE BUTTON */}
@@ -251,10 +284,18 @@ export default function StudentCourseDetail() {
                                 (c) => c.id === chapter.id
                             );
 
+                            // Check if previous chapter is completed
+                            const isPrevChapterDone = chapterIndex === 0 ? true : (
+                                course.chapters[chapterIndex - 1].materials.every((m) => m.done) &&
+                                (course.chapters[chapterIndex - 1].quiz?.done ?? true)
+                            );
+
                             return (
                                 <div
                                     key={chapter.id}
-                                    className="border rounded-xl p-4 bg-gray-50"
+                                    className={`border rounded-xl p-4 ${
+                                        isPrevChapterDone ? "bg-gray-50" : "bg-gray-100 opacity-60 cursor-not-allowed"
+                                    }`}
                                 >
                                     <div className="flex justify-between mb-2">
                                         <h3 className="font-semibold">
@@ -263,16 +304,12 @@ export default function StudentCourseDetail() {
 
                                         <span
                                             className={`text-xs px-2 py-1 rounded-full ${
-                                                chapter.materials.every(
-                                                    (m) => m.done
-                                                ) && chapter.quiz.done
+                                                chapter.materials.every((m) => m.done) && (chapter.quiz?.done ?? true)
                                                     ? "bg-green-100 text-green-700"
                                                     : "bg-yellow-100 text-yellow-700"
                                             }`}
                                         >
-                                            {chapter.materials.every(
-                                                (m) => m.done
-                                            ) && chapter.quiz.done
+                                            {chapter.materials.every((m) => m.done) && (chapter.quiz?.done ?? true)
                                                 ? "completed"
                                                 : "in-progress"}
                                         </span>
@@ -282,9 +319,11 @@ export default function StudentCourseDetail() {
                                     <ul className="space-y-2">
                                         {chapter.materials.map((m, index) => {
                                             const canOpen =
-                                                index === 0 ||
-                                                chapter.materials[index - 1]
-                                                    .done;
+                                                isPrevChapterDone && (
+                                                    index === 0
+                                                        ? true
+                                                        : (chapter.materials[index - 1].done || false)
+                                                );
 
                                             return (
                                                 <li
@@ -328,37 +367,35 @@ export default function StudentCourseDetail() {
                                     </ul>
 
                                     {/* QUIZ */}
-                                    <div
-                                        className={`mt-3 bg-white border rounded-lg p-3 flex items-center justify-between 
-                                            ${
-                                                chapter.materials.every(
-                                                    (m) => m.done
+                                    {chapter.quiz && (
+                                        <div
+                                            className={`mt-3 bg-white border rounded-lg p-3 flex items-center justify-between 
+                                                ${
+                                                    isPrevChapterDone && chapter.materials.every((m) => m.done)
+                                                        ? "cursor-pointer hover:bg-gray-100"
+                                                        : "opacity-50 cursor-not-allowed"
+                                                }`}
+                                            onClick={() =>
+                                                isPrevChapterDone && chapter.materials.every((m) => m.done) &&
+                                                navigate(
+                                                    `/student/course/${course.id}/quiz/${chapter.quiz.id}`
                                                 )
-                                                    ? "cursor-pointer hover:bg-gray-100"
-                                                    : "opacity-50 cursor-not-allowed"
-                                            }`}
-                                        onClick={() =>
-                                            chapter.materials.every(
-                                                (m) => m.done
-                                            ) &&
-                                            navigate(
-                                                `/student/course/${course.id}/quiz/${chapter.quiz.id}`
-                                            )
-                                        }
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <FiHelpCircle className="text-purple-500" />
-                                            <p className="font-medium">
-                                                {chapter.quiz.title}
-                                            </p>
-                                        </div>
+                                            }
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <FiHelpCircle className="text-purple-500" />
+                                                <p className="font-medium">
+                                                    {chapter.quiz.title}
+                                                </p>
+                                            </div>
 
-                                        {chapter.quiz.done ? (
-                                            <FiCheckCircle className="text-green-600" />
-                                        ) : (
-                                            <FiPlayCircle className="text-blue-600" />
-                                        )}
-                                    </div>
+                                            {chapter.quiz.done ? (
+                                                <FiCheckCircle className="text-green-600" />
+                                            ) : (
+                                                <FiPlayCircle className="text-blue-600" />
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}
