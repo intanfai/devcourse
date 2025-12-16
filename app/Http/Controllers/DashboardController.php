@@ -183,11 +183,47 @@ class DashboardController extends Controller
         // Get first name from user name (split by space)
         $firstName = explode(' ', $user->name)[0];
 
+        // Get recommended courses - top 3 courses by enrollment count
+        $recommendedCourses = Course::with(['instructor', 'enrollments'])
+            ->where('status', 'Published')
+            ->withCount('enrollments')
+            ->orderBy('enrollments_count', 'desc')
+            ->limit(3)
+            ->get();
+        
+        \Log::info('Recommended courses query result: ' . $recommendedCourses->count());
+        
+        $recommendedCourses = $recommendedCourses->map(function ($course) {
+                // Calculate average rating from reviews
+                $reviewsCollection = \App\Models\Review::where('course_id', $course->id)->get();
+                $rating = $reviewsCollection->avg('rating') ?? 0;
+                
+                // Clean thumbnail path
+                $thumbnail = $course->thumbnail;
+                if (!$thumbnail || $thumbnail === 'null' || trim($thumbnail) === '') {
+                    $thumbnail = '/images/course-thumb.jpg';
+                } elseif (!str_starts_with($thumbnail, '/') && !str_starts_with($thumbnail, 'http')) {
+                    $thumbnail = '/' . $thumbnail;
+                }
+                
+                return [
+                    'id' => $course->id,
+                    'title' => $course->title,
+                    'category' => $course->category ?? 'General',
+                    'level' => $course->level ?? 'Beginner',
+                    'instructor' => $course->instructor->name ?? 'Unknown',
+                    'students' => $course->enrollments_count,
+                    'rating' => round($rating, 1),
+                    'thumbnail' => $thumbnail,
+                ];
+            });
+
         return response()->json([
             'first_name' => $firstName,
             'active_courses' => $activeCourses,
             'hours_learned' => $hoursLearned,
             'certificates_earned' => $certificatesEarned,
+            'recommended_courses' => $recommendedCourses,
         ]);
     }
 
@@ -206,13 +242,14 @@ class DashboardController extends Controller
             // Filter courses with Published or Approved status (case-insensitive)
             $courses = $allCourses
                 ->filter(function ($course) {
-                    $status = strtolower($course->status ?? '');
-                    return in_array($status, ['published', 'approved']);
+                    $status = strtolower(trim($course->status ?? ''));
+                    return in_array($status, ['published', 'approved', 'publish']);
                 })
                 ->map(function ($course) {
-                    // Calculate average rating (placeholder - adjust based on your reviews table)
-                    $rating = 0; // Start with 0 until students provide reviews
-                    $reviewsCount = 0; // No reviews yet
+                    // Calculate average rating from reviews
+                    $reviewsCollection = \App\Models\Review::where('course_id', $course->id)->get();
+                    $rating = $reviewsCollection->avg('rating') ?? 0;
+                    $reviewsCount = $reviewsCollection->count();
                     
                     // Clean thumbnail path
                     $thumbnail = $course->thumbnail;
@@ -251,5 +288,30 @@ class DashboardController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get student profile progress data
+     */
+    public function getProfileProgress()
+    {
+        $studentId = auth()->id();
+        
+        // Get total enrolled courses
+        $totalCourses = Enrollment::where('user_id', $studentId)->count();
+        
+        // Get completed courses (courses with certificates)
+        $completedCourses = \App\Models\Certificate::where('user_id', $studentId)->count();
+        
+        // Alternative: could also check if all chapters/materials are completed
+        // But using certificates is more accurate as it requires course completion
+        
+        return response()->json([
+            'total_courses' => $totalCourses,
+            'completed_courses' => $completedCourses,
+            'completion_percentage' => $totalCourses > 0 
+                ? round(($completedCourses / $totalCourses) * 100, 1) 
+                : 0,
+        ]);
     }
 }

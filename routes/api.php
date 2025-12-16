@@ -240,6 +240,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/dashboard/monthly-earnings', [DashboardController::class, 'monthlyEarnings'])->middleware('role:2');
     Route::get('/dashboard/instructor-classes', [DashboardController::class, 'instructorClasses'])->middleware('role:2');
     Route::get('/dashboard/explore-courses', [DashboardController::class, 'exploreCourses'])->middleware('role:3');
+    Route::get('/dashboard/profile-progress', [DashboardController::class, 'getProfileProgress'])->middleware('role:3');
 
     // semua route ini butuh token
     Route::get('/courses', [CourseController::class, 'index']);
@@ -260,6 +261,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     //api enrollment untuk mengakses course dan materi
     Route::post('/enrollments', [EnrollmentController::class, 'store']);
+
+    //api review untuk submit review course
+    Route::post('/courses/{courseId}/review', [CourseController::class, 'submitReview'])->middleware('role:3');
+
+    //api certificate untuk download sertifikat
+    Route::get('/certificates', [CourseController::class, 'getCertificates'])->middleware('role:3');
+    Route::get('/certificates/download/{courseId}', [CourseController::class, 'downloadCertificate'])->middleware('role:3');
 
     //api forget Password
     

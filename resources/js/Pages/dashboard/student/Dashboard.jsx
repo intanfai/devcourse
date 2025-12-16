@@ -1,7 +1,7 @@
 import { FiBookOpen, FiAward, FiClock } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "../../../axios";
 import StudentLayout from "../../../layouts/StudentLayout";
 
 export default function StudentDashboard() {
@@ -13,6 +13,7 @@ export default function StudentDashboard() {
         active_courses: 0,
         hours_learned: 0,
         certificates_earned: 0,
+        recommended_courses: [],
     });
     const [loading, setLoading] = useState(true);
 
@@ -21,7 +22,8 @@ export default function StudentDashboard() {
         const maxHours = 100;
         const maxCertificates = 10;
         const hoursProgress = (dashboardData.hours_learned / maxHours) * 50;
-        const certProgress = (dashboardData.certificates_earned / maxCertificates) * 50;
+        const certProgress =
+            (dashboardData.certificates_earned / maxCertificates) * 50;
         return Math.min(100, Math.round(hoursProgress + certProgress));
     };
 
@@ -38,9 +40,12 @@ export default function StudentDashboard() {
             const res = await axios.get("/dashboard/student", {
                 headers: { Authorization: `Bearer ${token}` },
             });
+            console.log("Dashboard data received:", res.data);
+            console.log("Recommended courses:", res.data.recommended_courses);
             setDashboardData(res.data);
         } catch (err) {
             console.error("Failed to fetch dashboard data:", err);
+            console.error("Error details:", err.response);
         } finally {
             setLoading(false);
         }
@@ -53,38 +58,8 @@ export default function StudentDashboard() {
             : hour < 18
             ? "Good afternoon"
             : "Good evening";
-    const recommended = [
-        {
-            id: 10,
-            title: "TailwindCSS Mastery",
-            category: "Frontend",
-            level: "Beginner",
-            instructor: "Michael Ross",
-            students: 8200,
-            rating: 4.7,
-            thumbnail: "/images/course-thumb.jpg",
-        },
-        {
-            id: 11,
-            title: "JavaScript Advanced Patterns",
-            category: "Programming",
-            level: "Intermediate",
-            instructor: "Sarah Mitchell",
-            students: 10400,
-            rating: 4.8,
-            thumbnail: "/images/course-thumb.jpg",
-        },
-        {
-            id: 12,
-            title: "Figma UI/UX Complete Guide",
-            category: "Design",
-            level: "All Levels",
-            instructor: "Daniel Kim",
-            students: 6700,
-            rating: 4.6,
-            thumbnail: "/images/course-thumb.jpg",
-        },
-    ];
+
+    const recommended = dashboardData.recommended_courses || [];
 
     if (!user) return <div className="p-6">Loading...</div>;
 
@@ -108,7 +83,8 @@ export default function StudentDashboard() {
                         />
                         <div>
                             <h1 className="text-xl md:text-2xl font-semibold text-gray-800">
-                                {greet}, {dashboardData.first_name || user?.name}! 👋
+                                {greet},{" "}
+                                {dashboardData.first_name || user?.name}! 👋
                             </h1>
                             <p className="text-gray-600 mt-1 text-xs md:text-sm">
                                 Ready to continue your learning journey today?
@@ -183,21 +159,21 @@ export default function StudentDashboard() {
                         {
                             icon: <FiBookOpen className="text-3xl" />,
                             label: "Active Courses",
-                            value: dashboardData.active_courses,
+                            value: dashboardData.active_courses || 0,
                             gradient: "from-blue-400 to-blue-600",
                             link: "/student/courses",
                         },
                         {
                             icon: <FiClock className="text-3xl" />,
                             label: "Hours Learned",
-                            value: `${dashboardData.hours_learned} h`,
+                            value: `${dashboardData.hours_learned || 0} h`,
                             gradient: "from-yellow-400 to-yellow-600",
                             link: "/student/progress",
                         },
                         {
                             icon: <FiAward className="text-3xl" />,
                             label: "Certificates Earned",
-                            value: dashboardData.certificates_earned,
+                            value: dashboardData.certificates_earned || 0,
                             gradient: "from-green-400 to-green-700",
                             link: "/student/certificates",
                         },
@@ -235,50 +211,65 @@ export default function StudentDashboard() {
                     Recommended For You
                 </h2>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                    {recommended.map((course) => (
-                        <Link
-                            key={course.id}
-                            to={`/student/course/${course.id}/preview`}
-                            className="
+                {loading ? (
+                    <div className="flex items-center justify-center py-12">
+                        <p className="text-gray-500">
+                            Loading recommendations...
+                        </p>
+                    </div>
+                ) : recommended.length === 0 ? (
+                    <div className="flex items-center justify-center py-12">
+                        <p className="text-gray-500">
+                            No courses available yet
+                        </p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                        {recommended.map((course) => (
+                            <Link
+                                key={course.id}
+                                to={`/student/course/${course.id}/preview`}
+                                className="
                                 bg-white rounded-2xl border border-gray-200 shadow-sm
                                 hover:shadow-xl hover:-translate-y-1 transition-all
                                 overflow-hidden
                             "
-                        >
-                            <img
-                                src={course.thumbnail}
-                                className="w-full h-40 md:h-44 object-cover"
-                            />
+                            >
+                                <img
+                                    src={course.thumbnail}
+                                    className="w-full h-40 md:h-44 object-cover"
+                                />
 
-                            <div className="p-4 md:p-5">
-                                <p className="text-xs text-gray-500">
-                                    by{" "}
-                                    <span className="text-blue-600 font-medium">
-                                        {course.instructor}
+                                <div className="p-4 md:p-5">
+                                    <p className="text-xs text-gray-500">
+                                        by{" "}
+                                        <span className="text-blue-600 font-medium">
+                                            {course.instructor}
+                                        </span>
+                                    </p>
+
+                                    <span className="mt-2 inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                                        {course.level}
                                     </span>
-                                </p>
 
-                                <span className="mt-2 inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                                    {course.level}
-                                </span>
+                                    <h3 className="mt-3 font-semibold text-lg text-gray-900">
+                                        {course.title}
+                                    </h3>
 
-                                <h3 className="mt-3 font-semibold text-lg text-gray-900">
-                                    {course.title}
-                                </h3>
-
-                                <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
-                                    <span>
-                                        👥 {course.students.toLocaleString()}
-                                    </span>
-                                    <span className="text-yellow-500">
-                                        ⭐ {course.rating}
-                                    </span>
+                                    <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
+                                        <span>
+                                            👥{" "}
+                                            {course.students.toLocaleString()}
+                                        </span>
+                                        <span className="text-yellow-500">
+                                            ⭐ {course.rating}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                        </Link>
-                    ))}
-                </div>
+                            </Link>
+                        ))}
+                    </div>
+                )}
             </div>
         </StudentLayout>
     );

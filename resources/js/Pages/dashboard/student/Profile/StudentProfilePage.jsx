@@ -1,16 +1,18 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import axios from "../../../../axios";
 import StudentLayout from "../../../../layouts/StudentLayout";
-import {
-    FiMail,
-    FiPhone,
-    FiEdit2,
-    FiBookOpen,
-} from "react-icons/fi";
+import { FiMail, FiPhone, FiEdit2, FiBookOpen } from "react-icons/fi";
 
 export default function ProfilePage() {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
+    const [progressData, setProgressData] = useState({
+        total_courses: 0,
+        completed_courses: 0,
+        completion_percentage: 0,
+    });
+    const [loading, setLoading] = useState(true);
 
     // Load user dari localStorage dan listen untuk updates
     useEffect(() => {
@@ -26,8 +28,29 @@ export default function ProfilePage() {
         const handleUserUpdated = () => loadUser();
         window.addEventListener("user-updated", handleUserUpdated);
 
-        return () => window.removeEventListener("user-updated", handleUserUpdated);
+        return () =>
+            window.removeEventListener("user-updated", handleUserUpdated);
     }, []);
+
+    // Fetch progress data from backend
+    useEffect(() => {
+        fetchProgressData();
+    }, []);
+
+    const fetchProgressData = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axios.get("/dashboard/profile-progress", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            console.log("Profile progress data:", res.data);
+            setProgressData(res.data);
+        } catch (err) {
+            console.error("Failed to fetch progress data:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     if (!user) {
         return <div className="p-6">Loading...</div>;
@@ -36,21 +59,23 @@ export default function ProfilePage() {
     return (
         <StudentLayout>
             <div className="pb-6">
-
                 {/* TITLE */}
-                <h1 className="text-2xl font-bold text-gray-900 mb-8">My Profile</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-8">
+                    My Profile
+                </h1>
 
                 <div className="bg-white border shadow-sm rounded-xl p-6">
-
                     {/* TOP SECTION */}
                     <div className="flex items-start gap-6 mb-10">
                         <img
                             src={
-                                (user.avatar && user.avatar.trim() !== "" && user.avatar !== "null")
+                                user.avatar &&
+                                user.avatar.trim() !== "" &&
+                                user.avatar !== "null"
                                     ? user.avatar
                                     : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                        user.name
-                                    )}&background=0D8ABC&color=fff&size=200`
+                                          user.name
+                                      )}&background=0D8ABC&color=fff&size=200`
                             }
                             onError={(e) =>
                                 (e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -61,10 +86,14 @@ export default function ProfilePage() {
                         />
 
                         <div className="flex-1">
-                            <h2 className="text-2xl font-bold text-gray-900">{user.name}</h2>
+                            <h2 className="text-2xl font-bold text-gray-900">
+                                {user.name}
+                            </h2>
 
                             {/* ROLE LANGSUNG DARI DATABASE */}
-                            <p className="text-gray-600 capitalize">{user.role}</p>
+                            <p className="text-gray-600 capitalize">
+                                {user.role}
+                            </p>
 
                             {user.bio && (
                                 <p className="text-gray-500 mt-2">{user.bio}</p>
@@ -85,7 +114,6 @@ export default function ProfilePage() {
                     </h3>
 
                     <div className="grid md:grid-cols-2 gap-6 mb-8">
-
                         {/* EMAIL */}
                         <div className="flex items-center gap-3">
                             <FiMail className="text-blue-600" size={20} />
@@ -99,7 +127,6 @@ export default function ProfilePage() {
                                 {user.phone || "No phone provided"}
                             </p>
                         </div>
-
                     </div>
 
                     {/* EDUCATION INFO */}
@@ -110,28 +137,36 @@ export default function ProfilePage() {
                     <div className="bg-gray-50 p-4 rounded-lg border mb-8">
                         <div className="flex items-center gap-3 mb-2">
                             <FiBookOpen className="text-indigo-600" size={22} />
-                            <p className="font-semibold text-gray-800">Course Progress</p>
+                            <p className="font-semibold text-gray-800">
+                                Course Progress
+                            </p>
                         </div>
 
-                        <p className="text-gray-700 mb-2">
-                            Completed {user.completedCourses || 0} of{" "}
-                            {user.totalCourses || 0} courses
-                        </p>
+                        {loading ? (
+                            <p className="text-gray-500">Loading progress...</p>
+                        ) : (
+                            <>
+                                <p className="text-gray-700 mb-2">
+                                    Completed {progressData.completed_courses}{" "}
+                                    of {progressData.total_courses} courses
+                                </p>
 
-                        <div className="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-blue-600 rounded-full"
-                                style={{
-                                    width: `${
-                                        user.totalCourses
-                                            ? (user.completedCourses / user.totalCourses) * 100
-                                            : 0
-                                    }%`,
-                                }}
-                            ></div>
-                        </div>
+                                <div className="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-blue-600 rounded-full transition-all duration-500"
+                                        style={{
+                                            width: `${progressData.completion_percentage}%`,
+                                        }}
+                                    ></div>
+                                </div>
+
+                                <p className="text-sm text-gray-600 mt-2">
+                                    {progressData.completion_percentage}%
+                                    Complete
+                                </p>
+                            </>
+                        )}
                     </div>
-
                 </div>
             </div>
         </StudentLayout>

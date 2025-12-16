@@ -8,9 +8,12 @@ import {
     FiStar,
     FiUsers,
     FiArrowLeft,
+    FiAward,
+    FiDownload,
 } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import axios from "../../../axios";
+import ReviewModal from "../../../Components/ReviewModal";
 
 export default function StudentCourseDetail() {
     const { courseId } = useParams();
@@ -18,9 +21,17 @@ export default function StudentCourseDetail() {
 
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [hasReviewed, setHasReviewed] = useState(false);
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [certificateDownloading, setCertificateDownloading] = useState(false);
 
     useEffect(() => {
         fetchCourseDetail();
+        // Check if review exists in localStorage
+        const savedReview = localStorage.getItem(`review-course-${courseId}`);
+        if (savedReview) {
+            setHasReviewed(true);
+        }
     }, [courseId]);
 
     const fetchCourseDetail = async () => {
@@ -34,13 +45,17 @@ export default function StudentCourseDetail() {
 
             // Clean thumbnail path
             let thumbnailPath = data.thumbnail;
-            if (!thumbnailPath || thumbnailPath === 'null' || thumbnailPath.trim() === '') {
+            if (
+                !thumbnailPath ||
+                thumbnailPath === "null" ||
+                thumbnailPath.trim() === ""
+            ) {
                 thumbnailPath = "/images/course-thumb.jpg";
-            } else if (thumbnailPath.startsWith('http')) {
+            } else if (thumbnailPath.startsWith("http")) {
                 // use as-is
-            } else if (thumbnailPath.startsWith('/')) {
+            } else if (thumbnailPath.startsWith("/")) {
                 // already absolute
-            } else if (thumbnailPath.startsWith('storage/')) {
+            } else if (thumbnailPath.startsWith("storage/")) {
                 thumbnailPath = `/${thumbnailPath}`;
             } else {
                 thumbnailPath = `/storage/${thumbnailPath}`;
@@ -48,8 +63,14 @@ export default function StudentCourseDetail() {
 
             // Get instructor avatar
             let instructorAvatar = data.instructor?.avatar || "";
-            if (!instructorAvatar || instructorAvatar.trim() === '' || instructorAvatar === 'null') {
-                instructorAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.instructor?.name || 'Instructor')}&background=0D8ABC&color=fff&size=100`;
+            if (
+                !instructorAvatar ||
+                instructorAvatar.trim() === "" ||
+                instructorAvatar === "null"
+            ) {
+                instructorAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    data.instructor?.name || "Instructor"
+                )}&background=0D8ABC&color=fff&size=100`;
             }
 
             // Transform chapters and materials
@@ -63,54 +84,72 @@ export default function StudentCourseDetail() {
                     video_url: mat.video_url,
                     done: false,
                 })),
-                quiz: chapter.quiz ? { id: chapter.quiz.id, title: chapter.quiz.title, done: false } : null,
+                quiz: chapter.quiz
+                    ? {
+                          id: chapter.quiz.id,
+                          title: chapter.quiz.title,
+                          done: false,
+                      }
+                    : null,
             }));
 
             // Get final quiz
-            const finalQuiz = (data.quizzes || []).find(q => !q.chapter_id);
+            const finalQuiz = (data.quizzes || []).find((q) => !q.chapter_id);
 
             const courseData = {
                 id: data.id,
                 title: data.title,
-                category: data.category || 'Course',
-                level: data.level || 'Beginner',
+                category: data.category || "Course",
+                level: data.level || "Beginner",
                 description: data.description,
                 thumbnail: thumbnailPath,
-                rating: 4.8,
-                reviews: 0,
+                rating: data.average_rating || 0,
+                reviews: data.reviews_count || 0,
                 studentsCount: data.enrollments_count || 0,
                 instructor: {
-                    name: data.instructor?.name || 'Unknown',
+                    name: data.instructor?.name || "Unknown",
                     avatar: instructorAvatar,
                 },
                 chapters: chapters,
                 finalQuiz: finalQuiz
                     ? { id: finalQuiz.id, title: finalQuiz.title, done: false }
-                    : { id: 999, title: 'Final Course Quiz', done: false },
+                    : { id: 999, title: "Final Course Quiz", done: false },
             };
 
             // Load progress from localStorage
             const savedProgress = localStorage.getItem(`progress-${courseId}`);
-            const materialProgress = localStorage.getItem(`material-progress-${courseId}`);
+            const materialProgress = localStorage.getItem(
+                `material-progress-${courseId}`
+            );
 
             if (savedProgress) {
                 const saved = JSON.parse(savedProgress);
-                courseData.chapters = courseData.chapters.map((ch) => ({
-                    ...ch,
-                    materials: ch.materials.map((m) => {
-                        const savedMat = saved.chapters
-                            ?.find((sc) => sc.id === ch.id)
-                            ?.materials?.find((sm) => sm.id === m.id);
-                        return { ...m, done: savedMat?.done || false };
-                    }),
-                    quiz: ch.quiz && saved.chapters?.find((sc) => sc.id === ch.id)?.quiz?.done
-                        ? { ...ch.quiz, done: true }
-                        : ch.quiz,
-                }));
+                courseData.chapters = courseData.chapters.map((ch) => {
+                    const savedChapter = saved.chapters?.find(
+                        (sc) => sc.id === ch.id
+                    );
+                    return {
+                        ...ch,
+                        materials: ch.materials.map((m) => {
+                            const savedMat = savedChapter?.materials?.find(
+                                (sm) => sm.id === m.id
+                            );
+                            return { ...m, done: savedMat?.done || false };
+                        }),
+                        quiz: ch.quiz
+                            ? {
+                                  ...ch.quiz,
+                                  done: savedChapter?.quiz?.done || false,
+                              }
+                            : null,
+                    };
+                });
                 courseData.finalQuiz.done = saved.finalQuiz?.done || false;
             } else if (materialProgress) {
                 // fallback: mark done based on material-progress store
-                const doneIds = new Set((JSON.parse(materialProgress) || []).map(String));
+                const doneIds = new Set(
+                    (JSON.parse(materialProgress) || []).map(String)
+                );
                 courseData.chapters = courseData.chapters.map((ch) => ({
                     ...ch,
                     materials: ch.materials.map((m) => ({
@@ -118,6 +157,25 @@ export default function StudentCourseDetail() {
                         done: doneIds.has(String(m.id)),
                     })),
                 }));
+            }
+
+            // Initialize progress if not exists
+            if (!savedProgress) {
+                const initialProgress = {
+                    chapters: courseData.chapters.map((ch) => ({
+                        id: ch.id,
+                        materials: ch.materials.map((m) => ({
+                            id: m.id,
+                            done: m.done || false,
+                        })),
+                        quiz: ch.quiz ? { id: ch.quiz.id, done: false } : null,
+                    })),
+                    finalQuiz: { id: courseData.finalQuiz.id, done: false },
+                };
+                localStorage.setItem(
+                    `progress-${courseId}`,
+                    JSON.stringify(initialProgress)
+                );
             }
 
             setCourse(courseData);
@@ -134,13 +192,16 @@ export default function StudentCourseDetail() {
         setCourse(data);
     };
 
-    if (!course) return (
-        <StudentLayout>
-            <div className="flex items-center justify-center py-12">
-                <p className="text-gray-500">{loading ? 'Loading course...' : 'Course not found'}</p>
-            </div>
-        </StudentLayout>
-    );
+    if (!course)
+        return (
+            <StudentLayout>
+                <div className="flex items-center justify-center py-12">
+                    <p className="text-gray-500">
+                        {loading ? "Loading course..." : "Course not found"}
+                    </p>
+                </div>
+            </StudentLayout>
+        );
 
     // =============================
     // UNLOCK LOGIC
@@ -192,7 +253,7 @@ export default function StudentCourseDetail() {
                 {/* BACK BUTTON */}
                 <div className="flex items-center gap-4 mb-8">
                     <button
-                        onClick={() => navigate(-1)}
+                        onClick={() => navigate("/student/courses")}
                         className="p-2 bg-blue-600 hover:bg-blue-700 rounded-full text-white"
                     >
                         <FiArrowLeft size={18} />
@@ -203,14 +264,15 @@ export default function StudentCourseDetail() {
                 {/* HEADER */}
                 <div className="bg-white rounded-xl shadow p-6 mb-8 flex gap-6">
                     <div className="w-56 h-36 overflow-hidden rounded-xl bg-gray-200">
-                            <img
-                                src={course.thumbnail}
-                                alt={course.title}
-                                onError={(e) => {
-                                    e.currentTarget.src = "/images/course-thumb.jpg";
-                                }}
-                                className="w-full h-full object-cover"
-                            />
+                        <img
+                            src={course.thumbnail}
+                            alt={course.title}
+                            onError={(e) => {
+                                e.currentTarget.src =
+                                    "/images/course-thumb.jpg";
+                            }}
+                            className="w-full h-full object-cover"
+                        />
                     </div>
 
                     <div className="flex-1 pr-10">
@@ -240,19 +302,21 @@ export default function StudentCourseDetail() {
                                 {course.studentsCount.toLocaleString()} students
                             </div>
 
-                        <div className="flex items-center gap-2">
-                                    <img
-                                        src={course.instructor.avatar}
-                                        alt={course.instructor.name}
-                                        onError={(e) => {
-                                            e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(course.instructor.name)}&background=0D8ABC&color=fff&size=100`;
-                                        }}
-                                        className="w-8 h-8 rounded-full border object-cover"
-                                    />
-                                    <span className="text-gray-700">
-                                        {course.instructor.name}
-                                    </span>
-                                </div>
+                            <div className="flex items-center gap-2">
+                                <img
+                                    src={course.instructor.avatar}
+                                    alt={course.instructor.name}
+                                    onError={(e) => {
+                                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                            course.instructor.name
+                                        )}&background=0D8ABC&color=fff&size=100`;
+                                    }}
+                                    className="w-8 h-8 rounded-full border object-cover"
+                                />
+                                <span className="text-gray-700">
+                                    {course.instructor.name}
+                                </span>
+                            </div>
                         </div>
 
                         {/* CONTINUE BUTTON */}
@@ -284,17 +348,34 @@ export default function StudentCourseDetail() {
                                 (c) => c.id === chapter.id
                             );
 
-                            // Check if previous chapter is completed
-                            const isPrevChapterDone = chapterIndex === 0 ? true : (
-                                course.chapters[chapterIndex - 1].materials.every((m) => m.done) &&
-                                (course.chapters[chapterIndex - 1].quiz?.done ?? true)
-                            );
+                            // Check if previous chapter is completed (all materials + quiz done)
+                            const isPrevChapterDone =
+                                chapterIndex === 0
+                                    ? true
+                                    : course.chapters[
+                                          chapterIndex - 1
+                                      ].materials.every((m) => m.done) &&
+                                      (course.chapters[chapterIndex - 1].quiz
+                                          ?.done ??
+                                          true);
+
+                            // Check if current chapter is completed
+                            const isChapterCompleted =
+                                chapter.materials.every((m) => m.done) &&
+                                (chapter.quiz?.done ?? true);
+
+                            // Check if chapter has started
+                            const isChapterStarted =
+                                chapter.materials.some((m) => m.done) ||
+                                (chapter.quiz?.done ?? false);
 
                             return (
                                 <div
                                     key={chapter.id}
                                     className={`border rounded-xl p-4 ${
-                                        isPrevChapterDone ? "bg-gray-50" : "bg-gray-100 opacity-60 cursor-not-allowed"
+                                        isPrevChapterDone
+                                            ? "bg-gray-50"
+                                            : "bg-gray-100 opacity-60 cursor-not-allowed"
                                     }`}
                                 >
                                     <div className="flex justify-between mb-2">
@@ -304,14 +385,18 @@ export default function StudentCourseDetail() {
 
                                         <span
                                             className={`text-xs px-2 py-1 rounded-full ${
-                                                chapter.materials.every((m) => m.done) && (chapter.quiz?.done ?? true)
+                                                isChapterCompleted
                                                     ? "bg-green-100 text-green-700"
-                                                    : "bg-yellow-100 text-yellow-700"
+                                                    : isChapterStarted
+                                                    ? "bg-yellow-100 text-yellow-700"
+                                                    : "bg-gray-100 text-gray-500"
                                             }`}
                                         >
-                                            {chapter.materials.every((m) => m.done) && (chapter.quiz?.done ?? true)
+                                            {isChapterCompleted
                                                 ? "completed"
-                                                : "in-progress"}
+                                                : isChapterStarted
+                                                ? "in-progress"
+                                                : "not started"}
                                         </span>
                                     </div>
 
@@ -319,11 +404,12 @@ export default function StudentCourseDetail() {
                                     <ul className="space-y-2">
                                         {chapter.materials.map((m, index) => {
                                             const canOpen =
-                                                isPrevChapterDone && (
-                                                    index === 0
-                                                        ? true
-                                                        : (chapter.materials[index - 1].done || false)
-                                                );
+                                                isPrevChapterDone &&
+                                                (index === 0
+                                                    ? true
+                                                    : chapter.materials[
+                                                          index - 1
+                                                      ].done || false);
 
                                             return (
                                                 <li
@@ -371,12 +457,18 @@ export default function StudentCourseDetail() {
                                         <div
                                             className={`mt-3 bg-white border rounded-lg p-3 flex items-center justify-between 
                                                 ${
-                                                    isPrevChapterDone && chapter.materials.every((m) => m.done)
+                                                    isPrevChapterDone &&
+                                                    chapter.materials.every(
+                                                        (m) => m.done
+                                                    )
                                                         ? "cursor-pointer hover:bg-gray-100"
                                                         : "opacity-50 cursor-not-allowed"
                                                 }`}
                                             onClick={() =>
-                                                isPrevChapterDone && chapter.materials.every((m) => m.done) &&
+                                                isPrevChapterDone &&
+                                                chapter.materials.every(
+                                                    (m) => m.done
+                                                ) &&
                                                 navigate(
                                                     `/student/course/${course.id}/quiz/${chapter.quiz.id}`
                                                 )
@@ -445,9 +537,138 @@ export default function StudentCourseDetail() {
                                 </p>
                             )}
                         </div>
+
+                        {/* CERTIFICATE SECTION */}
+                        {course.finalQuiz.done && (
+                            <div className="border rounded-xl p-6 bg-gradient-to-r from-yellow-50 to-amber-50">
+                                <div className="flex items-start gap-4">
+                                    <div className="p-3 bg-yellow-100 rounded-full">
+                                        <FiAward className="text-yellow-600 text-2xl" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="font-bold text-lg mb-2">
+                                            Course Certificate
+                                        </h3>
+                                        <p className="text-sm text-gray-600 mb-4">
+                                            Congratulations on completing the
+                                            course!
+                                        </p>
+
+                                        {!hasReviewed ? (
+                                            <div className="space-y-3">
+                                                <div className="p-3 bg-yellow-100 border border-yellow-300 rounded-lg">
+                                                    <p className="text-sm text-yellow-800">
+                                                        <strong>
+                                                            ⚠️ Review Required:
+                                                        </strong>{" "}
+                                                        Please leave a review
+                                                        before downloading your
+                                                        certificate.
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    onClick={() =>
+                                                        setShowReviewModal(true)
+                                                    }
+                                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition"
+                                                >
+                                                    <FiStar />
+                                                    Leave a Review
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={async () => {
+                                                    setCertificateDownloading(
+                                                        true
+                                                    );
+                                                    try {
+                                                        const token =
+                                                            localStorage.getItem(
+                                                                "token"
+                                                            );
+                                                        const response =
+                                                            await axios.get(
+                                                                `/certificates/download/${courseId}`,
+                                                                {
+                                                                    headers: {
+                                                                        Authorization: `Bearer ${token}`,
+                                                                    },
+                                                                    responseType:
+                                                                        "blob",
+                                                                }
+                                                            );
+
+                                                        const url =
+                                                            window.URL.createObjectURL(
+                                                                new Blob([
+                                                                    response.data,
+                                                                ])
+                                                            );
+                                                        const link =
+                                                            document.createElement(
+                                                                "a"
+                                                            );
+                                                        link.href = url;
+                                                        link.setAttribute(
+                                                            "download",
+                                                            `certificate-${course.title}.pdf`
+                                                        );
+                                                        document.body.appendChild(
+                                                            link
+                                                        );
+                                                        link.click();
+                                                        link.remove();
+                                                    } catch (error) {
+                                                        console.error(
+                                                            "Failed to download certificate:",
+                                                            error
+                                                        );
+                                                        alert(
+                                                            "Failed to download certificate. Please try again."
+                                                        );
+                                                    } finally {
+                                                        setCertificateDownloading(
+                                                            false
+                                                        );
+                                                    }
+                                                }}
+                                                disabled={
+                                                    certificateDownloading
+                                                }
+                                                className="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {certificateDownloading ? (
+                                                    <>
+                                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                                        Downloading...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <FiDownload />
+                                                        Download Certificate
+                                                    </>
+                                                )}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
+
+            {/* REVIEW MODAL */}
+            <ReviewModal
+                open={showReviewModal}
+                courseId={courseId}
+                onClose={() => setShowReviewModal(false)}
+                onReviewSubmitted={() => {
+                    setHasReviewed(true);
+                    setShowReviewModal(false);
+                }}
+            />
         </StudentLayout>
     );
 }

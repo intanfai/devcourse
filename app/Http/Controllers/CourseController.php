@@ -198,7 +198,8 @@ class CourseController extends Controller
             'chapters.materials', 
             'chapters.quiz.questions',
             'quizzes.questions',
-            'enrollments'
+            'enrollments',
+            'reviews'
         ])->findOrFail($id);
 
         // Transform chapters to include quiz data properly
@@ -216,6 +217,12 @@ class CourseController extends Controller
 
         // Add enrollments count
         $course->enrollments_count = $course->enrollments->count();
+
+        // Add reviews count and average rating
+        $course->reviews_count = $course->reviews->count();
+        $course->average_rating = $course->reviews_count > 0 
+            ? round($course->reviews->avg('rating'), 1) 
+            : 0;
 
         return response()->json($course);
     }
@@ -376,5 +383,122 @@ class CourseController extends Controller
     {
         Course::findOrFail($id)->delete();
         return response()->json(['message' => 'Course deleted']);
+    }
+
+    public function getCertificates()
+    {
+        $user = auth()->user();
+        
+        $certificates = \App\Models\Certificate::with('course')
+            ->where('user_id', $user->id)
+            ->orderBy('issued_at', 'desc')
+            ->get();
+
+        return response()->json($certificates);
+    }
+
+    public function submitReview(Request $request, $courseId)
+    {
+        $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'review' => 'required|string|min:10',
+        ]);
+
+        $user = auth()->user();
+
+        // Check if user already reviewed this course
+        $existingReview = \App\Models\Review::where('user_id', $user->id)
+            ->where('course_id', $courseId)
+            ->first();
+
+        if ($existingReview) {
+            // Update existing review
+            $existingReview->update([
+                'rating' => $request->rating,
+                'review' => $request->review,
+            ]);
+
+            // Create certificate record if not exists
+            $certificate = \App\Models\Certificate::where('user_id', $user->id)
+                ->where('course_id', $courseId)
+                ->first();
+
+            if (!$certificate) {
+                \App\Models\Certificate::create([
+                    'user_id' => $user->id,
+                    'course_id' => $courseId,
+                    'issued_at' => now(),
+                ]);
+            }
+
+            return response()->json(['message' => 'Review updated successfully', 'review' => $existingReview]);
+        }
+
+        // Create new review
+        $review = \App\Models\Review::create([
+            'user_id' => $user->id,
+            'course_id' => $courseId,
+            'rating' => $request->rating,
+            'review' => $request->review,
+        ]);
+
+        // Create certificate record if not exists
+        $certificate = \App\Models\Certificate::where('user_id', $user->id)
+            ->where('course_id', $courseId)
+            ->first();
+
+        if (!$certificate) {
+            \App\Models\Certificate::create([
+                'user_id' => $user->id,
+                'course_id' => $courseId,
+                'issued_at' => now(),
+            ]);
+        }
+
+        return response()->json(['message' => 'Review submitted successfully', 'review' => $review]);
+    }
+
+    public function downloadCertificate($courseId)
+    {
+        $user = auth()->user();
+
+        // Check if user has reviewed the course
+        $hasReview = \App\Models\Review::where('user_id', $user->id)
+            ->where('course_id', $courseId)
+            ->exists();
+
+        if (!$hasReview) {
+            return response()->json(['message' => 'You must submit a review before downloading the certificate'], 403);
+        }
+
+        // Load course with instructor
+        $course = Course::with('instructor')->findOrFail($courseId);
+        
+        // Check if certificate already exists
+        $certificate = \App\Models\Certificate::where('user_id', $user->id)
+            ->where('course_id', $courseId)
+            ->first();
+
+        if (!$certificate) {
+            // Create certificate record
+            $certificate = \App\Models\Certificate::create([
+                'user_id' => $user->id,
+                'course_id' => $courseId,
+                'issued_at' => now(),
+            ]);
+        }
+
+        // Generate PDF certificate
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificates.template', [
+            'user' => $user,
+            'course' => $course,
+            'certificate' => $certificate,
+        ]);
+        
+        // Set to landscape A4
+        $pdf->setPaper('A4', 'landscape');
+
+        $fileName = 'certificate-' . str_replace(' ', '-', $course->title) . '.pdf';
+        return $pdf->download($fileName);
     }
 }

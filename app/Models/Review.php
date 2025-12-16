@@ -4,14 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Certificate extends Model
+class Review extends Model
 {
     protected $fillable = [
-        'user_id', 'course_id', 'certificate_url', 'issued_at'
-    ];
-
-    protected $casts = [
-        'issued_at' => 'datetime',
+        'user_id',
+        'course_id',
+        'rating',
+        'review',
     ];
 
     public function user()
@@ -21,6 +20,6 @@ class Certificate extends Model
 
     public function course()
     {
-        return $this->belongsTo(Course::class, 'course_id');
+        return $this->belongsTo(Course::class);
     }
 }
