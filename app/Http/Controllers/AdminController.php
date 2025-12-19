@@ -31,4 +31,54 @@ class AdminController extends Controller
             'pending_classes' => $pending,
         ]);
     }
+
+    /**
+     * Get all certificates for admin
+     */
+    public function getCertificates(Request $request)
+    {
+        $query = \App\Models\Certificate::with(['user', 'course'])
+            ->orderBy('issued_at', 'desc');
+
+        // Apply search filter if provided
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply course filter if provided
+        if ($request->has('course') && $request->course && $request->course !== 'All') {
+            $query->whereHas('course', function($q) use ($request) {
+                $q->where('title', $request->course);
+            });
+        }
+
+        $certificates = $query->get()->map(function($cert) {
+            return [
+                'id' => $cert->id,
+                'userName' => $cert->user->name,
+                'email' => $cert->user->email,
+                'course' => $cert->course->title,
+                'issueDate' => $cert->issued_at ? $cert->issued_at->format('Y-m-d') : $cert->created_at->format('Y-m-d'),
+                'status' => 'Completed',
+                'certificate_url' => $cert->certificate_url,
+            ];
+        });
+
+        // Get unique courses for filter dropdown
+        $courses = \App\Models\Certificate::with('course')
+            ->get()
+            ->pluck('course.title')
+            ->unique()
+            ->values();
+
+        return response()->json([
+            'certificates' => $certificates,
+            'courses' => $courses,
+            'total' => $certificates->count(),
+        ]);
+    }
 }

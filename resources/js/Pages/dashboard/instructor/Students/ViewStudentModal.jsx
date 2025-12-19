@@ -15,12 +15,30 @@ export default function ViewStudentModal({ open, data, close }) {
 
                 <h2 className="text-lg font-semibold mb-4">Student Detail</h2>
 
-                <p className="text-sm"><strong>Name:</strong> {data.name}</p>
-                <p className="text-sm"><strong>Email:</strong> {data.email}</p>
-                <p className="text-sm"><strong>Class:</strong> {data.class}</p>
-                <p className="text-sm"><strong>Status:</strong> {data.status}</p>
-                <p className="text-sm"><strong>Progress:</strong> {data.progress}</p>
-                <p className="text-sm"><strong>Joined:</strong> {data.joined}</p>
+                <p className="text-sm mb-2">
+                    <strong>Name:</strong> {data.name}
+                </p>
+                <p className="text-sm mb-2">
+                    <strong>Email:</strong> {data.email}
+                </p>
+                <p className="text-sm mb-2">
+                    <strong>Class:</strong> {data.course}
+                </p>
+                <p className="text-sm mb-2">
+                    <strong>Status:</strong>{" "}
+                    <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            data.status === "Active"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-blue-100 text-blue-700"
+                        }`}
+                    >
+                        {data.status}
+                    </span>
+                </p>
+                <p className="text-sm mb-2">
+                    <strong>Joined:</strong> {data.joined}
+                </p>
 
                 <button
                     onClick={close}

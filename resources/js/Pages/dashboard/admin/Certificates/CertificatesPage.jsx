@@ -1,41 +1,46 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminLayout from "../../../../layouts/AdminLayout";
 import { FiSearch, FiFilter, FiEye } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function CertificatesPage() {
     const navigate = useNavigate();
 
-    const [certificates, setCertificates] = useState([
-        {
-            id: 101,
-            userName: "Rina",
-            email: "rina@gmail.com",
-            course: "React Basics",
-            issueDate: "2025-01-21",
-            status: "Completed",
-        },
-        {
-            id: 102,
-            userName: "Bayu",
-            email: "bayu@gmail.com",
-            course: "UI/UX Fundamental",
-            issueDate: "2025-02-02",
-            status: "Completed",
-        },
-        {
-            id: 103,
-            userName: "Dita",
-            email: "dita@gmail.com",
-            course: "Backend Laravel API",
-            issueDate: "2025-02-05",
-            status: "Completed",
-        },
-    ]);
+    const [certificates, setCertificates] = useState([]);
+    const [courses, setCourses] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     /* ===================== FILTERS ===================== */
     const [search, setSearch] = useState("");
     const [filterCourse, setFilterCourse] = useState("All");
+
+    // Fetch certificates from backend
+    useEffect(() => {
+        fetchCertificates();
+    }, [search, filterCourse]);
+
+    const fetchCertificates = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.get("/api/admin/certificates", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                params: {
+                    search: search,
+                    course: filterCourse,
+                },
+            });
+
+            setCertificates(response.data.certificates || []);
+            setCourses(response.data.courses || []);
+            setLoading(false);
+        } catch (error) {
+            console.error("Error fetching certificates:", error);
+            setLoading(false);
+        }
+    };
 
     const filteredCertificates = certificates.filter((c) => {
         const matchSearch =
@@ -100,9 +105,11 @@ export default function CertificatesPage() {
                                 }}
                             >
                                 <option value="All">All</option>
-                                <option value="React Basics">React Basics</option>
-                                <option value="UI/UX Fundamental">UI/UX Fundamental</option>
-                                <option value="Backend Laravel API">Backend Laravel API</option>
+                                {courses.map((course, idx) => (
+                                    <option key={idx} value={course}>
+                                        {course}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                     </details>
@@ -115,7 +122,9 @@ export default function CertificatesPage() {
                     <thead>
                         <tr className="border-b text-gray-500">
                             <th className="py-3 px-3 text-left w-12">No</th>
-                            <th className="py-3 px-3 text-left">Certificate ID</th>
+                            <th className="py-3 px-3 text-left">
+                                Certificate ID
+                            </th>
                             <th className="py-3 px-3 text-left">User</th>
                             <th className="py-3 px-3 text-left">Email</th>
                             <th className="py-3 px-3 text-left">Course</th>
@@ -125,36 +134,55 @@ export default function CertificatesPage() {
                     </thead>
 
                     <tbody>
-                        {paginatedData.map((cert, index) => (
-                            <tr
-                                key={cert.id}
-                                className="border-b hover:bg-gray-50 transition"
-                            >
-                                <td className="py-3 px-3 text-left">
-                                    {(currentPage - 1) * rowsPerPage + index + 1}
-                                </td>
-
-                                <td className="py-3 px-3 text-left font-mono text-blue-600 font-semibold">
-                                    #{cert.id}
-                                </td>
-
-                                <td className="py-3 px-3">{cert.userName}</td>
-                                <td className="py-3 px-3">{cert.email}</td>
-                                <td className="py-3 px-3">{cert.course}</td>
-                                <td className="py-3 px-3">{cert.issueDate}</td>
-
-                                <td className="py-3 px-3 text-center">
-                                    <button
-                                        onClick={() =>
-                                            navigate(`/admin/certificates/${cert.id}`)
-                                        }
-                                        className="text-blue-600 hover:text-blue-800"
-                                    >
-                                        <FiEye size={18} />
-                                    </button>
+                        {loading ? (
+                            <tr>
+                                <td
+                                    colSpan="7"
+                                    className="py-8 text-center text-gray-500"
+                                >
+                                    Loading certificates...
                                 </td>
                             </tr>
-                        ))}
+                        ) : paginatedData.length > 0 ? (
+                            paginatedData.map((cert, index) => (
+                                <tr
+                                    key={cert.id}
+                                    className="border-b hover:bg-gray-50 transition"
+                                >
+                                    <td className="py-3 px-3 text-left">
+                                        {(currentPage - 1) * rowsPerPage +
+                                            index +
+                                            1}
+                                    </td>
+
+                                    <td className="py-3 px-3 text-left font-mono text-blue-600 font-semibold">
+                                        #{cert.id}
+                                    </td>
+
+                                    <td className="py-3 px-3">
+                                        {cert.userName}
+                                    </td>
+                                    <td className="py-3 px-3">{cert.email}</td>
+                                    <td className="py-3 px-3">{cert.course}</td>
+                                    <td className="py-3 px-3">
+                                        {cert.issueDate}
+                                    </td>
+
+                                    <td className="py-3 px-3 text-center">
+                                        <button
+                                            onClick={() =>
+                                                navigate(
+                                                    `/admin/certificates/${cert.id}`
+                                                )
+                                            }
+                                            className="text-blue-600 hover:text-blue-800"
+                                        >
+                                            <FiEye size={18} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : null}
                     </tbody>
                 </table>
 
@@ -169,7 +197,9 @@ export default function CertificatesPage() {
                     <div className="mt-4 flex items-center justify-between">
                         {/* ROWS PER PAGE */}
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">Rows per page:</span>
+                            <span className="text-sm text-gray-500">
+                                Rows per page:
+                            </span>
                             <select
                                 value={rowsPerPage}
                                 onChange={(e) => {
@@ -188,7 +218,9 @@ export default function CertificatesPage() {
                         <div className="flex items-center gap-2">
                             <button
                                 disabled={currentPage === 1}
-                                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                onClick={() =>
+                                    setCurrentPage((p) => Math.max(1, p - 1))
+                                }
                                 className="px-3 py-1 rounded bg-gray-200 text-sm disabled:opacity-50"
                             >
                                 Prev
@@ -197,7 +229,10 @@ export default function CertificatesPage() {
                             {/* Sliding window (max 3 pages) */}
                             {(() => {
                                 const maxStart = Math.max(1, totalPages - 2);
-                                const start = Math.min(Math.max(1, currentPage), maxStart);
+                                const start = Math.min(
+                                    Math.max(1, currentPage),
+                                    maxStart
+                                );
                                 const items = [];
 
                                 for (let i = 0; i < 3; i++) {
@@ -206,7 +241,9 @@ export default function CertificatesPage() {
                                         items.push(
                                             <button
                                                 key={page}
-                                                onClick={() => setCurrentPage(page)}
+                                                onClick={() =>
+                                                    setCurrentPage(page)
+                                                }
                                                 className={`px-3 py-1 rounded text-sm ${
                                                     currentPage === page
                                                         ? "bg-blue-600 text-white"
@@ -225,7 +262,12 @@ export default function CertificatesPage() {
                                         {start + 3 <= totalPages && (
                                             <button
                                                 onClick={() =>
-                                                    setCurrentPage(Math.min(totalPages, start + 3))
+                                                    setCurrentPage(
+                                                        Math.min(
+                                                            totalPages,
+                                                            start + 3
+                                                        )
+                                                    )
                                                 }
                                                 className="px-3 py-1 rounded text-sm bg-gray-100"
                                             >
@@ -238,7 +280,11 @@ export default function CertificatesPage() {
 
                             <button
                                 disabled={currentPage === totalPages}
-                                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                onClick={() =>
+                                    setCurrentPage((p) =>
+                                        Math.min(totalPages, p + 1)
+                                    )
+                                }
                                 className="px-3 py-1 rounded bg-gray-200 text-sm disabled:opacity-50"
                             >
                                 Next

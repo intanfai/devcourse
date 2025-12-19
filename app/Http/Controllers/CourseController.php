@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class CourseController extends Controller
 {
@@ -46,7 +48,7 @@ class CourseController extends Controller
         ]);
 
         // Allow only instructors (role_id = 2) and admin (role_id = 1)
-        $user = auth()->user();
+        $user = Auth::user();
         if (!$user || !in_array($user->role_id, [1, 2])) {
             return response()->json([
                 'message' => 'Only instructors or admin can create courses'
@@ -60,7 +62,7 @@ class CourseController extends Controller
             'category' => $request->category,
             'level' => $request->level,
             'status' => $request->status ?? 'Pending',
-            'instructor_id' => auth()->id(), // AMBIL ID USER LOGIN
+            'instructor_id' => Auth::id(), // AMBIL ID USER LOGIN
         ];
 
         if ($request->hasFile('thumbnail')) {
@@ -100,25 +102,25 @@ class CourseController extends Controller
 
                             // Debug: Log material data
                             $videoField = $mat['video_field'] ?? null;
-                            \Log::info('Processing material: ' . ($mat['title'] ?? 'untitled'));
-                            \Log::info('Video field: ' . ($videoField ?? 'none'));
+                            Log::info('Processing material: ' . ($mat['title'] ?? 'untitled'));
+                            Log::info('Video field: ' . ($videoField ?? 'none'));
 
                             // if video_field provided, store uploaded file
                             if (!empty($videoField)) {
-                                \Log::info('Checking for file: ' . $videoField);
+                                Log::info('Checking for file: ' . $videoField);
                                 
                                 if ($request->hasFile($videoField)) {
                                     try {
-                                        \Log::info('File found! Uploading video: ' . $videoField);
+                                        Log::info('File found! Uploading video: ' . $videoField);
                                         $vpath = $request->file($videoField)->store('materials_videos', 'public');
                                         $matData['video_url'] = 'storage/' . $vpath;
-                                        \Log::info('Video uploaded successfully: ' . $matData['video_url']);
+                                        Log::info('Video uploaded successfully: ' . $matData['video_url']);
                                     } catch (\Exception $e) {
-                                        \Log::error('Video upload failed: ' . $e->getMessage());
+                                        Log::error('Video upload failed: ' . $e->getMessage());
                                     }
                                 } else {
-                                    \Log::warning('File not found in request for: ' . $videoField);
-                                    \Log::info('Available files in request: ' . json_encode(array_keys($request->allFiles())));
+                                    Log::warning('File not found in request for: ' . $videoField);
+                                    Log::info('Available files in request: ' . json_encode(array_keys($request->allFiles())));
                                 }
                             }
 
@@ -194,12 +196,12 @@ class CourseController extends Controller
     public function show($id)
     {
         $course = Course::with([
-            'instructor', 
+            'instructor',
             'chapters.materials', 
             'chapters.quiz.questions',
             'quizzes.questions',
             'enrollments',
-            'reviews'
+            'reviews.user'
         ])->findOrFail($id);
 
         // Transform chapters to include quiz data properly
@@ -223,6 +225,18 @@ class CourseController extends Controller
         $course->average_rating = $course->reviews_count > 0 
             ? round($course->reviews->avg('rating'), 1) 
             : 0;
+
+        // Transform reviews to include user data
+        $course->reviews_list = $course->reviews->map(function($review) {
+            return [
+                'id' => $review->id,
+                'user' => $review->user->name,
+                'avatar' => $review->user->avatar ?: '',
+                'rating' => $review->rating,
+                'comment' => $review->review,
+                'created_at' => $review->created_at->format('Y-m-d'),
+            ];
+        });
 
         return response()->json($course);
     }
@@ -374,7 +388,7 @@ class CourseController extends Controller
         return response()->json(['message' => 'Course updated successfully', 'course' => $course]);
         
         } catch (\Exception $e) {
-            \Log::error('Course update failed: ' . $e->getMessage());
+            Log::error('Course update failed: ' . $e->getMessage());
             return response()->json(['message' => 'Failed to update course', 'error' => $e->getMessage()], 500);
         }
     }
@@ -387,7 +401,7 @@ class CourseController extends Controller
 
     public function getCertificates()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         
         $certificates = \App\Models\Certificate::with('course')
             ->where('user_id', $user->id)
@@ -404,7 +418,7 @@ class CourseController extends Controller
             'review' => 'required|string|min:10',
         ]);
 
-        $user = auth()->user();
+        $user = Auth::user();
 
         // Check if user already reviewed this course
         $existingReview = \App\Models\Review::where('user_id', $user->id)
@@ -460,45 +474,76 @@ class CourseController extends Controller
 
     public function downloadCertificate($courseId)
     {
-        $user = auth()->user();
+        try {
+            $user = Auth::user();
 
-        // Check if user has reviewed the course
-        $hasReview = \App\Models\Review::where('user_id', $user->id)
-            ->where('course_id', $courseId)
-            ->exists();
-
-        if (!$hasReview) {
-            return response()->json(['message' => 'You must submit a review before downloading the certificate'], 403);
-        }
-
-        // Load course with instructor
-        $course = Course::with('instructor')->findOrFail($courseId);
-        
-        // Check if certificate already exists
-        $certificate = \App\Models\Certificate::where('user_id', $user->id)
-            ->where('course_id', $courseId)
-            ->first();
-
-        if (!$certificate) {
-            // Create certificate record
-            $certificate = \App\Models\Certificate::create([
+            Log::info('Certificate download requested', [
                 'user_id' => $user->id,
-                'course_id' => $courseId,
-                'issued_at' => now(),
+                'course_id' => $courseId
             ]);
+
+            // Check if user has reviewed the course
+            $hasReview = \App\Models\Review::where('user_id', $user->id)
+                ->where('course_id', $courseId)
+                ->exists();
+
+            if (!$hasReview) {
+                Log::warning('Certificate download failed: No review found', [
+                    'user_id' => $user->id,
+                    'course_id' => $courseId
+                ]);
+                return response()->json(['message' => 'You must submit a review before downloading the certificate'], 403);
+            }
+
+            // Load course with instructor
+            $course = Course::with('instructor')->findOrFail($courseId);
+            
+            // Check if certificate already exists
+            $certificate = \App\Models\Certificate::where('user_id', $user->id)
+                ->where('course_id', $courseId)
+                ->first();
+
+            if (!$certificate) {
+                // Create certificate record
+                $certificate = \App\Models\Certificate::create([
+                    'user_id' => $user->id,
+                    'course_id' => $courseId,
+                    'issued_at' => now(),
+                ]);
+                Log::info('Certificate record created', ['certificate_id' => $certificate->id]);
+            }
+
+            Log::info('Generating PDF certificate');
+
+            // Generate PDF certificate
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificates.template', [
+                'user' => $user,
+                'course' => $course,
+                'certificate' => $certificate,
+            ]);
+            
+            // Set to landscape A4
+            $pdf->setPaper('A4', 'landscape');
+
+            // Clean filename: remove invalid characters for file names
+            $cleanTitle = preg_replace('/[^A-Za-z0-9\-]/', '-', strtolower($course->title));
+            $cleanTitle = preg_replace('/-+/', '-', $cleanTitle); // Replace multiple dashes with single dash
+            $fileName = 'certificate-' . $cleanTitle . '.pdf';
+            
+            Log::info('Certificate PDF generated successfully', ['filename' => $fileName]);
+            
+            return $pdf->download($fileName);
+            
+        } catch (\Exception $e) {
+            Log::error('Certificate download failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'message' => 'Failed to generate certificate',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        // Generate PDF certificate
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificates.template', [
-            'user' => $user,
-            'course' => $course,
-            'certificate' => $certificate,
-        ]);
-        
-        // Set to landscape A4
-        $pdf->setPaper('A4', 'landscape');
-
-        $fileName = 'certificate-' . str_replace(' ', '-', $course->title) . '.pdf';
-        return $pdf->download($fileName);
     }
 }

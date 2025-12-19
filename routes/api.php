@@ -33,6 +33,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin/data', function (
 // admin stats
 use App\Http\Controllers\AdminController;
 Route::middleware(['auth:sanctum', 'role:1'])->get('/admin/stats', [AdminController::class, 'stats']);
+Route::middleware(['auth:sanctum', 'role:1'])->get('/admin/certificates', [AdminController::class, 'getCertificates']);
 
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -239,6 +240,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/dashboard/course-performance', [DashboardController::class, 'coursePerformance'])->middleware('role:2');
     Route::get('/dashboard/monthly-earnings', [DashboardController::class, 'monthlyEarnings'])->middleware('role:2');
     Route::get('/dashboard/instructor-classes', [DashboardController::class, 'instructorClasses'])->middleware('role:2');
+    Route::get('/dashboard/instructor-students', [DashboardController::class, 'instructorStudents'])->middleware('role:2');
     Route::get('/dashboard/explore-courses', [DashboardController::class, 'exploreCourses'])->middleware('role:3');
     Route::get('/dashboard/profile-progress', [DashboardController::class, 'getProfileProgress'])->middleware('role:3');
 

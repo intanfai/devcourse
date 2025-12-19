@@ -1,64 +1,51 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import InstructorLayout from "../../../../layouts/InstructorLayout";
 import { FiSearch, FiFilter, FiEye } from "react-icons/fi";
 import ViewStudentModal from "./ViewStudentModal";
+import axios from "axios";
 
 export default function StudentsPage() {
     const [search, setSearch] = useState("");
     const [selectedClass, setSelectedClass] = useState("All");
+    const [students, setStudents] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Dummy data
-    const [students] = useState([
-        {
-            id: 1,
-            name: "Rina Putri",
-            email: "rina@example.com",
-            class: "React Basics",
-            progress: "80%",
-            status: "Active",
-            joined: "2025-01-12",
-        },
-        {
-            id: 2,
-            name: "Doni Saputra",
-            email: "doni@example.com",
-            class: "Laravel API Masterclass",
-            progress: "100%",
-            status: "Completed",
-            joined: "2025-01-05",
-        },
-        {
-            id: 3,
-            name: "Salsa Nur",
-            email: "salsa@example.com",
-            class: "UI/UX Design Fundamentals",
-            progress: "40%",
-            status: "Active",
-            joined: "2025-01-20",
-        },
-        {
-            id: 4,
-            name: "Bima Aditya",
-            email: "bima@example.com",
-            class: "React Basics",
-            progress: "15%",
-            status: "Active",
-            joined: "2025-01-18",
-        },
-    ]);
+    // Fetch students from backend
+    useEffect(() => {
+        const fetchStudents = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const response = await axios.get(
+                    "/api/dashboard/instructor-students",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                        params: {
+                            search: search,
+                        },
+                    }
+                );
 
-    const classList = ["All", ...new Set(students.map((s) => s.class))];
+                setStudents(response.data.students || []);
+                setLoading(false);
+            } catch (error) {
+                console.error("Error fetching students:", error);
+                setLoading(false);
+            }
+        };
+
+        fetchStudents();
+    }, [search]);
+
+    const classList = ["All", ...new Set(students.map((s) => s.course))];
 
     // FILTERING
     const filtered = students.filter((s) => {
-        const matchSearch =
-            s.name.toLowerCase().includes(search.toLowerCase()) ||
-            s.email.toLowerCase().includes(search.toLowerCase());
-
         const matchClass =
-            selectedClass === "All" ? true : s.class === selectedClass;
+            selectedClass === "All" ? true : s.course === selectedClass;
 
-        return matchSearch && matchClass;
+        return matchClass;
     });
 
     // PAGINATION NEW
@@ -132,7 +119,6 @@ export default function StudentsPage() {
                                 <th className="py-3">Name</th>
                                 <th className="py-3">Email</th>
                                 <th className="py-3">Class</th>
-                                <th className="py-3">Progress</th>
                                 <th className="py-3">Status</th>
                                 <th className="py-3">Joined</th>
                                 <th className="py-3 text-center">Action</th>
@@ -140,52 +126,64 @@ export default function StudentsPage() {
                         </thead>
 
                         <tbody>
-                            {currentData.map((s, i) => (
-                                <tr
-                                    key={s.id}
-                                    className="border-b hover:bg-gray-50"
-                                >
-                                    <td className="py-3">{start + i + 1}</td>
-                                    <td className="py-3 font-medium">
-                                        {s.name}
-                                    </td>
-                                    <td className="py-3">{s.email}</td>
-                                    <td className="py-3">{s.class}</td>
-                                    <td className="py-3">{s.progress}</td>
-
-                                    <td className="py-3">
-                                        <span
-                                            className={`px-3 py-1 rounded-full text-xs font-medium
-                                                ${
-                                                    s.status === "Active"
-                                                        ? "bg-green-100 text-green-700"
-                                                        : s.status ===
-                                                          "Completed"
-                                                        ? "bg-blue-100 text-blue-700"
-                                                        : "bg-gray-200 text-gray-700"
-                                                }`}
-                                        >
-                                            {s.status}
-                                        </span>
-                                    </td>
-
-                                    <td className="py-3">{s.joined}</td>
-
-                                    <td className="py-3 text-center">
-                                        <button
-                                            className="text-blue-600 hover:text-blue-800"
-                                            onClick={() =>
-                                                setViewModal({
-                                                    open: true,
-                                                    data: s,
-                                                })
-                                            }
-                                        >
-                                            <FiEye size={18} />
-                                        </button>
+                            {loading ? (
+                                <tr>
+                                    <td
+                                        colSpan="7"
+                                        className="py-8 text-center text-gray-500"
+                                    >
+                                        Loading students...
                                     </td>
                                 </tr>
-                            ))}
+                            ) : currentData.length > 0 ? (
+                                currentData.map((s, i) => (
+                                    <tr
+                                        key={s.id}
+                                        className="border-b hover:bg-gray-50"
+                                    >
+                                        <td className="py-3">
+                                            {start + i + 1}
+                                        </td>
+                                        <td className="py-3 font-medium">
+                                            {s.name}
+                                        </td>
+                                        <td className="py-3">{s.email}</td>
+                                        <td className="py-3">{s.course}</td>
+
+                                        <td className="py-3">
+                                            <span
+                                                className={`px-3 py-1 rounded-full text-xs font-medium
+                                                    ${
+                                                        s.status === "Active"
+                                                            ? "bg-green-100 text-green-700"
+                                                            : s.status ===
+                                                              "Completed"
+                                                            ? "bg-blue-100 text-blue-700"
+                                                            : "bg-gray-200 text-gray-700"
+                                                    }`}
+                                            >
+                                                {s.status}
+                                            </span>
+                                        </td>
+
+                                        <td className="py-3">{s.joined}</td>
+
+                                        <td className="py-3 text-center">
+                                            <button
+                                                className="text-blue-600 hover:text-blue-800"
+                                                onClick={() =>
+                                                    setViewModal({
+                                                        open: true,
+                                                        data: s,
+                                                    })
+                                                }
+                                            >
+                                                <FiEye size={18} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : null}
                         </tbody>
                     </table>
 

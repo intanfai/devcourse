@@ -599,34 +599,90 @@ export default function StudentCourseDetail() {
                                                                 }
                                                             );
 
-                                                        const url =
-                                                            window.URL.createObjectURL(
-                                                                new Blob([
-                                                                    response.data,
-                                                                ])
+                                                        // Check if response is actually a blob (PDF)
+                                                        if (
+                                                            response.data
+                                                                .type ===
+                                                            "application/pdf"
+                                                        ) {
+                                                            const url =
+                                                                window.URL.createObjectURL(
+                                                                    new Blob(
+                                                                        [
+                                                                            response.data,
+                                                                        ],
+                                                                        {
+                                                                            type: "application/pdf",
+                                                                        }
+                                                                    )
+                                                                );
+                                                            const link =
+                                                                document.createElement(
+                                                                    "a"
+                                                                );
+                                                            link.href = url;
+                                                            link.setAttribute(
+                                                                "download",
+                                                                `certificate-${course.title}.pdf`
                                                             );
-                                                        const link =
-                                                            document.createElement(
-                                                                "a"
+                                                            document.body.appendChild(
+                                                                link
                                                             );
-                                                        link.href = url;
-                                                        link.setAttribute(
-                                                            "download",
-                                                            `certificate-${course.title}.pdf`
-                                                        );
-                                                        document.body.appendChild(
-                                                            link
-                                                        );
-                                                        link.click();
-                                                        link.remove();
+                                                            link.click();
+                                                            link.remove();
+                                                            window.URL.revokeObjectURL(
+                                                                url
+                                                            );
+                                                        } else {
+                                                            // Response might be JSON error
+                                                            const text =
+                                                                await response.data.text();
+                                                            try {
+                                                                const errorData =
+                                                                    JSON.parse(
+                                                                        text
+                                                                    );
+                                                                alert(
+                                                                    errorData.message ||
+                                                                        "Failed to download certificate."
+                                                                );
+                                                            } catch {
+                                                                alert(
+                                                                    "Failed to download certificate. Please try again."
+                                                                );
+                                                            }
+                                                        }
                                                     } catch (error) {
                                                         console.error(
                                                             "Failed to download certificate:",
                                                             error
                                                         );
-                                                        alert(
-                                                            "Failed to download certificate. Please try again."
-                                                        );
+
+                                                        let errorMessage =
+                                                            "Failed to download certificate. Please try again.";
+                                                        if (
+                                                            error.response?.data
+                                                        ) {
+                                                            // Try to read error message from blob
+                                                            try {
+                                                                const text =
+                                                                    await error.response.data.text();
+                                                                const errorData =
+                                                                    JSON.parse(
+                                                                        text
+                                                                    );
+                                                                errorMessage =
+                                                                    errorData.message ||
+                                                                    errorMessage;
+                                                            } catch (e) {
+                                                                console.error(
+                                                                    "Error parsing error response:",
+                                                                    e
+                                                                );
+                                                            }
+                                                        }
+
+                                                        alert(errorMessage);
                                                     } finally {
                                                         setCertificateDownloading(
                                                             false

@@ -33,16 +33,23 @@ export default function CoursePreviewPage() {
                 headers: { Authorization: `Bearer ${token}` },
             });
             console.log("Course detail:", res.data);
-            
+
             // Clean thumbnail path
             let thumbnailPath = res.data.thumbnail;
-            if (!thumbnailPath || thumbnailPath === 'null' || thumbnailPath.trim() === '') {
+            if (
+                !thumbnailPath ||
+                thumbnailPath === "null" ||
+                thumbnailPath.trim() === ""
+            ) {
                 thumbnailPath = "/images/course-thumb.jpg";
-            } else if (!thumbnailPath.startsWith('/') && !thumbnailPath.startsWith('http')) {
+            } else if (
+                !thumbnailPath.startsWith("/") &&
+                !thumbnailPath.startsWith("http")
+            ) {
                 // Add leading slash if not present
-                thumbnailPath = '/' + thumbnailPath;
+                thumbnailPath = "/" + thumbnailPath;
             }
-            
+
             // Transform backend data to match frontend structure
             const courseData = {
                 id: res.data.id,
@@ -51,8 +58,8 @@ export default function CoursePreviewPage() {
                 previewVideo: null, // Add if you have preview video in backend
                 category: res.data.category,
                 level: res.data.level,
-                rating: 0, // Will be calculated from reviews
-                reviews: 0,
+                rating: res.data.average_rating || 0,
+                reviews: res.data.reviews_count || 0,
                 students: res.data.enrollments_count || 0,
                 price: res.data.price,
                 oldPrice: null,
@@ -60,19 +67,21 @@ export default function CoursePreviewPage() {
                 requirements: [], // Add if you have requirements field
                 instructor_id: res.data.instructor_id,
                 learningPoints: [], // Add if you have learning points field
-                reviewsList: [], // Will be populated from reviews
-                chapters: res.data.chapters?.map(chapter => ({
-                    id: chapter.id,
-                    title: chapter.title,
-                    materials: chapter.materials?.map(mat => ({
-                        id: mat.id,
-                        title: mat.title,
-                        duration: mat.duration,
-                        video_url: mat.video_url,
+                reviewsList: res.data.reviews_list || [],
+                chapters:
+                    res.data.chapters?.map((chapter) => ({
+                        id: chapter.id,
+                        title: chapter.title,
+                        materials:
+                            chapter.materials?.map((mat) => ({
+                                id: mat.id,
+                                title: mat.title,
+                                duration: mat.duration,
+                                video_url: mat.video_url,
+                            })) || [],
                     })) || [],
-                })) || [],
             };
-            
+
             setCourse(courseData);
 
             // Fetch instructor profile
@@ -90,7 +99,9 @@ export default function CoursePreviewPage() {
                         id: res.data.instructor_id,
                         name: res.data.instructor?.name || "Unknown",
                         avatar: res.data.instructor?.avatar || "", // Empty string fallback to generated avatar
-                        bio: res.data.instructor?.bio || "Experienced instructor",
+                        bio:
+                            res.data.instructor?.bio ||
+                            "Experienced instructor",
                         email: res.data.instructor?.email || "",
                     });
                 }
@@ -110,7 +121,9 @@ export default function CoursePreviewPage() {
             });
 
             const enrollments = res.data.enrollments || [];
-            const alreadyEnrolled = enrollments.some(e => e.course_id === parseInt(courseId));
+            const alreadyEnrolled = enrollments.some(
+                (e) => e.course_id === parseInt(courseId)
+            );
             setIsEnrolled(alreadyEnrolled);
         } catch (err) {
             console.error("Failed to check enrollment:", err);
@@ -158,13 +171,16 @@ export default function CoursePreviewPage() {
                         {/* Thumbnail */}
                         <div
                             className="lg:w-1/2 relative group cursor-pointer"
-                            onClick={() => course.previewVideo && setShowVideo(true)}
+                            onClick={() =>
+                                course.previewVideo && setShowVideo(true)
+                            }
                         >
                             <img
                                 src={course.thumbnail}
                                 alt={course.title}
                                 onError={(e) => {
-                                    e.currentTarget.src = "/images/course-thumb.jpg";
+                                    e.currentTarget.src =
+                                        "/images/course-thumb.jpg";
                                 }}
                                 className="rounded-xl w-full h-64 object-cover shadow"
                             />
@@ -228,9 +244,13 @@ export default function CoursePreviewPage() {
                             <button
                                 onClick={() => {
                                     if (isEnrolled) {
-                                        alert("You have already enrolled in this course");
+                                        alert(
+                                            "You have already enrolled in this course"
+                                        );
                                     } else {
-                                        navigate(`/student/checkout/${course.id}`);
+                                        navigate(
+                                            `/student/checkout/${course.id}`
+                                        );
                                     }
                                 }}
                                 className={`px-8 py-3 rounded-xl font-semibold shadow transition ${
@@ -265,7 +285,9 @@ export default function CoursePreviewPage() {
                 {/* ================= REQUIREMENTS ================= */}
                 {course.requirements && course.requirements.length > 0 && (
                     <div className="bg-white rounded-xl shadow p-6 mb-10">
-                        <h2 className="text-xl font-semibold mb-4">Requirements</h2>
+                        <h2 className="text-xl font-semibold mb-4">
+                            Requirements
+                        </h2>
 
                         <ul className="space-y-2 text-sm text-gray-700">
                             {course.requirements.map((r, i) => (
@@ -286,15 +308,17 @@ export default function CoursePreviewPage() {
                             <div className="flex items-center gap-4">
                                 <img
                                     src={
-                                        (instructor.avatar && instructor.avatar.trim() !== '' && instructor.avatar !== 'null')
+                                        instructor.avatar &&
+                                        instructor.avatar.trim() !== "" &&
+                                        instructor.avatar !== "null"
                                             ? instructor.avatar
                                             : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                                instructor.name
-                                            )}&background=0D8ABC&color=fff&size=150`
+                                                  instructor.name
+                                              )}&background=0D8ABC&color=fff&size=150`
                                     }
                                     onError={(e) => {
                                         e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                            instructor.name || 'User'
+                                            instructor.name || "User"
                                         )}&background=0D8ABC&color=fff&size=150`;
                                     }}
                                     className="w-16 h-16 rounded-full object-cover border"
@@ -305,57 +329,85 @@ export default function CoursePreviewPage() {
                                         {instructor.name}
                                     </h3>
                                     <p className="text-gray-600 text-sm">
-                                        {instructor.bio || "Professional Instructor"}
+                                        {instructor.bio ||
+                                            "Professional Instructor"}
                                     </p>
                                 </div>
                             </div>
                         </div>
                     ) : (
-                        <div className="text-gray-500">Loading instructor info...</div>
+                        <div className="text-gray-500">
+                            Loading instructor info...
+                        </div>
                     )}
                 </div>
 
                 {/* ================= COURSE CURRICULUM ================= */}
                 <div className="bg-white rounded-xl shadow p-6 mb-10">
-                    <h2 className="text-xl font-semibold mb-4">Course Curriculum</h2>
+                    <h2 className="text-xl font-semibold mb-4">
+                        Course Curriculum
+                    </h2>
 
                     {course.chapters && course.chapters.length > 0 ? (
                         <div className="space-y-4">
                             {course.chapters.map((chapter, idx) => (
-                                <div key={chapter.id} className="border rounded-lg overflow-hidden">
+                                <div
+                                    key={chapter.id}
+                                    className="border rounded-lg overflow-hidden"
+                                >
                                     <div className="bg-gray-50 px-4 py-3 border-b">
                                         <h3 className="font-semibold text-gray-800">
                                             Chapter {idx + 1}: {chapter.title}
                                         </h3>
                                         <p className="text-sm text-gray-500 mt-1">
-                                            {chapter.materials?.length || 0} materials
+                                            {chapter.materials?.length || 0}{" "}
+                                            materials
                                         </p>
                                     </div>
 
                                     <div className="p-3">
-                                        {chapter.materials && chapter.materials.length > 0 ? (
+                                        {chapter.materials &&
+                                        chapter.materials.length > 0 ? (
                                             <ul className="space-y-2">
-                                                {chapter.materials.map((mat) => (
-                                                    <li key={mat.id} className="flex items-center gap-3 text-sm text-gray-700">
-                                                        <FiLock className="text-gray-400" size={16} />
-                                                        <span>{mat.title}</span>
-                                                        {mat.duration > 0 && (
-                                                            <span className="ml-auto text-gray-500 text-xs">
-                                                                {mat.duration} min
+                                                {chapter.materials.map(
+                                                    (mat) => (
+                                                        <li
+                                                            key={mat.id}
+                                                            className="flex items-center gap-3 text-sm text-gray-700"
+                                                        >
+                                                            <FiLock
+                                                                className="text-gray-400"
+                                                                size={16}
+                                                            />
+                                                            <span>
+                                                                {mat.title}
                                                             </span>
-                                                        )}
-                                                    </li>
-                                                ))}
+                                                            {mat.duration >
+                                                                0 && (
+                                                                <span className="ml-auto text-gray-500 text-xs">
+                                                                    {
+                                                                        mat.duration
+                                                                    }{" "}
+                                                                    min
+                                                                </span>
+                                                            )}
+                                                        </li>
+                                                    )
+                                                )}
                                             </ul>
                                         ) : (
-                                            <p className="text-sm text-gray-500">No materials available</p>
+                                            <p className="text-sm text-gray-500">
+                                                No materials available
+                                            </p>
                                         )}
                                     </div>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <p className="text-gray-500 text-sm">No curriculum available</p>
+                        <p className="text-gray-500 text-sm">
+                            No curriculum available
+                        </p>
                     )}
                 </div>
 
@@ -367,27 +419,72 @@ export default function CoursePreviewPage() {
 
                     {course.reviewsList && course.reviewsList.length > 0 ? (
                         course.reviewsList.map((rev, i) => (
-                            <div key={i} className="border-b py-4">
+                            <div
+                                key={rev.id || i}
+                                className="border-b py-4 last:border-b-0"
+                            >
                                 <div className="flex items-center gap-3 mb-2">
-                                    <img
-                                        src={rev.avatar}
-                                        className="w-10 h-10 rounded-full border object-cover"
-                                    />
-                                    <div>
-                                        <p className="font-medium">{rev.user}</p>
-                                        <p className="text-yellow-500 text-sm flex items-center gap-1">
-                                            <FiStar /> {rev.rating}
+                                    {rev.avatar ? (
+                                        <img
+                                            src={
+                                                rev.avatar.startsWith("/") ||
+                                                rev.avatar.startsWith("http")
+                                                    ? rev.avatar
+                                                    : "/" + rev.avatar
+                                            }
+                                            alt={rev.user}
+                                            className="w-10 h-10 rounded-full border object-cover"
+                                            onError={(e) => {
+                                                e.target.style.display = "none";
+                                                e.target.nextSibling.style.display =
+                                                    "flex";
+                                            }}
+                                        />
+                                    ) : null}
+                                    <div
+                                        className="w-10 h-10 rounded-full border bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold"
+                                        style={{
+                                            display: rev.avatar
+                                                ? "none"
+                                                : "flex",
+                                        }}
+                                    >
+                                        {rev.user?.charAt(0)?.toUpperCase()}
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="font-medium">
+                                            {rev.user}
                                         </p>
+                                        <div className="flex items-center gap-2">
+                                            <div className="text-yellow-500 text-sm flex items-center gap-1">
+                                                {[...Array(5)].map((_, idx) => (
+                                                    <FiStar
+                                                        key={idx}
+                                                        className={
+                                                            idx < rev.rating
+                                                                ? "fill-yellow-500"
+                                                                : ""
+                                                        }
+                                                        size={14}
+                                                    />
+                                                ))}
+                                            </div>
+                                            <span className="text-xs text-gray-500">
+                                                {rev.created_at}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <p className="text-gray-600 text-sm">
+                                <p className="text-gray-600 text-sm ml-13">
                                     {rev.comment}
                                 </p>
                             </div>
                         ))
                     ) : (
-                        <p className="text-gray-500 text-sm">No reviews yet. Be the first to review this course!</p>
+                        <p className="text-gray-500 text-sm">
+                            No reviews yet. Be the first to review this course!
+                        </p>
                     )}
                 </div>
 

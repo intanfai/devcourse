@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use App\Models\Enrollment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -13,7 +16,7 @@ class DashboardController extends Controller
      */
     public function instructorDashboard()
     {
-        $instructorId = auth()->id();
+        $instructorId = Auth::id();
 
         // Total courses created by this instructor
         $totalCourses = Course::where('instructor_id', $instructorId)->count();
@@ -45,7 +48,7 @@ class DashboardController extends Controller
      */
     public function coursePerformance()
     {
-        $instructorId = auth()->id();
+        $instructorId = Auth::id();
 
         // Get courses with enrollment count
         $courses = Course::where('instructor_id', $instructorId)
@@ -68,7 +71,7 @@ class DashboardController extends Controller
      */
     public function monthlyEarnings()
     {
-        $instructorId = auth()->id();
+        $instructorId = Auth::id();
 
         // Get payments for this instructor's courses for the last 6 months
         $earnings = [];
@@ -80,7 +83,7 @@ class DashboardController extends Controller
             $year = $month->year;
 
             // Calculate total earnings for this month
-            $monthlyTotal = \DB::table('payments')
+            $monthlyTotal = DB::table('payments')
                 ->join('enrollments', 'payments.enrollment_id', '=', 'enrollments.id')
                 ->join('courses', 'enrollments.course_id', '=', 'courses.id')
                 ->where('courses.instructor_id', $instructorId)
@@ -129,7 +132,7 @@ class DashboardController extends Controller
      */
     public function instructorClasses()
     {
-        $instructorId = auth()->id();
+        $instructorId = Auth::id();
 
         // Get all courses for this instructor with enrollment count
         $courses = Course::where('instructor_id', $instructorId)
@@ -158,8 +161,8 @@ class DashboardController extends Controller
      */
     public function studentDashboard()
     {
-        $studentId = auth()->id();
-        $user = auth()->user();
+        $studentId = Auth::id();
+        $user = Auth::user();
 
         // Get active courses (enrolled courses)
         $activeCourses = Enrollment::where('user_id', $studentId)
@@ -168,7 +171,7 @@ class DashboardController extends Controller
             ->count();
 
         // Get hours learned - sum of all material durations from enrolled courses
-        $hoursLearned = \DB::table('materials')
+        $hoursLearned = DB::table('materials')
             ->join('chapters', 'materials.chapter_id', '=', 'chapters.id')
             ->join('enrollments', 'chapters.course_id', '=', 'enrollments.course_id')
             ->where('enrollments.user_id', $studentId)
@@ -191,7 +194,7 @@ class DashboardController extends Controller
             ->limit(3)
             ->get();
         
-        \Log::info('Recommended courses query result: ' . $recommendedCourses->count());
+        Log::info('Recommended courses query result: ' . $recommendedCourses->count());
         
         $recommendedCourses = $recommendedCourses->map(function ($course) {
                 // Calculate average rating from reviews
@@ -236,8 +239,8 @@ class DashboardController extends Controller
             // Get all courses first
             $allCourses = Course::with(['instructor', 'enrollments'])->get();
             
-            \Log::info('Total courses in DB: ' . $allCourses->count());
-            \Log::info('Course statuses: ' . $allCourses->pluck('status')->unique()->implode(', '));
+            Log::info('Total courses in DB: ' . $allCourses->count());
+            Log::info('Course statuses: ' . $allCourses->pluck('status')->unique()->implode(', '));
             
             // Filter courses with Published or Approved status (case-insensitive)
             $courses = $allCourses
@@ -275,14 +278,14 @@ class DashboardController extends Controller
                 })
                 ->values();
 
-            \Log::info('Filtered courses count: ' . $courses->count());
+            Log::info('Filtered courses count: ' . $courses->count());
 
             return response()->json([
                 'courses' => $courses,
                 'total' => $courses->count(),
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error in exploreCourses: ' . $e->getMessage());
+            Log::error('Error in exploreCourses: ' . $e->getMessage());
             return response()->json([
                 'courses' => [],
                 'error' => $e->getMessage()
@@ -295,7 +298,7 @@ class DashboardController extends Controller
      */
     public function getProfileProgress()
     {
-        $studentId = auth()->id();
+        $studentId = Auth::id();
         
         // Get total enrolled courses
         $totalCourses = Enrollment::where('user_id', $studentId)->count();
@@ -312,6 +315,79 @@ class DashboardController extends Controller
             'completion_percentage' => $totalCourses > 0 
                 ? round(($completedCourses / $totalCourses) * 100, 1) 
                 : 0,
+        ]);
+    }
+
+    /**
+     * Get all students enrolled in instructor's courses
+     */
+    public function instructorStudents(Request $request)
+    {
+        $instructorId = Auth::id();
+
+        // Get all course IDs created by this instructor
+        $courseIds = Course::where('instructor_id', $instructorId)->pluck('id');
+
+        // Get all enrollments for instructor's courses
+        $studentsQuery = Enrollment::with(['user', 'course'])
+            ->whereIn('course_id', $courseIds)
+            ->join('users', 'enrollments.user_id', '=', 'users.id')
+            ->select('enrollments.*', 'users.name', 'users.email')
+            ->orderBy('enrollments.created_at', 'desc');
+
+        // Apply search filter if provided
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $studentsQuery->where(function ($query) use ($search) {
+                $query->where('users.name', 'like', "%{$search}%")
+                      ->orWhere('users.email', 'like', "%{$search}%");
+            });
+        }
+
+        $enrollments = $studentsQuery->get();
+
+        // Map the data with status
+        $students = $enrollments->map(function ($enrollment) {
+            // Check if student has certificate for this course
+            $hasCertificate = \App\Models\Certificate::where('user_id', $enrollment->user_id)
+                ->where('course_id', $enrollment->course_id)
+                ->exists();
+
+            // Calculate progress percentage
+            $totalMaterials = DB::table('materials')
+                ->join('chapters', 'materials.chapter_id', '=', 'chapters.id')
+                ->where('chapters.course_id', $enrollment->course_id)
+                ->count();
+
+            $completedMaterials = \App\Models\Progress::where('user_id', $enrollment->user_id)
+                ->whereIn('material_id', function ($query) use ($enrollment) {
+                    $query->select('materials.id')
+                        ->from('materials')
+                        ->join('chapters', 'materials.chapter_id', '=', 'chapters.id')
+                        ->where('chapters.course_id', $enrollment->course_id);
+                })
+                ->where('is_completed', true)
+                ->count();
+
+            $progress = $totalMaterials > 0 
+                ? round(($completedMaterials / $totalMaterials) * 100) 
+                : 0;
+
+            return [
+                'id' => $enrollment->user_id,
+                'name' => $enrollment->user->name,
+                'email' => $enrollment->user->email,
+                'course' => $enrollment->course->title,
+                'course_id' => $enrollment->course_id,
+                'progress' => $progress,
+                'status' => $hasCertificate ? 'Completed' : 'Active',
+                'joined' => $enrollment->created_at->format('Y-m-d'),
+            ];
+        });
+
+        return response()->json([
+            'students' => $students,
+            'total' => $students->count(),
         ]);
     }
 }
