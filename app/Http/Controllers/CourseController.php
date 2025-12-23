@@ -14,15 +14,29 @@ class CourseController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $request->validate([
             'title' => 'required',
-            'description' => 'nullable',
+            'description' => 'required',
             'price' => 'required|numeric',
-            'instructor_id' => 'required|exists:users,id'
         ]);
 
-        return Course::create($data);
+        // Pastikan user adalah instruktur
+        if (auth()->user()->role_id != 2) {
+            return response()->json([
+                'message' => 'Only instructors can create courses'
+            ], 403);
+        }
+
+        $course = Course::create([
+            'title' => $request->title,
+            'description' => $request->description,
+            'price' => $request->price,
+            'instructor_id' => auth()->id(), // AMBIL ID USER LOGIN
+        ]);
+
+        return response()->json($course);
     }
+
 
     public function show($id)
     {

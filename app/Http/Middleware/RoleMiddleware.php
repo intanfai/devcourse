@@ -4,14 +4,25 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 
 class RoleMiddleware
 {
-    public function handle($request, Closure $next, $role)
+    /**
+     * Handle an incoming request.
+     */
+    public function handle(Request $request, Closure $next, ...$roles)
     {
-        if ($request()->user()->role !== $role) {
-            abort(403);
+        $user = $request->user();
+
+        // Jika user tidak login
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // roles = array of allowed role_id
+        if (!in_array($user->role_id, $roles)) {
+            return response()->json(['message' => 'Access denied'], 403);
         }
 
         return $next($request);
