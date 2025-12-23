@@ -1,7 +1,11 @@
 export default function Footer() {
     return (
-        <footer className="bg-[#003B95] text-white py-16 px-8 lg:px-24">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+        <footer className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white py-16 px-8 lg:px-24 relative overflow-hidden">
+            {/* Decorative background */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl"></div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-12 relative z-10">
 
                 {/* Brand */}
                 <div>

@@ -15,6 +15,7 @@ class MaterialController extends Controller
             'content' => 'nullable',
             'video_url' => 'nullable',
             'order' => 'required|integer',
+            'duration' => 'nullable',
         ]);
 
         return Material::create($data);
@@ -28,7 +29,8 @@ class MaterialController extends Controller
     public function update(Request $request, $id)
     {
         $material = Material::findOrFail($id);
-        $material->update($request->all());
+        $data = $request->only(['title','content','video_url','order','duration']);
+        $material->update($data);
         return $material;
     }
 

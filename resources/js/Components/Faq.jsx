@@ -29,21 +29,30 @@ export default function FAQ() {
     return (
         <div className="max-w-3xl mx-auto">
             {faqData.map((faq, index) => (
-                <div key={index} className="border-b py-5">
+                <div 
+                    key={index} 
+                    className="bg-white rounded-xl border-2 border-gray-200 mb-4 overflow-hidden hover:border-blue-300 transition-all duration-300"
+                >
                     <button
                         onClick={() => toggleFAQ(index)}
-                        className="w-full flex justify-between items-center text-left"
+                        className="w-full flex justify-between items-center text-left p-6 hover:bg-blue-50/50 transition-colors"
                     >
-                        <span className="text-lg font-semibold text-gray-800">
+                        <span className="text-lg font-bold text-gray-800 pr-4">
                             {faq.question}
                         </span>
-                        <span className="text-xl font-bold">
-                            {openIndex === index ? "-" : "+"}
+                        <span className={`text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full transition-all duration-300 flex-shrink-0 ${
+                            openIndex === index 
+                                ? 'bg-blue-600 text-white rotate-45' 
+                                : 'bg-gray-200 text-gray-600'
+                        }`}>
+                            +
                         </span>
                     </button>
 
                     {openIndex === index && (
-                        <p className="mt-3 text-gray-600">{faq.answer}</p>
+                        <div className="px-6 pb-6 pt-2">
+                            <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
+                        </div>
                     )}
                 </div>
             ))}

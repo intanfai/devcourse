@@ -5,28 +5,46 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Notifications\ResetPasswordNotification;
+
 
 class User extends Authenticatable
 {
+public function sendPasswordResetNotification($token)
+{
+    $this->notify(new ResetPasswordNotification($token));
+}
+
+
+
     use HasApiTokens, Notifiable;
 
     protected $fillable = [
         'name',
         'email',
         'password',
+        'role',
         'role_id',
+        'bio',
+        'phone',
+        'avatar',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'created_at',
+        'updated_at',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
     ];
 
     public function role()
     {
-        return $this->belongsTo(\App\Models\Role::class);
+        return $this->belongsTo(Role::class);
     }
-
 
     // Jika user = instruktur
     public function courses()

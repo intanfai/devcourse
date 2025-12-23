@@ -13,47 +13,133 @@ class AuthController extends Controller
             'name' => 'required',
             'email' => 'required|unique:users,email',
             'password' => 'required|min:6',
-            'role_id' => 'required|exists:roles,id'
         ]);
+
+        // Force any registration to be a student (role_id = 3)
+        $data['role_id'] = 3;
 
         $data['password'] = Hash::make($data['password']);
 
         $user = User::create($data);
 
-        // Beri token langsung setelah register
+        // Beri token langsung setelah register (auto-login)
         $token = $user->createToken('devcourse_token')->plainTextToken;
 
+        // Return MINIMAL data
+        $userData = [
+            'name' => $user->name,
+            'role_id' => $user->role_id,
+            'role' => optional($user->role)->name,
+            'avatar' => $user->avatar,
+        ];
+
         return response()->json([
-            'user' => $user,
+            'success' => true,
+            'user' => $userData,
             'token' => $token
-        ], 201);
+        ], 201)->cookie(
+            'auth_token',
+            $token,
+            60 * 24 * 7,
+            '/',
+            null,
+            true,
+            true,
+            false,
+            'Strict'
+        );
     }
 
 
     public function login(Request $request)
     {
-        // Cari user berdasarkan email
+        // Validasi input
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required'
+        ]);
+
+        // Cari user
         $user = User::where('email', $request->email)->first();
 
-        // Jika user tidak ditemukan
+        // Jika user tidak ada
         if (!$user) {
             return response()->json([
-                'message' => 'User tidak ditemukan'
-            ], 404);
+                'message' => 'Email atau password salah'
+            ], 401);
         }
 
-        // Buat token baru
-        $token = $user->createToken('devcourse_token')->plainTextToken;
 
+        // CEK PASSWORD (WAJIB!!!)
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'message' => 'Email atau password salah'
+            ], 401);
+        }
+
+        // Jika password benar → buat token
+        $token = $user->createToken('auth')->plainTextToken;
+
+        // Return MINIMAL data yang diperlukan frontend
+        $userData = [
+            'name' => $user->name,
+            'role_id' => $user->role_id,
+            'role' => optional($user->role)->name,
+            'avatar' => $user->avatar,
+        ];
+
+        // Set token di httpOnly cookie untuk keamanan lebih
         return response()->json([
-            'user' => $user,
-            'token' => $token
-        ]);
+            'success' => true,
+            'user' => $userData,
+            'token' => $token, // Masih kirim untuk localStorage (bisa dihapus jika pakai cookie saja)
+        ], 200)->cookie(
+            'auth_token',
+            $token,
+            60 * 24 * 7, // 7 days
+            '/',
+            null,
+            true, // secure (HTTPS only di production)
+            true, // httpOnly (tidak bisa diakses JavaScript)
+            false,
+            'Strict' // SameSite
+        );
     }
 
 
     public function profile(Request $request)
     {
-        return $request->user();
+        $user = $request->user();
+        
+        return response()->json([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role_id' => $user->role_id,
+            'role' => optional($user->role)->name,
+            'bio' => $user->bio,
+            'phone' => $user->phone,
+            'avatar' => $user->avatar,
+        ]);
+    }
+
+    public function logout(Request $request)
+    {
+        // Revoke all tokens
+        $request->user()->tokens()->delete();
+
+        return response()->json([
+            'message' => 'Logged out successfully'
+        ])->cookie(
+            'auth_token',
+            '',
+            -1, // Expire immediately
+            '/',
+            null,
+            true,
+            true,
+            false,
+            'Strict'
+        );
     }
 }

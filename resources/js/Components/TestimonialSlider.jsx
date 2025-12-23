@@ -10,8 +10,8 @@ export default function TestimonialSlider() {
         dots: false,
         infinite: true,
         autoplay: true,
-        speed: 800,
-        autoplaySpeed: 3000,
+        autoplaySpeed: 3500,
+        speed: 900,
         slidesToShow: 3,
         slidesToScroll: 1,
         centerMode: true,
@@ -71,70 +71,88 @@ export default function TestimonialSlider() {
     ];
 
     return (
-        <section className="py-24 px-8 lg:px-24">
-            <div className="text-center mb-16">
-                <h2 className="text-4xl font-bold text-gray-900">
-                    What our student say
-                </h2>
-                <p className="text-3xl font-bold text-blue-600 mt-1">
-                    about us
-                </p>
-            </div>
-
-            {/* Slider */}
+        <section className="px-8 lg:px-24">
+            {/* SLIDER */}
             <Slider ref={sliderRef} {...settings}>
                 {testimonials.map((item, i) => (
-                    <div key={i} className="px-4 pt-6 pb-6">
+                    <div key={i} className="px-5 pt-6 pb-10">
                         <div
-                            className="testimonial-card bg-[#F5F8FE] shadow-[0_4px_20px_rgba(0,0,0,0.0)]
-         p-8 rounded-2xl border-gray-200 h-[240px]"
+                            className="
+                            bg-white rounded-2xl shadow-lg border-2 border-gray-100 
+                            px-8 py-8 h-full
+                            transition-all duration-300 
+                            hover:-translate-y-2 hover:shadow-2xl hover:border-blue-200
+                            "
                         >
-                            {" "}
-                            <h3 className="font-semibold text-lg mb-2">
+                            {/* TITLE */}
+                            <h3 className="font-bold text-xl mb-3 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
                                 {item.title}
                             </h3>
+
+                            {/* TEXT */}
                             <p className="text-gray-600 text-sm leading-relaxed mb-10">
                                 {item.text}
                             </p>
+
+                            {/* FOOTER */}
                             <div className="flex items-center justify-between">
+                                {/* USER */}
                                 <div className="flex items-center gap-3">
                                     <img
                                         src={item.image}
-                                        className="w-10 h-10 rounded-full object-cover"
+                                        className="w-12 h-12 rounded-full object-cover shadow-md ring-2 ring-blue-100"
+                                        alt={item.name}
                                     />
                                     <div>
-                                        <p className="font-semibold">
+                                        <p className="font-bold text-gray-800">
                                             {item.name}
                                         </p>
-                                        <p className="text-sm text-gray-500">
+                                        <p className="text-gray-500 text-sm">
                                             {item.role}
                                         </p>
                                     </div>
                                 </div>
 
-                                <p className="text-yellow-400 text-lg">
+                                {/* RATING */}
+                                <div className="text-yellow-400 text-lg">
                                     {"★".repeat(item.rating)}
-                                </p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 ))}
             </Slider>
 
-            {/* Custom Arrows */}
+            {/* CUSTOM ARROWS */}
             <div className="flex justify-center gap-6 mt-14">
                 <button
                     onClick={() => sliderRef.current.slickPrev()}
-                    className="w-11 h-11 rounded-full border flex items-center justify-center text-blue-600 hover:bg-blue-50 transition"
+                    className="
+                    w-14 h-14 rounded-full 
+                    bg-gradient-to-r from-blue-600 to-blue-800
+                    shadow-lg shadow-blue-500/30
+                    flex items-center justify-center 
+                    text-white hover:shadow-xl hover:shadow-blue-500/50
+                    hover:scale-110
+                    transition-all duration-300
+                    "
                 >
-                    <i className="ri-arrow-left-line text-xl"></i>
+                    <i className="ri-arrow-left-line text-2xl"></i>
                 </button>
 
                 <button
                     onClick={() => sliderRef.current.slickNext()}
-                    className="w-11 h-11 rounded-full border flex items-center justify-center text-blue-600 hover:bg-blue-50 transition"
+                    className="
+                    w-14 h-14 rounded-full 
+                    bg-gradient-to-r from-blue-600 to-blue-800
+                    shadow-lg shadow-blue-500/30
+                    flex items-center justify-center 
+                    text-white hover:shadow-xl hover:shadow-blue-500/50
+                    hover:scale-110
+                    transition-all duration-300
+                    "
                 >
-                    <i className="ri-arrow-right-line text-xl"></i>
+                    <i className="ri-arrow-right-line text-2xl"></i>
                 </button>
             </div>
         </section>
