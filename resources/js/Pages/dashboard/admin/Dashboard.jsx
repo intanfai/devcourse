@@ -24,15 +24,18 @@ export default function AdminDashboard() {
     });
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (!token) return;
 
-        axios.get('/admin/stats', { headers: { Authorization: `Bearer ${token}` } })
-            .then(res => {
+        axios
+            .get("/admin/stats", {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+            .then((res) => {
                 if (res.data) setStats(res.data);
             })
-            .catch(err => {
-                console.error('Failed to load admin stats', err);
+            .catch((err) => {
+                console.error("Failed to load admin stats", err);
             });
     }, []);
 
@@ -52,7 +55,9 @@ export default function AdminDashboard() {
                             <p className="text-sm text-gray-600 font-medium">
                                 Total Students
                             </p>
-                            <h3 className="text-2xl font-bold text-gray-800">{stats.students}</h3>
+                            <h3 className="text-2xl font-bold text-gray-800">
+                                {stats.students}
+                            </h3>
                         </div>
                     </div>
 
@@ -64,7 +69,9 @@ export default function AdminDashboard() {
                             <p className="text-sm text-gray-600 font-medium">
                                 Total Instructors
                             </p>
-                            <h3 className="text-2xl font-bold text-gray-800">{stats.instructors}</h3>
+                            <h3 className="text-2xl font-bold text-gray-800">
+                                {stats.instructors}
+                            </h3>
                         </div>
                     </div>
 
@@ -73,8 +80,12 @@ export default function AdminDashboard() {
                             <FiLayers className="text-3xl" />
                         </div>
                         <div>
-                            <p className="text-sm text-gray-600 font-medium">Classes</p>
-                            <h3 className="text-2xl font-bold text-gray-800">{stats.courses}</h3>
+                            <p className="text-sm text-gray-600 font-medium">
+                                Classes
+                            </p>
+                            <h3 className="text-2xl font-bold text-gray-800">
+                                {stats.courses}
+                            </h3>
                         </div>
                     </div>
 
@@ -83,8 +94,12 @@ export default function AdminDashboard() {
                             <FiBookOpen className="text-3xl" />
                         </div>
                         <div>
-                            <p className="text-sm text-gray-600 font-medium">Enrollments</p>
-                            <h3 className="text-2xl font-bold text-gray-800">{stats.enrollments}</h3>
+                            <p className="text-sm text-gray-600 font-medium">
+                                Enrollments
+                            </p>
+                            <h3 className="text-2xl font-bold text-gray-800">
+                                {stats.enrollments}
+                            </h3>
                         </div>
                     </div>
 
@@ -93,8 +108,12 @@ export default function AdminDashboard() {
                             <FiDollarSign className="text-3xl" />
                         </div>
                         <div>
-                            <p className="text-sm text-gray-600 font-medium">Revenue</p>
-                            <h3 className="text-2xl font-bold text-gray-800">1.200.000</h3>
+                            <p className="text-sm text-gray-600 font-medium">
+                                Revenue
+                            </p>
+                            <h3 className="text-2xl font-bold text-gray-800">
+                                1.200.000
+                            </h3>
                         </div>
                     </div>
 
@@ -106,7 +125,9 @@ export default function AdminDashboard() {
                             <p className="text-sm text-gray-600 font-medium">
                                 Pending Classes
                             </p>
-                            <h3 className="text-2xl font-bold text-gray-800">{stats.pending_classes}</h3>
+                            <h3 className="text-2xl font-bold text-gray-800">
+                                {stats.pending_classes}
+                            </h3>
                         </div>
                     </div>
                 </div>
@@ -117,7 +138,10 @@ export default function AdminDashboard() {
                     <p className="font-semibold border-l-4 pl-3 border-blue-600 mb-4">
                         User Growth Over Time
                     </p>
-                    <UserGrowthChart instructors={stats.instructors} students={stats.students} />
+                    <UserGrowthChart
+                        instructors={stats.instructors}
+                        students={stats.students}
+                    />
                 </div>
 
                 <div className="bg-white p-6 rounded-xl shadow-md border-2 border-gray-100 hover:shadow-lg transition-all duration-300">

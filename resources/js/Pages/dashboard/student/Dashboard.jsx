@@ -193,7 +193,11 @@ export default function StudentDashboard() {
                             "
                         >
                             <div
-                                className={`p-4 rounded-xl bg-gradient-to-br ${c.bg} text-${c.gradient.split('-')[1]}-600 shadow-md group-hover:scale-110 transition-transform duration-300`}
+                                className={`p-4 rounded-xl bg-gradient-to-br ${
+                                    c.bg
+                                } text-${
+                                    c.gradient.split("-")[1]
+                                }-600 shadow-md group-hover:scale-110 transition-transform duration-300`}
                             >
                                 {c.icon}
                             </div>

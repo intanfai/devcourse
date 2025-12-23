@@ -8,17 +8,17 @@ import Footer from "../Components/Footer";
 import TestimonialSlider from "../Components/TestimonialSlider.jsx";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { 
-    FaRocket, 
-    FaCertificate, 
-    FaChartLine, 
+import {
+    FaRocket,
+    FaCertificate,
+    FaChartLine,
     FaGraduationCap,
     FaCode,
     FaUsers,
     FaStar,
     FaArrowRight,
     FaPlay,
-    FaCheckCircle
+    FaCheckCircle,
 } from "react-icons/fa";
 
 // AOS IMPORT
@@ -74,17 +74,21 @@ export default function Landing() {
     return (
         <div className="bg-gradient-to-b from-white via-blue-50/30 to-white">
             {/* ================= NAVBAR ================= */}
-            <motion.nav 
+            <motion.nav
                 initial={{ y: -100 }}
                 animate={{ y: 0 }}
                 className="fixed top-0 w-full bg-white/70 backdrop-blur-xl py-4 px-6 lg:px-20 flex items-center justify-between border-b border-blue-100/50 z-50 shadow-sm"
             >
                 {/* LOGO */}
-                <motion.div 
+                <motion.div
                     whileHover={{ scale: 1.05 }}
                     className="flex items-center gap-3 cursor-pointer"
                 >
-                    <img src="/images/logo.png" className="w-10" alt="DevCourse Logo" />
+                    <img
+                        src="/images/logo.png"
+                        className="w-10"
+                        alt="DevCourse Logo"
+                    />
                     <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
                         DevCourse
                     </h1>
@@ -92,23 +96,25 @@ export default function Landing() {
 
                 {/* DESKTOP MENU */}
                 <ul className="hidden lg:flex items-center gap-10 text-gray-700 font-medium">
-                    {["home", "courses", "whydev", "testimoni"].map((item, index) => (
-                        <motion.li 
-                            key={item} 
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="relative group capitalize"
-                        >
-                            <a
-                                href={`#${item}`}
-                                className="hover:text-blue-600 transition-colors duration-300"
+                    {["home", "courses", "whydev", "testimoni"].map(
+                        (item, index) => (
+                            <motion.li
+                                key={item}
+                                initial={{ opacity: 0, y: -20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.1 }}
+                                className="relative group capitalize"
                             >
-                                {item === "whydev" ? "About" : item}
-                            </a>
-                            <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-gradient-to-r from-blue-600 to-blue-800 transition-all duration-300 group-hover:w-full"></span>
-                        </motion.li>
-                    ))}
+                                <a
+                                    href={`#${item}`}
+                                    className="hover:text-blue-600 transition-colors duration-300"
+                                >
+                                    {item === "whydev" ? "About" : item}
+                                </a>
+                                <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-gradient-to-r from-blue-600 to-blue-800 transition-all duration-300 group-hover:w-full"></span>
+                            </motion.li>
+                        )
+                    )}
                 </ul>
 
                 {/* AUTH BUTTON (DESKTOP) */}
@@ -138,7 +144,7 @@ export default function Landing() {
 
             {/* MOBILE DROPDOWN */}
             {mobileMenu && (
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="lg:hidden fixed top-20 left-0 right-0 mx-4 mt-2 px-6 py-6 bg-white/95 backdrop-blur-xl border border-blue-100 rounded-2xl flex flex-col gap-4 text-gray-700 font-medium shadow-xl z-40"
@@ -178,13 +184,16 @@ export default function Landing() {
                 {/* Animated Background Elements */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl animate-pulse"></div>
-                    <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+                    <div
+                        className="absolute bottom-20 right-10 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-pulse"
+                        style={{ animationDelay: "1s" }}
+                    ></div>
                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-blue-200/20 to-purple-200/20 rounded-full blur-3xl"></div>
                 </div>
 
                 <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center relative z-10">
                     {/* LEFT SIDE */}
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, x: -50 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.8 }}
@@ -200,7 +209,7 @@ export default function Landing() {
                             <span>Start Your Journey Today</span>
                         </motion.div>
 
-                        <motion.h1 
+                        <motion.h1
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3 }}
@@ -215,19 +224,21 @@ export default function Landing() {
                                 <motion.span
                                     className="absolute -bottom-2 left-0 w-full h-3 bg-yellow-400/30 -z-10"
                                     initial={{ width: 0 }}
-                                    animate={{ width: '100%' }}
+                                    animate={{ width: "100%" }}
                                     transition={{ delay: 1, duration: 0.8 }}
                                 />
                             </span>
                         </motion.h1>
 
-                        <motion.p 
+                        <motion.p
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.4 }}
                             className="text-gray-600 text-base md:text-lg mb-8 leading-relaxed"
                         >
-                            Learn programming with structured materials, hands-on practice, and guidance from expert mentors ready to support your growth journey.
+                            Learn programming with structured materials,
+                            hands-on practice, and guidance from expert mentors
+                            ready to support your growth journey.
                         </motion.p>
 
                         <motion.div
@@ -260,13 +271,15 @@ export default function Landing() {
                             {[
                                 { number: "10K+", label: "Students" },
                                 { number: "50+", label: "Courses" },
-                                { number: "98%", label: "Success Rate" }
+                                { number: "98%", label: "Success Rate" },
                             ].map((stat, i) => (
                                 <div key={i} className="text-center">
                                     <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
                                         {stat.number}
                                     </div>
-                                    <div className="text-gray-600 text-sm mt-1">{stat.label}</div>
+                                    <div className="text-gray-600 text-sm mt-1">
+                                        {stat.label}
+                                    </div>
                                 </div>
                             ))}
                         </motion.div>
@@ -306,10 +319,14 @@ export default function Landing() {
                                     alt="Student"
                                 />
                                 <div>
-                                    <p className="font-bold text-sm text-gray-800">Jake Sim</p>
+                                    <p className="font-bold text-sm text-gray-800">
+                                        Jake Sim
+                                    </p>
                                     <div className="flex items-center gap-1 text-yellow-500 text-xs">
                                         <FaStar />
-                                        <span className="text-gray-600">5.0 Rating</span>
+                                        <span className="text-gray-600">
+                                            5.0 Rating
+                                        </span>
                                     </div>
                                 </div>
                             </motion.div>
@@ -327,12 +344,18 @@ export default function Landing() {
                                         <FaCode className="text-white" />
                                     </div>
                                     <div>
-                                        <p className="font-bold text-sm text-gray-800">John Chena</p>
-                                        <p className="text-xs text-gray-500">Top Instructor</p>
+                                        <p className="font-bold text-sm text-gray-800">
+                                            John Chena
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            Top Instructor
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="flex text-yellow-400 text-xs gap-1">
-                                    {[...Array(5)].map((_, i) => <FaStar key={i} />)}
+                                    {[...Array(5)].map((_, i) => (
+                                        <FaStar key={i} />
+                                    ))}
                                 </div>
                             </motion.div>
 
@@ -346,10 +369,17 @@ export default function Landing() {
                             >
                                 <div className="flex items-center gap-2 mb-3">
                                     <FaUsers className="text-blue-600 text-lg" />
-                                    <p className="text-sm font-bold text-gray-800">Expert Instructors</p>
+                                    <p className="text-sm font-bold text-gray-800">
+                                        Expert Instructors
+                                    </p>
                                 </div>
                                 <div className="flex -space-x-3">
-                                    {["sunoo", "jungwon", "sunghoon", "jennie"].map((img) => (
+                                    {[
+                                        "sunoo",
+                                        "jungwon",
+                                        "sunghoon",
+                                        "jennie",
+                                    ].map((img) => (
                                         <img
                                             key={img}
                                             src={`/images/${img}.jpg`}
@@ -374,9 +404,9 @@ export default function Landing() {
             >
                 {/* Background Decoration */}
                 <div className="absolute top-0 right-0 w-96 h-96 bg-purple-300/10 rounded-full blur-3xl"></div>
-                
+
                 <div className="relative z-10">
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
@@ -390,12 +420,13 @@ export default function Landing() {
                         >
                             ⭐ Explore Our Courses
                         </motion.span>
-                        
+
                         <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-blue-900 bg-clip-text text-transparent mb-4">
                             Popular Courses
                         </h2>
                         <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
-                            Discover our most loved courses, trusted by thousands of learners worldwide
+                            Discover our most loved courses, trusted by
+                            thousands of learners worldwide
                         </p>
                     </motion.div>
 
@@ -432,7 +463,11 @@ export default function Landing() {
                                         ][i]
                                     }
                                     instructor={
-                                        ["Sarah Kim", "Daniel Park", "Kevin Lee"][i]
+                                        [
+                                            "Sarah Kim",
+                                            "Daniel Park",
+                                            "Kevin Lee",
+                                        ][i]
                                     }
                                     rating={5.0}
                                     students={[2746, 2589, 2456][i]}
@@ -456,7 +491,7 @@ export default function Landing() {
                             ))}
                     </div>
 
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
                         viewport={{ once: true }}
@@ -474,7 +509,10 @@ export default function Landing() {
             </section>
 
             {/* ================= ABOUT SECTION ================= */}
-            <section id="whydev" className="py-24 lg:py-32 px-6 lg:px-20 bg-gradient-to-br from-blue-50 to-purple-50 relative overflow-hidden">
+            <section
+                id="whydev"
+                className="py-24 lg:py-32 px-6 lg:px-20 bg-gradient-to-br from-blue-50 to-purple-50 relative overflow-hidden"
+            >
                 {/* Decorative Elements */}
                 <div className="absolute top-0 left-0 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl"></div>
                 <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl"></div>
@@ -487,19 +525,19 @@ export default function Landing() {
                                 FaRocket,
                                 "Learn Anytime, Anywhere",
                                 "Access world-class courses with flexible learning schedules that fit your lifestyle.",
-                                "from-blue-500 to-blue-600"
+                                "from-blue-500 to-blue-600",
                             ],
                             [
                                 FaCertificate,
                                 "Official Certificate",
                                 "Earn industry-recognized certificates to showcase your achievements and boost your career.",
-                                "from-purple-500 to-purple-600"
+                                "from-purple-500 to-purple-600",
                             ],
                             [
                                 FaChartLine,
                                 "Updated Materials",
                                 "Stay ahead with regularly updated content that reflects the latest industry trends and best practices.",
-                                "from-green-500 to-green-600"
+                                "from-green-500 to-green-600",
                             ],
                         ].map(([Icon, title, desc, gradient], i) => (
                             <motion.div
@@ -511,7 +549,9 @@ export default function Landing() {
                                 whileHover={{ scale: 1.03, x: 10 }}
                                 className="group flex items-start gap-5 bg-white/80 backdrop-blur-sm p-7 md:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-blue-100/50"
                             >
-                                <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-xl transform group-hover:rotate-6 transition-transform duration-300`}>
+                                <div
+                                    className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-xl transform group-hover:rotate-6 transition-transform duration-300`}
+                                >
                                     <Icon className="text-white text-2xl md:text-3xl" />
                                 </div>
 
@@ -552,7 +592,10 @@ export default function Landing() {
                         </h2>
 
                         <p className="text-gray-700 text-base md:text-lg mb-8 leading-relaxed">
-                            We provide a structured, practical, and guided learning journey tailored for anyone who wants to build a real career in tech — from complete beginners to advanced learners.
+                            We provide a structured, practical, and guided
+                            learning journey tailored for anyone who wants to
+                            build a real career in tech — from complete
+                            beginners to advanced learners.
                         </p>
 
                         <div className="space-y-4 mb-8">
@@ -560,7 +603,7 @@ export default function Landing() {
                                 "Expert-led video tutorials",
                                 "Hands-on projects and assignments",
                                 "24/7 community support",
-                                "Lifetime access to materials"
+                                "Lifetime access to materials",
                             ].map((feature, i) => (
                                 <motion.div
                                     key={i}
@@ -571,7 +614,9 @@ export default function Landing() {
                                     className="flex items-center gap-3"
                                 >
                                     <FaCheckCircle className="text-green-500 text-xl flex-shrink-0" />
-                                    <span className="text-gray-700 font-medium">{feature}</span>
+                                    <span className="text-gray-700 font-medium">
+                                        {feature}
+                                    </span>
                                 </motion.div>
                             ))}
                         </div>
@@ -594,7 +639,7 @@ export default function Landing() {
                 className="py-24 lg:py-32 px-6 lg:px-20 relative overflow-hidden"
             >
                 <div className="absolute top-20 left-10 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl"></div>
-                
+
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -609,12 +654,13 @@ export default function Landing() {
                     >
                         💬 Student Stories
                     </motion.span>
-                    
+
                     <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
                         What Our Students Say
                     </h2>
                     <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
-                        Join thousands of satisfied learners who transformed their careers with DevCourse
+                        Join thousands of satisfied learners who transformed
+                        their careers with DevCourse
                     </p>
                 </motion.div>
 
@@ -624,7 +670,10 @@ export default function Landing() {
             </section>
 
             {/* ================= FAQ ================= */}
-            <section id="faq" className="py-24 lg:py-32 px-6 lg:px-20 bg-gradient-to-br from-blue-50 via-white to-purple-50">
+            <section
+                id="faq"
+                className="py-24 lg:py-32 px-6 lg:px-20 bg-gradient-to-br from-blue-50 via-white to-purple-50"
+            >
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -639,12 +688,13 @@ export default function Landing() {
                     >
                         ❓ Have Questions?
                     </motion.span>
-                    
+
                     <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
                         Frequently Asked Questions
                     </h2>
                     <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
-                        Find answers to common questions about our courses and platform
+                        Find answers to common questions about our courses and
+                        platform
                     </p>
                 </motion.div>
 
@@ -680,7 +730,9 @@ export default function Landing() {
                                 Ready to Start Learning?
                             </h2>
                             <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
-                                Join thousands of students and start your journey to success today. Get instant access to all courses!
+                                Join thousands of students and start your
+                                journey to success today. Get instant access to
+                                all courses!
                             </p>
                         </motion.div>
 
@@ -713,7 +765,8 @@ export default function Landing() {
                             transition={{ delay: 0.6 }}
                             className="text-blue-100 text-sm mt-6"
                         >
-                            No credit card required • Cancel anytime • 14-day money-back guarantee
+                            No credit card required • Cancel anytime • 14-day
+                            money-back guarantee
                         </motion.p>
                     </div>
                 </motion.div>

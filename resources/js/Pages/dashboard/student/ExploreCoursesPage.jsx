@@ -26,11 +26,14 @@ export default function ExploreCoursesPage() {
             });
             console.log("Explore courses response:", res.data);
             console.log("Total courses:", res.data.courses?.length || 0);
-            console.log("Courses with thumbnails:", res.data.courses?.map(c => ({
-                id: c.id,
-                title: c.title,
-                thumbnail: c.thumbnail,
-            })));
+            console.log(
+                "Courses with thumbnails:",
+                res.data.courses?.map((c) => ({
+                    id: c.id,
+                    title: c.title,
+                    thumbnail: c.thumbnail,
+                }))
+            );
             setCourses(res.data.courses || []);
         } catch (err) {
             console.error("Failed to fetch courses:", err);
@@ -43,12 +46,12 @@ export default function ExploreCoursesPage() {
 
     const categories = [
         "All",
-        ...new Set(courses.map(c => c.category).filter(Boolean))
+        ...new Set(courses.map((c) => c.category).filter(Boolean)),
     ];
 
     const getCategories = () => {
         const uniqueCategories = new Set(["All"]);
-        courses.forEach(c => {
+        courses.forEach((c) => {
             if (c.category) uniqueCategories.add(c.category);
         });
         return Array.from(uniqueCategories);
@@ -65,9 +68,11 @@ export default function ExploreCoursesPage() {
 
             const matchLevel = levelFilter === "All" || c.level === levelFilter;
 
-            const matchPrice = priceFilter === "All" 
-                ? true 
-                : (priceFilter === "Free" && c.price === 0) || (priceFilter === "Paid" && c.price > 0);
+            const matchPrice =
+                priceFilter === "All"
+                    ? true
+                    : (priceFilter === "Free" && c.price === 0) ||
+                      (priceFilter === "Paid" && c.price > 0);
 
             return matchSearch && matchCategory && matchLevel && matchPrice;
         })
@@ -179,11 +184,15 @@ export default function ExploreCoursesPage() {
                                         className="bg-white rounded-2xl border shadow-sm hover:shadow-lg transition overflow-hidden"
                                     >
                                         <img
-                                            src={course.thumbnail || "/images/course-thumb.jpg"}
+                                            src={
+                                                course.thumbnail ||
+                                                "/images/course-thumb.jpg"
+                                            }
                                             className="w-full h-40 md:h-44 object-cover"
                                             alt={course.title}
                                             onError={(e) => {
-                                                e.target.src = "/images/course-thumb.jpg";
+                                                e.target.src =
+                                                    "/images/course-thumb.jpg";
                                             }}
                                         />
 
@@ -193,18 +202,28 @@ export default function ExploreCoursesPage() {
                                             </h3>
 
                                             <p className="text-gray-500 text-sm mb-2">
-                                                {course.category} • {course.level}
+                                                {course.category} •{" "}
+                                                {course.level}
                                             </p>
 
                                             <div className="flex items-center gap-1 text-sm text-gray-600 mb-2">
                                                 <FiUsers />
-                                                {course.students.toLocaleString()} students enrolled
+                                                {course.students.toLocaleString()}{" "}
+                                                students enrolled
                                             </div>
 
                                             <div className="flex items-center gap-1 text-sm text-yellow-500">
-                                                <FiStar size={16} fill="currentColor" />
-                                                <span>{course.rating || 0}</span>
-                                                <span className="text-gray-500">({course.reviews || 0} reviews)</span>
+                                                <FiStar
+                                                    size={16}
+                                                    fill="currentColor"
+                                                />
+                                                <span>
+                                                    {course.rating || 0}
+                                                </span>
+                                                <span className="text-gray-500">
+                                                    ({course.reviews || 0}{" "}
+                                                    reviews)
+                                                </span>
                                             </div>
                                         </div>
                                     </Link>
@@ -212,7 +231,9 @@ export default function ExploreCoursesPage() {
                             </div>
                         ) : (
                             <div className="flex items-center justify-center py-12">
-                                <p className="text-gray-500">No courses found</p>
+                                <p className="text-gray-500">
+                                    No courses found
+                                </p>
                             </div>
                         )}
                     </>

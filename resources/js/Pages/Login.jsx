@@ -70,24 +70,30 @@ export default function Login() {
                 <div className="max-w-md w-full">
                     {/* Back to Home Button */}
                     <button
-                        onClick={() => navigate('/')}
+                        onClick={() => navigate("/")}
                         className="flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-8 transition-all duration-300 hover:gap-3 w-fit group"
                     >
-                        <FaArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-                        <span className="text-sm font-medium">Back to Home</span>
+                        <FaArrowLeft
+                            size={16}
+                            className="group-hover:-translate-x-1 transition-transform"
+                        />
+                        <span className="text-sm font-medium">
+                            Back to Home
+                        </span>
                     </button>
-                    
-                    <h2 className="text-4xl font-bold mb-3 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Welcome Back</h2>
+
+                    <h2 className="text-4xl font-bold mb-3 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                        Welcome Back
+                    </h2>
                     <p className="text-gray-600 mb-6 text-sm sm:text-base">
                         Welcome back! Please login.
                     </p>
 
-                    {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+                    {error && (
+                        <p className="text-red-500 text-sm mb-3">{error}</p>
+                    )}
 
-                    <form
-                        className="space-y-5 w-full"
-                        onSubmit={handleSubmit}
-                    >
+                    <form className="space-y-5 w-full" onSubmit={handleSubmit}>
                         {/* Email */}
                         <div>
                             <label className="text-gray-700 font-semibold text-sm block mb-2">
@@ -164,7 +170,7 @@ export default function Login() {
                 {/* Decorative background */}
                 <div className="absolute top-10 right-10 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl"></div>
                 <div className="absolute bottom-10 left-10 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl"></div>
-                
+
                 <div className="w-full max-w-2xl bg-white/80 backdrop-blur-sm border-2 border-blue-600 rounded-3xl px-10 pt-10 pb-12 flex flex-col shadow-2xl relative z-10 overflow-hidden">
                     {/* Illust */}
                     <div className="w-full flex justify-center mb-10">
@@ -176,7 +182,11 @@ export default function Login() {
 
                     {/* Logo */}
                     <div className="flex items-center gap-3 mb-6">
-                        <img src="/images/logo.png" className="w-12" alt="DevCourse Logo" />
+                        <img
+                            src="/images/logo.png"
+                            className="w-12"
+                            alt="DevCourse Logo"
+                        />
                         <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
                             DevCourse
                         </h3>
