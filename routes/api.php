@@ -25,6 +25,12 @@ use App\Http\Controllers\ResetPasswordController;
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 
+// Auth routes
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
+Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
+Route::middleware('auth:sanctum')->get('/profile', [AuthController::class, 'profile']);
+
 
 Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin/data', function () {
     return response()->json(['message' => 'Admin only']);
@@ -34,9 +40,6 @@ Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin/data', function (
 use App\Http\Controllers\AdminController;
 Route::middleware(['auth:sanctum', 'role:1'])->get('/admin/stats', [AdminController::class, 'stats']);
 Route::middleware(['auth:sanctum', 'role:1'])->get('/admin/certificates', [AdminController::class, 'getCertificates']);
-
-
-Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/users', [UserController::class, 'index']);
 Route::get('/users/{id}', [UserController::class, 'show']);
@@ -58,28 +61,46 @@ Route::put('/profile', [UserController::class, 'updateProfile'])
     ->middleware('auth:sanctum')
     ->middleware('role:1,2,3');
 
-Route::get('/roles', [RoleController::class, 'index']);
-Route::post('/roles', [RoleController::class, 'store']);
-Route::get('/roles/{id}', [RoleController::class, 'show']);
-Route::put('/roles/{id}', [RoleController::class, 'update']);
-Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
+// ROLES - Admin only
+Route::middleware(['auth:sanctum', 'role:1'])->group(function () {
+    Route::get('/roles', [RoleController::class, 'index']);
+    Route::post('/roles', [RoleController::class, 'store']);
+    Route::get('/roles/{id}', [RoleController::class, 'show']);
+    Route::put('/roles/{id}', [RoleController::class, 'update']);
+    Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
+});
 
+// COURSES - Admin & Instructor can create/update/delete
 Route::get('/courses', [CourseController::class, 'index']);
-Route::post('/courses', [CourseController::class, 'store']);
 Route::get('/courses/{id}', [CourseController::class, 'show']);
-Route::put('/courses/{id}', [CourseController::class, 'update']);
-Route::patch('/courses/{id}', [CourseController::class, 'update']);
-Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
 
-Route::post('/materials', [MaterialController::class, 'store']);
+Route::middleware(['auth:sanctum', 'role:1,2'])->group(function () {
+    Route::post('/courses', [CourseController::class, 'store']);
+    Route::put('/courses/{id}', [CourseController::class, 'update']);
+    Route::patch('/courses/{id}', [CourseController::class, 'update']);
+    Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
+});
+
+// MATERIALS - Instructor only
 Route::get('/materials/{id}', [MaterialController::class, 'show']);
-Route::put('/materials/{id}', [MaterialController::class, 'update']);
-Route::delete('/materials/{id}', [MaterialController::class, 'destroy']);
 
-Route::post('/quizzes', [QuizController::class, 'store']);
+Route::middleware(['auth:sanctum', 'role:2'])->group(function () {
+    Route::post('/materials', [MaterialController::class, 'store']);
+    Route::put('/materials/{id}', [MaterialController::class, 'update']);
+    Route::delete('/materials/{id}', [MaterialController::class, 'destroy']);
+});
+
+// QUIZZES - Instructor only
 Route::get('/quizzes/{id}', [QuizController::class, 'show']);
 
-Route::post('/quiz-questions', [QuizQuestionController::class, 'store']);
+Route::middleware(['auth:sanctum', 'role:2'])->group(function () {
+    Route::post('/quizzes', [QuizController::class, 'store']);
+});
+
+// QUIZ QUESTIONS - Instructor only
+Route::middleware(['auth:sanctum', 'role:2'])->group(function () {
+    Route::post('/quiz-questions', [QuizQuestionController::class, 'store']);
+});
 
 Route::post('/enrollments', [EnrollmentController::class, 'store']);
 Route::get('/enrollments', [EnrollmentController::class, 'index'])->middleware('auth:sanctum');
@@ -89,7 +110,10 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::post('/payments', [PaymentController::class, 'store']);
-Route::put('/payments/{id}/status', [PaymentController::class, 'updateStatus']);
+// PAYMENTS - Admin only untuk update status
+Route::middleware(['auth:sanctum', 'role:1'])->group(function () {
+    Route::put('/payments/{id}/status', [PaymentController::class, 'updateStatus']);
+});
 
 // Midtrans QRIS dynamic
 Route::middleware('auth:sanctum')->group(function () {
@@ -110,126 +134,7 @@ Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRe
 // ================================
 //           API ROUTES
 // ================================
-
-    /*
-    |--------------------------------------------------------------------------
-    | AUTH
-    --------------------------------------------------------------------------
-    */
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login',    [AuthController::class, 'login']);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | USERS
-    |--------------------------------------------------------------------------
-    */
-    Route::get('/users', [UserController::class, 'index']);
-    Route::get('/users/{id}', [UserController::class, 'show']);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ROLES
-    |--------------------------------------------------------------------------
-    */
-    Route::get('/roles', [RoleController::class, 'index']);
-    Route::post('/roles', [RoleController::class, 'store']);
-    Route::get('/roles/{id}', [RoleController::class, 'show']);
-    Route::put('/roles/{id}', [RoleController::class, 'update']);
-    Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | COURSES
-    |--------------------------------------------------------------------------
-    */
-    Route::get('/courses', [CourseController::class, 'index']);
-    Route::post('/courses', [CourseController::class, 'store']);
-    Route::get('/courses/{id}', [CourseController::class, 'show']);
-    Route::put('/courses/{id}', [CourseController::class, 'update']);
-    Route::patch('/courses/{id}', [CourseController::class, 'update']);
-    Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | MATERIALS
-    |--------------------------------------------------------------------------
-    */
-    Route::post('/materials', [MaterialController::class, 'store']);
-    Route::get('/materials/{id}', [MaterialController::class, 'show']);
-    Route::put('/materials/{id}', [MaterialController::class, 'update']);
-    Route::delete('/materials/{id}', [MaterialController::class, 'destroy']);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | QUIZZES
-    |--------------------------------------------------------------------------
-    */
-    Route::post('/quizzes', [QuizController::class, 'store']);
-    Route::get('/quizzes/{id}', [QuizController::class, 'show']);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | QUIZ QUESTIONS
-    |--------------------------------------------------------------------------
-    */
-    Route::post('/quiz-questions', [QuizQuestionController::class, 'store']);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ENROLLMENTS (Buy Course)
-    |--------------------------------------------------------------------------
-    */
-    Route::post('/enrollments', [EnrollmentController::class, 'store']);
-    Route::get('/enrollments', [EnrollmentController::class, 'index'])->middleware('auth:sanctum');
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | PAYMENTS
-    |--------------------------------------------------------------------------
-    */
-    Route::post('/payments', [PaymentController::class, 'store']);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | PROGRESS
-    |--------------------------------------------------------------------------
-    */
-    Route::post('/progress', [ProgressController::class, 'store']);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | CERTIFICATES
-    |--------------------------------------------------------------------------
-    */
-    Route::get('/certificates/{id}', [CertificateController::class, 'show']);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | NOTIFICATIONS
-    |--------------------------------------------------------------------------
-    */
-    Route::get('/notifications', [NotificationController::class, 'index']);
-    Route::post('/notifications', [NotificationController::class, 'store']);
-    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
-
-    Route::middleware('role:1')->get('/admin/dashboard', function () {
-    return 'Admin only';
-    });
-    Route::middleware('role:1,2')->post('/courses', [CourseController::class, 'store']);
-    Route::middleware('role:3')->get('/my-courses', [EnrollmentController::class, 'index']);
-    Route::middleware('role:1,2')->post('/materials', [MaterialController::class, 'store']);
+// Semua route sudah diorganisir di atas dengan middleware yang sesuai
 
 Route::middleware(['auth:sanctum'])->group(function () {
 

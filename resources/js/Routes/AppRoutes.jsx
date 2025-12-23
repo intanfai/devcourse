@@ -70,6 +70,10 @@ export default function AppRoutes() {
             {/* PROTECTED ROUTE */}
             <Route element={<PrivateRoutes />}>
                 <Route path="/dashboard" element={<Dashboard />} />
+            </Route>
+
+            {/* ADMIN ROUTES - Only role_id = 1 */}
+            <Route element={<PrivateRoutes allowedRoles={[1]} />}>
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/users" element={<UsersPage />} />
                 <Route path="/admin/classes" element={<ClassesPage />} />
@@ -108,6 +112,10 @@ export default function AppRoutes() {
                 />
                 <Route path="/admin/help" element={<HelpPage />} />
                 <Route path="/admin/settings" element={<SettingsPage />} />
+            </Route>
+
+            {/* INSTRUCTOR ROUTES - Only role_id = 2 */}
+            <Route element={<PrivateRoutes allowedRoles={[2]} />}>
                 <Route
                     path="/instructor/dashboard"
                     element={<InstructorDashboard />}
@@ -139,7 +147,10 @@ export default function AppRoutes() {
                     path="/instructor/settings"
                     element={<InstructorSettingsPage />}
                 />
+            </Route>
 
+            {/* STUDENT ROUTES - Only role_id = 3 */}
+            <Route element={<PrivateRoutes allowedRoles={[3]} />}>
                 <Route
                     path="/student/dashboard"
                     element={<StudentDashboard />}

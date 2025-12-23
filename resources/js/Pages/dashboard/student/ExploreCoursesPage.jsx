@@ -82,7 +82,7 @@ export default function ExploreCoursesPage() {
         <StudentLayout>
             <div className="pb-6">
                 {/* HEADER */}
-                <h1 className="text-2xl font-bold text-gray-900 mb-6">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
                     Explore Courses
                 </h1>
 
@@ -92,9 +92,9 @@ export default function ExploreCoursesPage() {
                         type="text"
                         placeholder="Search any course…"
                         className="
-                            w-full px-5 py-3 rounded-xl border border-gray-300 
+                            w-full px-5 py-3 rounded-xl border-2 border-gray-300 
                             focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                            text-sm md:text-base
+                            text-sm md:text-base transition-all duration-200
                         "
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}

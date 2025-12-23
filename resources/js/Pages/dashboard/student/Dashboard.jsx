@@ -150,7 +150,7 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* LEARNING STATS */}
-                <h2 className="text-xl md:text-2xl font-semibold mb-5 text-gray-900">
+                <h2 className="text-xl md:text-2xl font-bold mb-6 text-gray-900">
                     Your Learning Stats
                 </h2>
 
@@ -160,21 +160,24 @@ export default function StudentDashboard() {
                             icon: <FiBookOpen className="text-3xl" />,
                             label: "Active Courses",
                             value: dashboardData.active_courses || 0,
-                            gradient: "from-blue-400 to-blue-600",
+                            gradient: "from-blue-500 to-blue-700",
+                            bg: "from-blue-100 to-blue-200",
                             link: "/student/courses",
                         },
                         {
                             icon: <FiClock className="text-3xl" />,
                             label: "Hours Learned",
                             value: `${dashboardData.hours_learned || 0} h`,
-                            gradient: "from-yellow-400 to-yellow-600",
+                            gradient: "from-yellow-500 to-yellow-700",
+                            bg: "from-yellow-100 to-yellow-200",
                             link: "/student/progress",
                         },
                         {
                             icon: <FiAward className="text-3xl" />,
                             label: "Certificates Earned",
                             value: dashboardData.certificates_earned || 0,
-                            gradient: "from-green-400 to-green-700",
+                            gradient: "from-green-500 to-green-700",
+                            bg: "from-green-100 to-green-200",
                             link: "/student/certificates",
                         },
                     ].map((c, i) => (
@@ -182,20 +185,20 @@ export default function StudentDashboard() {
                             key={i}
                             to={c.link}
                             className="
-                                bg-white p-4 sm:p-6 rounded-2xl border border-gray-200
-                                shadow-sm hover:shadow-lg transition-all
-                                hover:-translate-y-1 flex flex-col sm:flex-row
-                                items-center gap-5 cursor-pointer
+                                bg-white p-4 sm:p-6 rounded-2xl border-2 border-gray-100
+                                shadow-md hover:shadow-xl transition-all duration-300
+                                hover:-translate-y-2 flex flex-col sm:flex-row
+                                items-center gap-5 cursor-pointer group
                                 text-center sm:text-left
                             "
                         >
                             <div
-                                className={`p-4 rounded-xl bg-gradient-to-br ${c.gradient} text-white shadow`}
+                                className={`p-4 rounded-xl bg-gradient-to-br ${c.bg} text-${c.gradient.split('-')[1]}-600 shadow-md group-hover:scale-110 transition-transform duration-300`}
                             >
                                 {c.icon}
                             </div>
                             <div>
-                                <p className="text-sm text-gray-500">
+                                <p className="text-sm text-gray-600 font-medium">
                                     {c.label}
                                 </p>
                                 <h3 className="text-2xl font-bold text-gray-800">
@@ -207,7 +210,7 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* RECOMMENDED */}
-                <h2 className="text-xl md:text-2xl font-semibold mb-5 text-gray-900">
+                <h2 className="text-xl md:text-2xl font-bold mb-6 text-gray-900">
                     Recommended For You
                 </h2>
 

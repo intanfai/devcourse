@@ -71,31 +71,21 @@ export default function TestimonialSlider() {
     ];
 
     return (
-        <section className="py-24 px-8 lg:px-24">
-            {/* TITLE */}
-            <div className="text-center mb-16">
-                <h2 className="text-4xl font-extrabold text-[#1E2A53]">
-                    What Our Students Say
-                </h2>
-                <p className="text-xl text-blue-600 mt-2">
-                    Their learning experience with DevCourse
-                </p>
-            </div>
-
+        <section className="px-8 lg:px-24">
             {/* SLIDER */}
             <Slider ref={sliderRef} {...settings}>
                 {testimonials.map((item, i) => (
                     <div key={i} className="px-5 pt-6 pb-10">
                         <div
                             className="
-                            bg-white rounded-2xl shadow-lg border border-gray-100 
+                            bg-white rounded-2xl shadow-lg border-2 border-gray-100 
                             px-8 py-8 h-full
                             transition-all duration-300 
-                            hover:-translate-y-2 hover:shadow-2xl
+                            hover:-translate-y-2 hover:shadow-2xl hover:border-blue-200
                             "
                         >
                             {/* TITLE */}
-                            <h3 className="font-semibold text-xl mb-3 text-[#1E2A53]">
+                            <h3 className="font-bold text-xl mb-3 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
                                 {item.title}
                             </h3>
 
@@ -110,10 +100,11 @@ export default function TestimonialSlider() {
                                 <div className="flex items-center gap-3">
                                     <img
                                         src={item.image}
-                                        className="w-11 h-11 rounded-full object-cover shadow-sm"
+                                        className="w-12 h-12 rounded-full object-cover shadow-md ring-2 ring-blue-100"
+                                        alt={item.name}
                                     />
                                     <div>
-                                        <p className="font-semibold text-[#1E2A53]">
+                                        <p className="font-bold text-gray-800">
                                             {item.name}
                                         </p>
                                         <p className="text-gray-500 text-sm">
@@ -137,12 +128,13 @@ export default function TestimonialSlider() {
                 <button
                     onClick={() => sliderRef.current.slickPrev()}
                     className="
-                    w-12 h-12 rounded-full 
-                    backdrop-blur-md bg-white/40 
-                    shadow-md border border-white/30
+                    w-14 h-14 rounded-full 
+                    bg-gradient-to-r from-blue-600 to-blue-800
+                    shadow-lg shadow-blue-500/30
                     flex items-center justify-center 
-                    text-blue-700 hover:bg-white/70 
-                    transition duration-300
+                    text-white hover:shadow-xl hover:shadow-blue-500/50
+                    hover:scale-110
+                    transition-all duration-300
                     "
                 >
                     <i className="ri-arrow-left-line text-2xl"></i>
@@ -151,12 +143,13 @@ export default function TestimonialSlider() {
                 <button
                     onClick={() => sliderRef.current.slickNext()}
                     className="
-                    w-12 h-12 rounded-full 
-                    backdrop-blur-md bg-white/40 
-                    shadow-md border border-white/30
+                    w-14 h-14 rounded-full 
+                    bg-gradient-to-r from-blue-600 to-blue-800
+                    shadow-lg shadow-blue-500/30
                     flex items-center justify-center 
-                    text-blue-700 hover:bg-white/70 
-                    transition duration-300
+                    text-white hover:shadow-xl hover:shadow-blue-500/50
+                    hover:scale-110
+                    transition-all duration-300
                     "
                 >
                     <i className="ri-arrow-right-line text-2xl"></i>

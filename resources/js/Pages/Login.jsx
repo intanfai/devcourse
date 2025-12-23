@@ -7,6 +7,7 @@ import {
     FaInstagram,
     FaLinkedin,
     FaTelegram,
+    FaArrowLeft,
 } from "react-icons/fa";
 
 export default function Login() {
@@ -63,93 +64,108 @@ export default function Login() {
     };
 
     return (
-        <section className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-white">
+        <section className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-gradient-to-br from-white to-blue-50/30">
             {/* ================= LEFT: FORM ================= */}
-            <div className="flex flex-col justify-center px-6 sm:px-12 md:px-20 lg:px-28 py-16 bg-white">
-                <h2 className="text-3xl font-bold mb-2 text-gray-900">Login</h2>
-                <p className="text-gray-600 mb-6 text-sm sm:text-base">
-                    Welcome back! Please login.
-                </p>
-
-                {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
-
-                <form
-                    className="space-y-5 max-w-sm w-full"
-                    onSubmit={handleSubmit}
-                >
-                    {/* Email */}
-                    <div>
-                        <label className="text-gray-700 font-medium text-sm">
-                            Email
-                        </label>
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="mt-1.5 w-full p-3 border border-gray-300 rounded-lg 
-                            focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
-                            placeholder="Enter your email"
-                        />
-                    </div>
-
-                    {/* Password */}
-                    <div>
-                        <label className="text-gray-700 font-medium text-sm">
-                            Password
-                        </label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="mt-1.5 w-full p-3 border border-gray-300 rounded-lg 
-                            focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
-                            placeholder="Password"
-                        />
-                    </div>
-                    <p className="text-right text-sm mt-1">
-                        <a
-                            href="/forgot-password"
-                            className="text-blue-600 font-medium hover:underline"
-                        >
-                            Forgot password?
-                        </a>
+            <div className="flex flex-col justify-center px-6 sm:px-12 md:px-20 lg:px-28 py-16">
+                <div className="max-w-md w-full">
+                    {/* Back to Home Button */}
+                    <button
+                        onClick={() => navigate('/')}
+                        className="flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-8 transition-all duration-300 hover:gap-3 w-fit group"
+                    >
+                        <FaArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                        <span className="text-sm font-medium">Back to Home</span>
+                    </button>
+                    
+                    <h2 className="text-4xl font-bold mb-3 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Welcome Back</h2>
+                    <p className="text-gray-600 mb-6 text-sm sm:text-base">
+                        Welcome back! Please login.
                     </p>
 
-                    {/* Google Button */}
-                    <button
-                        type="button"
-                        className="w-full border border-gray-300 py-2.5 rounded-lg 
-                        flex items-center justify-center gap-3 hover:bg-gray-100 transition text-sm"
-                    >
-                        <FcGoogle size={22} />
-                        Login with Google
-                    </button>
+                    {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
 
-                    {/* Login Button */}
-                    <button
-                        type="submit"
-                        className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold 
-                        hover:bg-blue-700 transition text-sm shadow-sm"
+                    <form
+                        className="space-y-5 w-full"
+                        onSubmit={handleSubmit}
                     >
-                        Login
-                    </button>
-                </form>
+                        {/* Email */}
+                        <div>
+                            <label className="text-gray-700 font-semibold text-sm block mb-2">
+                                Email Address
+                            </label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="mt-1 w-full p-3 border-2 border-gray-300 rounded-xl 
+                                focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none text-sm transition-all duration-200"
+                                placeholder="Enter your email"
+                            />
+                        </div>
 
-                {/* Register */}
-                <p className="mt-6 text-gray-600 text-xs sm:text-sm">
-                    Don't have an account?{" "}
-                    <a
-                        href="/register"
-                        className="text-blue-600 font-semibold hover:underline"
-                    >
-                        Register here
-                    </a>
-                </p>
+                        {/* Password */}
+                        <div>
+                            <label className="text-gray-700 font-semibold text-sm block mb-2">
+                                Password
+                            </label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="mt-1 w-full p-3 border-2 border-gray-300 rounded-xl 
+                                focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none text-sm transition-all duration-200"
+                                placeholder="Enter your password"
+                            />
+                        </div>
+                        <p className="text-right text-sm mt-1">
+                            <a
+                                href="/forgot-password"
+                                className="text-blue-600 font-medium hover:underline"
+                            >
+                                Forgot password?
+                            </a>
+                        </p>
+
+                        {/* Google Button */}
+                        <button
+                            type="button"
+                            className="w-full border-2 border-gray-300 py-3 rounded-xl 
+                            flex items-center justify-center gap-3 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 text-sm font-medium shadow-sm"
+                        >
+                            <FcGoogle size={22} />
+                            Login with Google
+                        </button>
+
+                        {/* Login Button */}
+                        <button
+                            type="submit"
+                            className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 rounded-xl font-semibold 
+                            hover:shadow-lg hover:shadow-blue-500/30 hover:scale-[1.02] transition-all duration-300 text-sm shadow-md"
+                        >
+                            Login
+                        </button>
+                    </form>
+
+                    {/* Register */}
+                    <p className="mt-8 text-gray-600 text-sm text-center">
+                        Don't have an account?{" "}
+                        <a
+                            href="/register"
+                            className="text-blue-600 font-bold hover:text-blue-700 transition-colors"
+                        >
+                            Sign up now
+                        </a>
+                    </p>
+                </div>
             </div>
 
             {/* ================= RIGHT: ILLUSTRATION ================= */}
-            <div className="hidden lg:flex items-start justify-center bg-white p-0">
-                <div className="w-[92%] h-[92%] my-6 border-2 border-[#004FC5] rounded-3xl px-10 pt-10 pb-12 flex flex-col">
+            <div className="hidden lg:flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100/40 p-8 relative overflow-hidden">
+                {/* Decorative background */}
+                <div className="absolute top-10 right-10 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-10 left-10 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl"></div>
+                
+                <div className="w-full max-w-2xl bg-white/80 backdrop-blur-sm border-2 border-blue-600 rounded-3xl px-10 pt-10 pb-12 flex flex-col shadow-2xl relative z-10 overflow-hidden">
                     {/* Illust */}
                     <div className="w-full flex justify-center mb-10">
                         <img
@@ -159,9 +175,9 @@ export default function Login() {
                     </div>
 
                     {/* Logo */}
-                    <div className="flex items-center gap-3 mb-4">
-                        <img src="/images/logo.png" className="w-12" />
-                        <h3 className="text-3xl font-bold text-[#004FC5]">
+                    <div className="flex items-center gap-3 mb-6">
+                        <img src="/images/logo.png" className="w-12" alt="DevCourse Logo" />
+                        <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
                             DevCourse
                         </h3>
                     </div>

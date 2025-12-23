@@ -26,22 +26,29 @@ class AuthController extends Controller
         // Beri token langsung setelah register (auto-login)
         $token = $user->createToken('devcourse_token')->plainTextToken;
 
-        // Kembalikan struktur user yang konsisten dengan login
+        // Return MINIMAL data
         $userData = [
-            'id' => $user->id,
             'name' => $user->name,
-            'email' => $user->email,
             'role_id' => $user->role_id,
             'role' => optional($user->role)->name,
-            'bio' => $user->bio,
-            'phone' => $user->phone,
             'avatar' => $user->avatar,
         ];
 
         return response()->json([
+            'success' => true,
             'user' => $userData,
             'token' => $token
-        ], 201);
+        ], 201)->cookie(
+            'auth_token',
+            $token,
+            60 * 24 * 7,
+            '/',
+            null,
+            true,
+            true,
+            false,
+            'Strict'
+        );
     }
 
 
@@ -59,22 +66,53 @@ class AuthController extends Controller
         // Jika user tidak ada
         if (!$user) {
             return response()->json([
-                'message' => 'User tidak ditemukan'
-            ], 404);
+                'message' => 'Email atau password salah'
+            ], 401);
         }
 
 
         // CEK PASSWORD (WAJIB!!!)
         if (!Hash::check($request->password, $user->password)) {
             return response()->json([
-                'message' => 'Password salah'
+                'message' => 'Email atau password salah'
             ], 401);
         }
 
         // Jika password benar → buat token
         $token = $user->createToken('auth')->plainTextToken;
 
+        // Return MINIMAL data yang diperlukan frontend
         $userData = [
+            'name' => $user->name,
+            'role_id' => $user->role_id,
+            'role' => optional($user->role)->name,
+            'avatar' => $user->avatar,
+        ];
+
+        // Set token di httpOnly cookie untuk keamanan lebih
+        return response()->json([
+            'success' => true,
+            'user' => $userData,
+            'token' => $token, // Masih kirim untuk localStorage (bisa dihapus jika pakai cookie saja)
+        ], 200)->cookie(
+            'auth_token',
+            $token,
+            60 * 24 * 7, // 7 days
+            '/',
+            null,
+            true, // secure (HTTPS only di production)
+            true, // httpOnly (tidak bisa diakses JavaScript)
+            false,
+            'Strict' // SameSite
+        );
+    }
+
+
+    public function profile(Request $request)
+    {
+        $user = $request->user();
+        
+        return response()->json([
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
@@ -83,18 +121,26 @@ class AuthController extends Controller
             'bio' => $user->bio,
             'phone' => $user->phone,
             'avatar' => $user->avatar,
-        ];
-
-        return response()->json([
-            'status' => 'success',
-            'token' => $token,
-            'user' => $userData,
         ]);
     }
 
-
-    public function profile(Request $request)
+    public function logout(Request $request)
     {
-        return $request->user();
+        // Revoke all tokens
+        $request->user()->tokens()->delete();
+
+        return response()->json([
+            'message' => 'Logged out successfully'
+        ])->cookie(
+            'auth_token',
+            '',
+            -1, // Expire immediately
+            '/',
+            null,
+            true,
+            true,
+            false,
+            'Strict'
+        );
     }
 }
