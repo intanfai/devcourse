@@ -4,12 +4,11 @@ Platform kursus online (LMS) berbasis web, dibangun dengan **Laravel** di sisi b
 
 ## Fitur
 
-- [ISI: mis. Autentikasi dan manajemen akun (peran siswa / admin)]
-- [ISI: mis. Katalog kursus dan halaman detail kursus]
-- [ISI: mis. Pembayaran kursus terintegrasi payment gateway (Midtrans)]
-- [ISI: mis. Dashboard dengan grafik statistik]
-- [ISI: mis. Ekspor data ke Excel]
-- [ISI: fitur lain yang ada di aplikasimu]
+- Autentikasi dan manajemen akun (peran siswa / admin)
+- Katalog kursus dan halaman detail kursus
+- Pembayaran kursus terintegrasi payment gateway (Midtran)
+- ISI: mis. Dashboard dengan grafik statistik
+- Ekspor data ke Excel
 
 ## Screenshot
 
